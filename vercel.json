@@ -1,11 +1,6 @@
 {
     "version": 2,
     "framework": null,
-    "functions": {
-        "api/index.php": {
-            "runtime": "vercel-php@0.6.0"
-        }
-    },
     "routes": [
         {
             "src": "/assets/(.*)",
@@ -21,23 +16,9 @@
         },
         {
             "src": "/(.*)",
-            "dest": "/api/index.php"
+            "dest": "/public/index.html"
         }
     ],
-    "env": {
-        "APP_ENV": "production",
-        "APP_DEBUG": "false",
-        "APP_URL": "https://your-vercel-domain.vercel.app",
-        "LOG_CHANNEL": "stack",
-        "CACHE_DRIVER": "file",
-        "SESSION_DRIVER": "file",
-        "QUEUE_CONNECTION": "sync"
-    },
-    "build": {
-        "env": {
-            "APP_ENV": "production",
-            "APP_DEBUG": "false"
-        }
-    },
-    "outputDirectory": "public"
+    "outputDirectory": "public",
+    "buildCommand": "npm run build"
 } 

@@ -3,7 +3,7 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
-        "vercel-build": "composer install --optimize-autoloader --no-dev && npm run build"
+        "vercel-build": "npm run build"
     },
     "devDependencies": {
         "axios": "^1.1.2",
