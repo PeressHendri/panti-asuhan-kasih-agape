@@ -1,68 +1,170 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🏠 Panti Asuhan Kasih Agape
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistem manajemen panti asuhan berbasis Laravel dengan fitur lengkap untuk admin, pengasuh, dan donatur.
 
-## About Laravel
+## ✨ Fitur Utama
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Dashboard Multi-Role**: Admin, Pengasuh, dan Donatur
+- **Manajemen Kehadiran**: Sistem absensi anak-anak panti asuhan
+- **Sistem CCTV**: Monitoring real-time untuk keamanan
+- **Manajemen Profil Panti**: Informasi lengkap tentang panti asuhan
+- **Galeri Foto**: Dokumentasi kegiatan dan acara
+- **Sistem Autentikasi**: Role-based access control
+- **Landing Page**: Website publik yang informatif
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🛠️ Teknologi yang Digunakan
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Backend**: Laravel 10
+- **Frontend**: Blade Templates, CSS3, JavaScript
+- **Database**: MySQL
+- **Authentication**: Laravel Sanctum
+- **Assets**: Vite + Laravel Mix
 
-## Learning Laravel
+## 📋 Requirements
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- PHP 8.1+
+- Composer
+- Node.js & NPM
+- MySQL/PostgreSQL
+- Web Server (Apache/Nginx)
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## 🚀 Installation
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 1. Clone Repository
+```bash
+git clone https://github.com/PeressHendri/panti-asuhan-kasih-agape.git
+cd panti-asuhan-kasih-agape
+```
 
-## Laravel Sponsors
+### 2. Install Dependencies
+```bash
+composer install
+npm install
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+### 3. Setup Environment
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-### Premium Partners
+### 4. Configure Database
+Edit file `.env` dan sesuaikan konfigurasi database:
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=web_agape
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+### 5. Run Migrations & Seeders
+```bash
+php artisan migrate
+php artisan db:seed
+```
 
-## Contributing
+### 6. Build Assets
+```bash
+npm run build
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 7. Start Development Server
+```bash
+php artisan serve
+```
 
-## Code of Conduct
+Aplikasi akan berjalan di `http://localhost:8000`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 👥 Role & Akses
 
-## Security Vulnerabilities
+### Admin
+- Dashboard admin
+- Manajemen pengguna
+- Manajemen profil panti
+- Sistem CCTV
+- Laporan kehadiran
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Pengasuh
+- Dashboard pengasuh
+- Input kehadiran anak-anak
+- Monitoring CCTV
+- Update profil panti
 
-## License
+### Donatur
+- Dashboard donatur
+- Lihat profil panti
+- Monitoring CCTV
+- Lihat laporan kehadiran
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 📁 Struktur Aplikasi
+
+```
+├── app/
+│   ├── Http/Controllers/
+│   │   ├── Admin/          # Controller untuk admin
+│   │   ├── Auth/           # Controller autentikasi
+│   │   ├── Donatur/        # Controller untuk donatur
+│   │   └── Pengasuh/       # Controller untuk pengasuh
+│   └── Models/             # Model database
+├── resources/views/
+│   ├── admin/              # View untuk admin
+│   ├── auth/               # View autentikasi
+│   ├── donatur/            # View untuk donatur
+│   ├── pengasuh/           # View untuk pengasuh
+│   └── welcome.blade.php   # Landing page
+├── public/assets/          # Assets statis (CSS, JS, Images)
+└── routes/web.php          # Definisi route
+```
+
+## 🔧 Konfigurasi Tambahan
+
+### Storage Link
+Untuk mengakses file uploads:
+```bash
+php artisan storage:link
+```
+
+### Cache Configuration
+Untuk production:
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+## 📸 Screenshots
+
+### Landing Page
+![Landing Page](public/assets/img/logoagape.png)
+
+### Dashboard Admin
+- Manajemen pengguna
+- Sistem kehadiran
+- Monitoring CCTV
+
+## 🤝 Contributing
+
+1. Fork repository ini
+2. Buat branch baru (`git checkout -b feature/AmazingFeature`)
+3. Commit perubahan (`git commit -m 'Add some AmazingFeature'`)
+4. Push ke branch (`git push origin feature/AmazingFeature`)
+5. Buat Pull Request
+
+## 📄 License
+
+Project ini dilisensikan di bawah [MIT License](https://opensource.org/licenses/MIT).
+
+## 📞 Kontak
+
+**Panti Asuhan Kasih Agape**
+- Alamat: Jl. Pakis Gunung I / 133 B, Surabaya, Jawa Timur
+- WhatsApp: [0813-3130-7503](https://wa.me/6281331307503)
+- Email: info@pantikasihagape.com
+
+---
+
+**"DIBERKATI UNTUK MENJADI BERKAT"** 🌟
 
 
