@@ -1,189 +1,131 @@
-// document.addEventListener("DOMContentLoaded", function () {
-//     const header = document.querySelector(".header");
-//     const header1 = document.querySelector(".header1");
-//     const menuIcon = document.querySelector("#menu-icon");
-//     const navbar = document.querySelector(".navbar");
-//     const navLinks = document.querySelectorAll(".navbar a");
-//     // Hapus logika scroll untuk active nav
+document.addEventListener("DOMContentLoaded", function () {
+    // ===================================================
+    // 1. Konfigurasi tsParticles (OPTIMIZED FOR MOBILE)
+    // ===================================================
+    const isMobile = window.innerWidth < 768;
+    const doveSvgUri = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%23ffffff' d='M442.7,185.3H416V138.7c0-26.5-12.8-50.4-33.1-65.2c-20.3-14.8-46.4-19.1-70-11.3L159.3,131.5c-2.6,0.9-5.1,1.9-7.5,3.2 c-20.9,11.3-33.8,33.4-33.8,57.7v157.9c0,23.6,12.3,45.2,32.3,57l0.1,0.1c19.9,11.7,44.2,12,64.4,0.6l176.4-98.6 c24-13.4,39.8-38.6,39.8-66.9V185.3z M416,298.7c0,13.4-7.6,25.6-19.1,31.9l-176.4,98.6c-9.6,5.4-20.9,5.2-30.4-0.3 c-9.5-5.5-15.4-15.9-15.4-27.1V192.3c0-11.5,6.1-22.1,16.2-27.8c10.1-5.7,22.1-6,32.5-0.9l153.6,85.6 c2.6,1.4,5,3.1,7.3,4.9L416,275.4V298.7z'/%3E%3C/svg%3E";
+    const cloudSvgUri = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M41.5,16.5A14,14,0,0,0,29.28,20.6,10.5,10.5,0,1,0,16.5,41.5H41.5a14,14,0,0,0,0-28Z' fill='%23ffffff'/%3E%3C/svg%3E";
 
-//     // Aktifkan menu saat diklik
-//     navLinks.forEach((link) => {
-//         link.addEventListener("click", function () {
-//             navLinks.forEach((l) => l.classList.remove("active"));
-//             this.classList.add("active");
-//             // Tutup menu mobile jika perlu
-//             if (navbar.classList.contains("active")) {
-//                 menuIcon.classList.remove("bx-x");
-//                 navbar.classList.remove("active");
-//                 navbar.style.transition = "left 0.4s ease";
-//             }
-//         });
-//     });
+    tsParticles.load('particles-js', {
+        particles: {
+            number: { value: isMobile ? 15 : 30, density: { enable: true, value_area: 800 } },
+            color: { value: "#ffffff" },
+            shape: {
+                type: "image",
+                image: [
+                    { src: doveSvgUri, width: 100, height: 100 },
+                    { src: cloudSvgUri, width: 120, height: 80 }
+                ]
+            },
+            opacity: { value: 0.5, random: true },
+            size: {
+                value: { min: 15, max: 30 },
+                random: true,
+                anim: { enable: true, speed: 2, size_min: 10, sync: false }
+            },
+            line_linked: { enable: false },
+            move: {
+                enable: true,
+                speed: 2,
+                direction: "top-right",
+                random: true,
+                straight: false,
+                out_mode: "out",
+                bounce: false
+            }
+        },
+        interactivity: {
+            events: { onhover: { enable: !isMobile, mode: "repulse" } }
+        },
+        detectRetina: true
+    });
+});
 
-//     // Sticky header and slide down effect with smooth transition
-//     window.addEventListener("scroll", () => {
-//         if (window.scrollY > 100) {
-//             header.classList.add("slidedown");
-//             if (header1) header1.classList.add("hidden");
-//         } else {
-//             header.classList.remove("slidedown");
-//             if (header1) header1.classList.remove("hidden");
-//         }
-//     });
+// ===================================================
+// 2. Logika Navigasi (Menu & Scroll)
+// ===================================================
+const header = document.querySelector('.header');
+const menuIcon = document.querySelector('#menu-icon');
+const navbar = document.querySelector('.navbar');
+const navLinks = document.querySelectorAll('.navbar a');
 
-//     // Scrollspy: aktifkan menu navbar sesuai section yang sedang terlihat
-//     window.addEventListener("scroll", () => {
-//         const sections = document.querySelectorAll("section");
-//         let scrollPos = window.scrollY + 120; // offset agar pas dengan header
+menuIcon.onclick = () => {
+    menuIcon.classList.toggle('fa-xmark');
+    navbar.classList.toggle('active');
+};
 
-//         sections.forEach((section) => {
-//             if (
-//                 scrollPos >= section.offsetTop &&
-//                 scrollPos < section.offsetTop + section.offsetHeight
-//             ) {
-//                 navLinks.forEach((link) => {
-//                     link.classList.remove("active");
-//                     if (link.getAttribute("href") === "#" + section.id) {
-//                         link.classList.add("active");
-//                     }
-//                 });
-//             }
-//         });
-//     });
+navLinks.forEach(link => {
+    link.addEventListener('click', () => {
+        if (navbar.classList.contains('active')) {
+            menuIcon.classList.remove('fa-xmark');
+            navbar.classList.remove('active');
+        }
+    });
+});
 
-//     // Mobile menu toggle with animation
-//     menuIcon.onclick = () => {
-//         menuIcon.classList.toggle("bx-x");
-//         navbar.classList.toggle("active");
-//         navbar.style.transition = "left 0.4s ease";
-//     };
+let lastScrollY = window.scrollY;
+window.addEventListener('scroll', () => {
+    if (lastScrollY < window.scrollY && window.scrollY > 100) {
+        header.classList.add('hide-navbar');
+    } else {
+        header.classList.remove('hide-navbar');
+    }
+    lastScrollY = window.scrollY;
+});
 
-//     // ScrollReveal animations with enhanced effects
-//     ScrollReveal({
-//         // reset: true,
-//         distance: "100px",
-//         duration: 1500,
-//         delay: 100,
-//         // easing: "cubic-bezier(0.5, 0, 0, 1)",
-//     });
+const sections = document.querySelectorAll('section[id]');
+function scrollActive() {
+    const scrollY = window.pageYOffset;
+    sections.forEach(current => {
+        const sectionHeight = current.offsetHeight;
+        const sectionTop = current.offsetTop - 150;
+        const sectionId = current.getAttribute('id');
+        const link = document.querySelector('.navbar a[href*=' + sectionId + ']');
+        if (link) {
+            if (scrollY > sectionTop && scrollY <= sectionTop + sectionHeight) {
+                document.querySelector('.navbar a.active')?.classList.remove('active');
+                link.classList.add('active');
+            }
+        }
+    });
+}
+window.addEventListener('scroll', scrollActive);
+scrollActive();
 
-//     ScrollReveal().reveal(".home-content, .heading", {
-//         origin: "top",
-//         interval: 100,
-//     });
-//     ScrollReveal().reveal(
-//         ".home-img, .company-container, .contact form, .background-content, .vision-content, .goals-content",
-//         { origin: "bottom", interval: 200 }
-//     );
-//     ScrollReveal().reveal(".home-content h1, .about-img", {
-//         origin: "left",
-//         interval: 200,
-//     });
-//     ScrollReveal().reveal(".home-content p, .text-content", {
-//         origin: "right",
-//         interval: 200,
-//     });
+// ===================================================
+// 3. Animasi Elemen (ScrollReveal & Typed.js)
+// ===================================================
+new Typed(".multiple-text", {
+    strings: ["Selamat Datang", "Welcome", "ようこそ", "환영", "欢迎", "DIBERKATI UNTUK MENJADI BERKAT"],
+    typeSpeed: 70, backSpeed: 40, backDelay: 2000, loop: true
+});
 
-//     // Typed.js for dynamic text with enhanced settings
-//     new Typed(".multiple-text", {
-//         strings: [
-//             "Selamat Datang",
-//             "Welcome",
-//             "Bienvenue",
-//             "ようこそ",
-//             "환영",
-//             "欢迎",
-//         ],
-//         typeSpeed: 80,
-//         backSpeed: 50,
-//         backDelay: 1000,
-//         // startDelay: 500,
-//         loop: true,
-//         showCursor: true,
-//         cursorChar: "|",
-//         fadeOut: true,
-//     });
+const sr = ScrollReveal({
+    origin: 'top',
+    distance: '50px',
+    duration: 1500,
+    delay: 200,
+    easing: 'ease-in-out'
+});
 
-//     const contactForm = document.getElementById("contact-form");
-//     if (contactForm) {
-//         contactForm.addEventListener("submit", (e) => {
-//             e.preventDefault();
-//             const name = document.getElementById("name").value.trim();
-//             const message = document.getElementById("message").value.trim();
-//             if (name && message) {
-//                 sendToWhatsapp(name, message);
-//             } else {
-//                 alert("Please fill in all fields.");
-//             }
-//         });
-//     }
-
-//     function sendToWhatsapp(name, message) {
-//         const number = "+6285159452235";
-//         const url =
-//             `https://wa.me/${number}?text=` +
-//             `Name : ${encodeURIComponent(name)}%0a` +
-//             `Message : ${encodeURIComponent(message)}%0a%0a`;
-
-//         console.log("Nama:", name, "Pesan:", message);
-//         console.log("URL:", url);
-//         window.open(url, "_blank").focus();
-//         document.getElementById("contact-form").reset();
-//     }
-// });
-
-// particlesJS("particles-js", {
-//     particles: {
-//         number: {
-//             value: 50,
-//             density: {
-//                 enable: true,
-//                 value_area: 600,
-//             },
-//         },
-//         color: {
-//             value: ["#ff69b4", "#00ced1"], // Warna pink dan teal
-//         },
-//         shape: {
-//             type: "circle",
-//         },
-//         opacity: {
-//             value: 0.8,
-//             random: true,
-//             anim: {
-//                 enable: true,
-//                 speed: 1,
-//                 opacity_min: 0.1,
-//                 sync: false,
-//             },
-//         },
-//         size: {
-//             value: 2,
-//             random: true,
-//         },
-//         line_linked: {
-//             enable: false,
-//         },
-//         move: {
-//             enable: true,
-//             speed: 1,
-//             direction: "none",
-//             random: true,
-//             straight: false,
-//             out_mode: "out",
-//         },
-//     },
-//     interactivity: {
-//         detect_on: "canvas",
-//         events: {
-//             onhover: {
-//                 enable: false,
-//             },
-//             onclick: {
-//                 enable: false,
-//             },
-//             resize: true,
-//         },
-//     },
-//     retina_detect: true,
-// });
+// ===================================================
+// 4. Formulir Kontak WhatsApp
+// ===================================================
+const contactForm = document.getElementById("contact-form");
+if (contactForm) {
+    contactForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const name = document.getElementById("name").value.trim();
+        const message = document.getElementById("message").value.trim();
+        if (name && message) {
+            const phoneNumber = "6281331307503";
+            const url = `https://wa.me/${phoneNumber}?text=` +
+                `Nama: ${encodeURIComponent(name)}%0a` +
+                `Pesan: ${encodeURIComponent(message)}`;
+            window.open(url, "_blank").focus();
+            contactForm.reset();
+        } else {
+            alert("Mohon isi nama dan pesan Anda.");
+        }
+    });
+}

@@ -1,0 +1,500 @@
+/* ===================================================
+   1. Konfigurasi Dasar & Skema Warna
+   =================================================== */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap");
+
+:root {
+    --bg-start: #a8e0ff;
+    --bg-end: #86c9ef;
+    --text-color: #333;
+    --heading-color: #013a63;
+    --main-color: #0077b6;
+    --container-bg: rgba(255, 255, 255, 0.6);
+    --border-color: rgba(0, 0, 0, 0.1);
+    --shadow-color: rgba(0, 119, 182, 0.3);
+    --header-height: 60px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    text-decoration: none;
+    border: none;
+    outline: none;
+    font-family: "Poppins", sans-serif;
+}
+
+/* Aturan dasar untuk gambar agar lebih robust */
+img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+html {
+    font-size: 62.5%;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    scroll-padding-top: var(--header-height);
+}
+
+body {
+    background-image: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
+    color: var(--text-color);
+    line-height: 1.6;
+    padding-top: var(--header-height);
+}
+
+/* ===================================================
+   2. Latar Belakang (Particles)
+   =================================================== */
+#particles-js {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+}
+
+/* ===================================================
+   3. Struktur & Konten Utama
+   =================================================== */
+section {
+    min-height: calc(100vh - var(--header-height));
+    padding: clamp(4rem, 8vw, 8rem) 5%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 1100px;
+    background: var(--container-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    border-radius: 2rem;
+    padding: clamp(2rem, 5vw, 3rem);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.heading {
+    text-align: center;
+    font-size: clamp(3rem, 6vw, 3.8rem);
+    margin-bottom: 3rem;
+    color: var(--heading-color);
+}
+
+.heading span {
+    color: var(--main-color);
+}
+
+/* ===================================================
+   4. Header & Navigasi
+   =================================================== */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--header-height);
+    padding: 0 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-color);
+    transition: top 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+.header.hide-navbar {
+    top: calc(-1 * var(--header-height));
+    opacity: 0;
+}
+
+.logo {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--heading-color);
+}
+
+.logo span {
+    display: block;
+    line-height: 1;
+}
+
+.logo .logo-bottom {
+    color: var(--main-color);
+}
+
+#menu-icon {
+    font-size: 3rem;
+    color: var(--heading-color);
+    cursor: pointer;
+    display: block;
+}
+
+.navbar {
+    position: absolute;
+    top: var(--header-height);
+    left: -100%;
+    width: 100%;
+    height: calc(100vh - var(--header-height));
+    background: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: left 0.4s ease;
+}
+
+.navbar.active {
+    left: 0;
+}
+
+.navbar a {
+    font-size: 2rem;
+    color: var(--heading-color);
+    margin: 1.5rem 0;
+    transition: color 0.3s;
+}
+
+.navbar a.active,
+.navbar a:hover {
+    color: var(--main-color);
+}
+
+#login-btn {
+    margin-top: 2rem;
+    padding: 1rem 2.5rem;
+    border: 2px solid var(--main-color);
+    color: var(--main-color);
+    border-radius: 2rem;
+    font-weight: 600;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+#login-btn:hover {
+    background: var(--main-color);
+    color: #fff;
+}
+
+/* ===================================================
+   5. Bagian Spesifik (Home, About, dll.)
+   =================================================== */
+.home {
+    text-align: center;
+}
+
+.home-content h1 {
+    font-size: clamp(4rem, 10vw, 5rem);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--heading-color);
+}
+
+.home-content .hcontent {
+    color: var(--main-color);
+}
+
+.home-content h3 {
+    font-size: clamp(2rem, 5vw, 2.8rem);
+    font-weight: 600;
+    margin-bottom: 2rem;
+    color: var(--text-color);
+}
+
+.btn,
+.location {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1.2rem 2.8rem;
+    border-radius: 4rem;
+    font-size: 1.6rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    margin: 0.5rem;
+}
+
+.btn {
+    background: var(--main-color);
+    color: #fff;
+}
+
+.btn:hover {
+    box-shadow: 0 0 2rem var(--shadow-color);
+    transform: scale(1.05);
+}
+
+.location {
+    border: 2px solid var(--main-color);
+    color: var(--main-color);
+}
+
+.location:hover {
+    background: var(--main-color);
+    color: #fff;
+}
+
+.about-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+}
+
+/* Mencegah lompatan saat gambar 'Tentang Kami' dimuat */
+.about-img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background-color: #e0e0e0;
+    /* Warna placeholder */
+    border-radius: 2rem;
+    overflow: hidden;
+    border: 2px solid var(--border-color);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.about-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.text-content {
+    text-align: center;
+}
+
+.text-content h3 {
+    font-size: 2.4rem;
+    color: var(--main-color);
+    margin-bottom: 1.5rem;
+}
+
+.text-content p,
+.background-content p,
+.vision-content p {
+    font-size: 1.6rem;
+    text-align: justify;
+}
+
+.vision-content {
+    text-align: center;
+}
+
+.vision-content h3 {
+    font-size: 2.8rem;
+    color: var(--main-color);
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.company-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.company-box {
+    position: relative;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    aspect-ratio: 1 / 1;
+}
+
+/* Memberi hint ke browser untuk optimasi animasi */
+.company-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+    will-change: transform;
+}
+
+.company-box:hover img {
+    transform: scale(1.1);
+}
+
+.company-layer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 1.5rem;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+    text-align: center;
+    color: #fff;
+}
+
+.company-layer h4 {
+    font-size: 1.8rem;
+}
+
+.contact-container {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+.lokasi iframe {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    height: auto;
+    border-radius: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.pesan form input,
+.pesan form textarea {
+    width: 100%;
+    padding: 1.5rem;
+    font-size: 1.6rem;
+    color: var(--text-color);
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 0.8rem;
+    margin-bottom: 2rem;
+    border: 1px solid var(--border-color);
+}
+
+.pesan form textarea {
+    resize: vertical;
+}
+
+.pesan form button {
+    width: 100%;
+}
+
+.footer {
+    background: var(--heading-color);
+    padding: 4rem 5%;
+    text-align: center;
+    color: #f0f0f0;
+}
+
+.footer .row {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+.footer-col h1,
+.footer-col h4 {
+    font-size: 2rem;
+    color: #fff;
+    margin-bottom: 1rem;
+}
+
+.footer-col p,
+.footer-col p a {
+    font-size: 1.5rem;
+    color: #e0e0e0;
+}
+
+.footer-col p a:hover {
+    color: #a8e0ff;
+}
+
+.footer-col .wa a {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 4rem;
+    height: 4rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 50%;
+    color: #e0e0e0;
+    font-size: 2rem;
+    margin: 0 0.5rem;
+    transition: color 0.3s, border-color 0.3s;
+}
+
+.footer-col .wa a:hover {
+    color: #fff;
+    border-color: #fff;
+}
+
+body.no-scroll {
+    overflow: hidden;
+}
+
+/* ===================================================
+   6. Media Queries untuk Desktop
+   =================================================== */
+@media (min-width: 768px) {
+    #menu-icon {
+        display: none;
+    }
+
+    .navbar {
+        position: static;
+        left: auto;
+        width: auto;
+        height: auto;
+        background: transparent;
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .navbar a {
+        font-size: 1.7rem;
+        margin: 0 1.5rem;
+    }
+
+    #login-btn {
+        margin-top: 0;
+        margin-left: 1.5rem;
+    }
+
+    .about-content,
+    .contact-container {
+        flex-direction: row;
+        align-items: center;
+        gap: 4rem;
+    }
+
+    .about-img,
+    .text-content,
+    .lokasi,
+    .pesan {
+        flex: 1;
+    }
+
+    .text-content {
+        text-align: left;
+    }
+
+    .footer .row {
+        flex-direction: row;
+        text-align: left;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 2rem;
+    }
+
+    .footer-col {
+        flex: 1 1 250px;
+    }
+}
+
+@media (min-width: 1024px) {
+    section {
+        padding: clamp(4rem, 8vw, 8rem) 9%;
+    }
+
+    .header {
+        padding: 0 9%;
+    }
+
+    .footer {
+        padding: 4rem 9%;
+    }
+}
