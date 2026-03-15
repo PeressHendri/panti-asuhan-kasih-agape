@@ -13,10 +13,15 @@ class Child extends Model
         'nama',
         'tanggal_lahir',
         'jenis_kelamin',
-        'nim',
         'sekolah',
-        'panti_id',
-        'photo',
+        'asal_daerah',
+        'tanggal_masuk',
+        'keterangan',
+        'status_sponsor',
+        'nama_sponsor',
+        'face_encoding_lbph',
+        'face_encoding_cnn',
+        'photo'
     ];
 
     public function attendances()

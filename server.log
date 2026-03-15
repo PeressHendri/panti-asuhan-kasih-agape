@@ -1,0 +1,21 @@
+
+   ErrorException 
+
+  filemtime(): stat failed for /Users/mac/Documents/Project/panti-asuhan-kasih-agape/.env
+
+  at vendor/laravel/framework/src/Illuminate/Foundation/Console/ServeCommand.php:90
+     86▕ 
+     87▕         $hasEnvironment = file_exists($environmentFile);
+     88▕ 
+     89▕         $environmentLastModified = $hasEnvironment
+  ➜  90▕                             ? filemtime($environmentFile)
+     91▕                             : now()->addDays(30)->getTimestamp();
+     92▕ 
+     93▕         $process = $this->startProcess($hasEnvironment);
+     94▕
+
+      [2m+13 vendor frames [22m
+
+  14  artisan:35
+      Illuminate\Foundation\Console\Kernel::handle(Object(Symfony\Component\Console\Input\ArgvInput), Object(Symfony\Component\Console\Output\ConsoleOutput))
+

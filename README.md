@@ -1,170 +1,54 @@
-# 🏠 Panti Asuhan Kasih Agape
+# Panti Asuhan Kasih Agape 🏥
 
-Sistem manajemen panti asuhan berbasis Laravel dengan fitur lengkap untuk admin, pengasuh, dan donatur.
+Selamat datang di sistem manajemen dan website resmi **Panti Asuhan Kasih Agape**. Proyek ini dirancang untuk profesionalitas tinggi, mengintegrasikan manajemen data panti dengan teknologi modern.
 
-## ✨ Fitur Utama
+## 🚀 Fitur Utama
 
-- **Dashboard Multi-Role**: Admin, Pengasuh, dan Donatur
-- **Manajemen Kehadiran**: Sistem absensi anak-anak panti asuhan
-- **Sistem CCTV**: Monitoring real-time untuk keamanan
-- **Manajemen Profil Panti**: Informasi lengkap tentang panti asuhan
-- **Galeri Foto**: Dokumentasi kegiatan dan acara
-- **Sistem Autentikasi**: Role-based access control
-- **Landing Page**: Website publik yang informatif
+- **Website Publik Premium**: Desain modern dengan animasi halus (ScrollReveal, Typed.js), slider galeri (Swiper.js), dan layout yang sepenuhnya responsif.
+- **Dashboard Multi-User**: Sistem login terpisah untuk **Admin**, **Pengasuh**, dan **Sponsor (Donatur)**.
+- **Monitoring CCTV**: Integrasi pemantauan kamera IP secara langsung (Streaming HLS/RTSP) dari dashboard.
+- **Face Recognition AI**: Log presensi otomatis berbasis pengenalan wajah (LBPH/CNN) yang terintegrasi dengan data kehadiran anak.
+- **Galeri Multimedia**: Dukungan penuh untuk unggah foto dan **Video (.mp4, .webm)** dengan pemutar otomatis di landing page.
+- **Sistem Donasi**: Form donasi online yang aman dengan fitur unggah bukti transfer.
 
-## 🛠️ Teknologi yang Digunakan
+## 🛠️ Panduan Admin & Pengasuh
 
-- **Backend**: Laravel 10
-- **Frontend**: Blade Templates, CSS3, JavaScript
-- **Database**: MySQL
-- **Authentication**: Laravel Sanctum
-- **Assets**: Vite + Laravel Mix
+### 1. Mengelola Galeri (Foto & Video)
+- Navigasi ke menu **Galeri** di sidebar dashboard.
+- Admin/Pengasuh dapat menambah konten baru. Sistem akan otomatis mendeteksi jika yang diunggah adalah video dan akan menampilkannya dengan video player di landing page.
+- Batas unggah file: **5MB (Foto)** dan **20MB (Video)**.
 
-## 📋 Requirements
+### 2. Monitoring CCTV & Face Log
+- Menu **Monitoring CCTV** menampilkan streaming kamera aktif.
+- Menu **Face Recognition** menampilkan riwayat deteksi wajah secara real-time, termasuk peringatan jika ada wajah tidak dikenal (keamanan).
 
-- PHP 8.1+
-- Composer
-- Node.js & NPM
-- MySQL/PostgreSQL
-- Web Server (Apache/Nginx)
+### 3. Manajemen Data Anak
+- Kelola profil lengkap anak asuh yang akan terhubung dengan sistem presensi otomatis.
 
-## 🚀 Installation
+## 💻 Teknologi yang Digunakan
 
-### 1. Clone Repository
-```bash
-git clone https://github.com/PeressHendri/panti-asuhan-kasih-agape.git
-cd panti-asuhan-kasih-agape
-```
+- **Backend**: Laravel 10 (PHP 8.1+)
+- **Frontend**: HTML5, Vanilla CSS (Premium Custom Design), JavaScript
+- **Libraries**:
+  - `Swiper.js` (Slider Konten)
+  - `Hls.js` (Streaming Video CCTV)
+  - `Typed.js` & `ScrollReveal` (Animasi UI)
+  - `FontAwesome 6` (Icons)
+- **Database**: MySQL/PostgreSQL
 
-### 2. Install Dependencies
-```bash
-composer install
-npm install
-```
+## ⚙️ Instalasi & Setup
 
-### 3. Setup Environment
-```bash
-cp .env.example .env
-php artisan key:generate
-```
+1. Clone repository.
+2. Jalankan `composer install`.
+3. Atur konfigurasi database di file `.env`.
+4. Jalankan migrasi: `php artisan migrate --seed`.
+5. **CRITICAL**: Jalankan `php artisan storage:link` agar media (foto/video) dapat tampil.
+6. Akses aplikasi melalui `php artisan serve`.
 
-### 4. Configure Database
-Edit file `.env` dan sesuaikan konfigurasi database:
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=web_agape
-DB_USERNAME=root
-DB_PASSWORD=
-```
-
-### 5. Run Migrations & Seeders
-```bash
-php artisan migrate
-php artisan db:seed
-```
-
-### 6. Build Assets
-```bash
-npm run build
-```
-
-### 7. Start Development Server
-```bash
-php artisan serve
-```
-
-Aplikasi akan berjalan di `http://localhost:8000`
-
-## 👥 Role & Akses
-
-### Admin
-- Dashboard admin
-- Manajemen pengguna
-- Manajemen profil panti
-- Sistem CCTV
-- Laporan kehadiran
-
-### Pengasuh
-- Dashboard pengasuh
-- Input kehadiran anak-anak
-- Monitoring CCTV
-- Update profil panti
-
-### Donatur
-- Dashboard donatur
-- Lihat profil panti
-- Monitoring CCTV
-- Lihat laporan kehadiran
-
-## 📁 Struktur Aplikasi
-
-```
-├── app/
-│   ├── Http/Controllers/
-│   │   ├── Admin/          # Controller untuk admin
-│   │   ├── Auth/           # Controller autentikasi
-│   │   ├── Donatur/        # Controller untuk donatur
-│   │   └── Pengasuh/       # Controller untuk pengasuh
-│   └── Models/             # Model database
-├── resources/views/
-│   ├── admin/              # View untuk admin
-│   ├── auth/               # View autentikasi
-│   ├── donatur/            # View untuk donatur
-│   ├── pengasuh/           # View untuk pengasuh
-│   └── welcome.blade.php   # Landing page
-├── public/assets/          # Assets statis (CSS, JS, Images)
-└── routes/web.php          # Definisi route
-```
-
-## 🔧 Konfigurasi Tambahan
-
-### Storage Link
-Untuk mengakses file uploads:
-```bash
-php artisan storage:link
-```
-
-### Cache Configuration
-Untuk production:
-```bash
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-```
-
-## 📸 Screenshots
-
-### Landing Page
-![Landing Page](public/assets/img/logoagape.png)
-
-### Dashboard Admin
-- Manajemen pengguna
-- Sistem kehadiran
-- Monitoring CCTV
-
-## 🤝 Contributing
-
-1. Fork repository ini
-2. Buat branch baru (`git checkout -b feature/AmazingFeature`)
-3. Commit perubahan (`git commit -m 'Add some AmazingFeature'`)
-4. Push ke branch (`git push origin feature/AmazingFeature`)
-5. Buat Pull Request
-
-## 📄 License
-
-Project ini dilisensikan di bawah [MIT License](https://opensource.org/licenses/MIT).
-
-## 📞 Kontak
-
-**Panti Asuhan Kasih Agape**
-- Alamat: Jl. Pakis Gunung I / 133 B, Surabaya, Jawa Timur
-- WhatsApp: [0813-3130-7503](https://wa.me/6281331307503)
-- Email: info@pantikasihagape.com
+## 📈 Statistik & SEO
+- **Tahun Melayani**: Dihitung otomatis sejak panti berdiri tahun 2000.
+- **Statistik Anak**: Ditampilkan secara statis (50+) sesuai kebutuhan desain.
+- **SEO Optimized**: Sudah dilengkapi Meta Tags, OG Tags (untuk share medsos), dan Favicon resmi.
 
 ---
-
-**"DIBERKATI UNTUK MENJADI BERKAT"** 🌟
-
-
+*Diberkati Untuk Menjadi Berkat.*

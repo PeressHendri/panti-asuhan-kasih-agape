@@ -35,12 +35,12 @@ class UserSeeder extends Seeder
             'address' => 'Jl. Kasih Agape No. 2, Jakarta',
         ]);
 
-        // Create Donatur User
+        // Create Sponsor User
         User::create([
-            'name' => 'Donatur 1',
-            'email' => 'donatur@pantiasuhan.com',
-            'password' => Hash::make('donatur1'),
-            'role' => 'donatur',
+            'name' => 'Sponsor 1',
+            'email' => 'sponsor@pantiasuhan.com',
+            'password' => Hash::make('sponsor1'),
+            'role' => 'sponsor',
             'is_active' => true,
             'phone' => '081234567892',
             'address' => 'Jl. Dermawan No. 10, Jakarta',

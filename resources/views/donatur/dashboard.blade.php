@@ -80,7 +80,7 @@
                     <i class="fas fa-home fa-3x text-primary mb-3"></i>
                     <h5 class="card-title">Profil Panti</h5>
                     <p class="card-text">Kenali lebih dalam tentang visi, misi, dan kontak Panti Asuhan Kasih Agape.</p>
-                    <a href="{{ route('donatur.profile.panti') }}" class="btn btn-outline-primary">Lihat Profil Panti</a>
+                    <a href="{{ route('sponsor.profile.panti') }}" class="btn btn-outline-primary">Lihat Profil Panti</a>
                 </div>
             </div>
         </div>
@@ -90,7 +90,7 @@
                     <i class="fas fa-user-nurse fa-3x text-success mb-3"></i>
                     <h5 class="card-title">Data Pengasuh</h5>
                     <p class="card-text">Lihat siapa saja yang merawat dan mendidik anak-anak panti setiap harinya.</p>
-                    <a href="{{ route('donatur.pengasuh') }}" class="btn btn-outline-success">Lihat Data Pengasuh</a>
+                    <a href="{{ route('sponsor.pengasuh') }}" class="btn btn-outline-success">Lihat Data Pengasuh</a>
                 </div>
             </div>
         </div>
@@ -100,7 +100,7 @@
                     <i class="fas fa-video fa-3x text-secondary mb-3"></i>
                     <h5 class="card-title">Monitoring CCTV</h5>
                     <p class="card-text">Pantau aktivitas anak-anak secara transparan melalui akses CCTV.</p>
-                    <a href="{{ route('donatur.cctv') }}" class="btn btn-outline-secondary">Lihat CCTV</a>
+                    <a href="{{ route('sponsor.cctv') }}" class="btn btn-outline-secondary">Lihat CCTV</a>
                 </div>
             </div>
         </div>

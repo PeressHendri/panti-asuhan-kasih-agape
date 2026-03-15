@@ -50,10 +50,10 @@ class User extends Authenticatable
         return $this->role === 'pengasuh';
     }
 
-    // Check if user is donatur
-    public function isDonatur()
+    // Check if user is sponsor
+    public function isSponsor()
     {
-        return $this->role === 'donatur';
+        return $this->role === 'sponsor';
     }
 
     // Scope for active users

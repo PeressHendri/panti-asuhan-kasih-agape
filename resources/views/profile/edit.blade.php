@@ -29,16 +29,20 @@
             <div class="col-12">
                 <label class="dashboard-label" style="color: var(--text-color);">Foto Profil</label>
                 <input type="file" name="photo" class="form-control" accept="image/*" onchange="previewPhoto(event)">
-                <small class="text-danger"><span style="color:red">* </span>Ukuran maksimal 10MB. Format: jpg, jpeg, png, dll.</small>
+                <small class="text-danger"><span style="color:red">* </span>Ukuran maksimal 10MB. Format: jpg, jpeg, png,
+                    dll.</small>
                 @if($user->photo)
                     <div class="mt-2 text-center">
                         <small style="color: var(--muted-text-color,rgb(99, 99, 99));">Foto saat ini:</small><br>
-                        <img src="{{ asset('storage/' . $user->photo) }}" class="img-fluid rounded-circle profile-image shadow" style="width: 170px; height: 170px; border: 2px solid var(--border-color); object-fit: cover; object-position: center;" alt="Foto Profil" id="old-photo-preview">
+                        <img src="{{ asset('storage/' . $user->photo) }}" class="img-fluid rounded-circle profile-image shadow"
+                            style="width: 170px; height: 170px; border: 2px solid var(--border-color); object-fit: cover; object-position: center;"
+                            alt="Foto Profil" id="old-photo-preview">
                     </div>
                 @endif
                 <div class="mt-2 text-center" id="new-photo-preview-container" style="display:none;">
                     <small style="color: var(--muted-text-color, #cccccc);">Foto baru:</small><br>
-                    <img id="new-photo-preview" class="img-fluid rounded-circle profile-image shadow" style="width: 170px; height: 170px; border: 2px solid var(--border-color); object-fit: cover; object-position: center;">
+                    <img id="new-photo-preview" class="img-fluid rounded-circle profile-image shadow"
+                        style="width: 170px; height: 170px; border: 2px solid var(--border-color); object-fit: cover; object-position: center;">
                 </div>
             </div>
             <div class="col-12">
@@ -98,10 +102,10 @@
             }).then(() => {
                 @php
                     $role = auth()->user()->role;
-                    $dashboard = $role === 'donatur' ? route('donatur.dashboard') : ($role === 'pengasuh' ? route('pengasuh.dashboard') : '/');
+                    $dashboard = $role === 'sponsor' ? route('sponsor.dashboard') : ($role === 'pengasuh' ? route('pengasuh.dashboard') : '/');
                 @endphp
                 window.location.href = "{{ $dashboard }}";
             });
-        </script>
+            </script>
     @endif
 @endpush

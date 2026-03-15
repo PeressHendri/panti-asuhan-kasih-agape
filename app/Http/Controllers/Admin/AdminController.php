@@ -29,7 +29,6 @@ class AdminController extends Controller
             'total_admin' => User::where('role', 'admin')->count(),
             'total_pengasuh' => User::where('role', 'pengasuh')->count(),
             'total_sponsor' => User::where('role', 'sponsor')->count(),
-            'total_donatur' => User::where('role', 'donatur')->count(),
         ];
 
         $activities = ActivityLog::with('user')->latest()->take(5)->get();
@@ -121,7 +120,8 @@ class AdminController extends Controller
 
         $child = Child::findOrFail($id);
 
-        $data = array_filter($validated, function($v) { return $v !== null && $v !== ''; });
+        $data = array_filter($validated, function ($v) {
+            return $v !== null && $v !== ''; });
 
         if ($request->hasFile('photo')) {
             if ($child->photo) {
@@ -169,7 +169,7 @@ class AdminController extends Controller
             'status' => 'Berhasil'
         ]);
 
-        $users = User::whereIn('role', ['admin', 'pengasuh', 'donatur'])->paginate(10);
+        $users = User::whereIn('role', ['admin', 'pengasuh', 'sponsor'])->paginate(10);
         return view('admin.manage-users', compact('users'));
     }
 
@@ -207,7 +207,7 @@ class AdminController extends Controller
         $attendances = $query->paginate(10);
         $children = Child::all();
 
-        Log::info('Attendance query result: ', ['attendances' => $attendances->toArray(), 'query' => $query->toSql()]);
+        Log::info('Attendance query result: ', ['attendances' => $attendances->items(), 'query' => $query->toSql()]);
         return view('admin.attendance', compact('attendances', 'children'));
     }
 

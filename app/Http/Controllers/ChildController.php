@@ -15,11 +15,10 @@ class ChildController extends Controller
 
         if ($search) {
             $query->where('nama', 'like', "%{$search}%")
-                  ->orWhere('nim', 'like', "%{$search}%");
+                ->orWhere('nim', 'like', "%{$search}%");
         }
 
         $children = $query->paginate(10);
-        dd($children->toArray());
         return view('admin.profile-panti', compact('children'));
     }
 
@@ -44,7 +43,7 @@ class ChildController extends Controller
         }
 
         Child::create($validated);
-        
+
         return redirect()->route('admin.profile.panti')->with('success', 'Data anak berhasil ditambahkan.');
     }
 
@@ -82,13 +81,21 @@ class ChildController extends Controller
     public function destroy($id)
     {
         $child = Child::findOrFail($id);
-        
+
         // Delete photo if exists
         if ($child->photo) {
             Storage::disk('public')->delete($child->photo);
         }
-        
+
         $child->delete();
         return redirect()->route('admin.profile.panti')->with('success', 'Data anak berhasil dihapus.');
+    }
+
+    public function forTraining()
+    {
+        return response()->json([
+            'success' => true,
+            'data' => Child::select('id', 'nama', 'face_encoding_lbph', 'face_encoding_cnn')->get()
+        ]);
     }
 }

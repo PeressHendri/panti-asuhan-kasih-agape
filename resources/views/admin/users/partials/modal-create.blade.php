@@ -22,11 +22,18 @@
                     </div>
                     <div class="mb-3">
                         <label for="create_password" class="form-label">Password</label>
-                        <input type="password" name="password" id="create_password" class="form-control" required>
+                        <div class="input-group">
+                            <input type="password" name="password" id="create_password" class="form-control" required>
+                            <button class="btn btn-outline-secondary" type="button" id="toggle_create_password"
+                                onclick="togglePassword('toggle_create_password', 'create_password', 'create_password_confirmation')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="create_password_confirmation" class="form-label">Konfirmasi Password</label>
-                        <input type="password" name="password_confirmation" id="create_password_confirmation" class="form-control" required>
+                        <input type="password" name="password_confirmation" id="create_password_confirmation"
+                            class="form-control" required>
                     </div>
                     <div class="mb-3">
                         <label for="create_role" class="form-label">Role</label>
@@ -34,14 +41,14 @@
                             <option value="" selected disabled>Pilih Role</option>
                             <option value="admin">Admin</option>
                             <option value="pengasuh">Pengasuh</option>
-                            <option value="donatur">Donatur</option>
+                            <option value="sponsor">Sponsor / Donatur</option>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="create_photo" class="form-label">Foto Profil</label>
-                        <input type="file" name="photo" class="form-control photo-preview-input" 
-                               data-preview-target="#create-photo-preview"
-                               data-preview-container="#create-photo-preview-container">
+                        <input type="file" name="photo" class="form-control photo-preview-input"
+                            data-preview-target="#create-photo-preview"
+                            data-preview-container="#create-photo-preview-container">
                         <div class="mt-2" id="create-photo-preview-container" style="display:none;">
                             <small>Preview:</small><br>
                             <img id="create-photo-preview" width="80" class="mt-1 rounded">

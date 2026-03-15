@@ -25,9 +25,9 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
-            
+
             $user = Auth::user();
-            
+
             // Check if user is active
             if (!$user->is_active) {
                 Auth::logout();
@@ -52,7 +52,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         if ($email) {
-            $request->session()->flash('last_email', $email);
+            session()->flash('last_email', $email);
         }
         return redirect()->route('login')->with('success', 'Anda telah berhasil logout.');
     }
@@ -64,8 +64,8 @@ class AuthController extends Controller
                 return redirect()->route('admin.dashboard')->with('success', 'Selamat datang, Admin!');
             case 'pengasuh':
                 return redirect()->route('pengasuh.dashboard')->with('success', 'Selamat datang, Pengasuh!');
-            case 'donatur':
-                return redirect()->route('donatur.dashboard')->with('success', 'Selamat datang, Donatur!');
+            case 'sponsor':
+                return redirect()->route('sponsor.dashboard')->with('success', 'Selamat datang, Sponsor/Donatur!');
             default:
                 return redirect()->route('home')->with('success', 'Selamat datang!');
         }

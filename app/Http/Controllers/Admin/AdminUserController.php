@@ -13,7 +13,7 @@ class AdminUserController extends Controller
 {
     public function index()
     {
-        $users = User::whereIn('role', ['admin', 'pengasuh', 'donatur'])->paginate(10);
+        $users = User::whereIn('role', ['admin', 'pengasuh', 'sponsor'])->paginate(10);
         return view('admin.manage-users', compact('users'));
     }
 
@@ -23,7 +23,7 @@ class AdminUserController extends Controller
             'name' => 'required',
             'email' => 'required|email|unique:users',
             'password' => 'required|confirmed|min:6',
-            'role' => 'required|in:admin,pengasuh,donatur',
+            'role' => 'required|in:admin,pengasuh,sponsor',
             'phone' => 'required',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
@@ -51,7 +51,7 @@ class AdminUserController extends Controller
         $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'role' => 'required|in:admin,pengasuh,donatur',
+            'role' => 'required|in:admin,pengasuh,sponsor',
             'phone' => 'required',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
