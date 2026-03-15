@@ -4,10 +4,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PANTI ASUHAN KASIH AGAPE</title>
+    <meta name="description" content="Panti Asuhan Kasih Agape - Mengasuh, Mendidik & Membangun Generasi Muda yang Berintegritas dan Takut Akan Tuhan. Berlokasi di Tangerang, melayani dengan sepenuh hati sejak tahun 2000.">
+    <meta name="keywords" content="panti asuhan, kasih agape, donasi panti, bantuan anak yatim, yayasan kasih agape, panti asuhan tangerang">
+    <meta name="author" content="Panti Asuhan Kasih Agape">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://pantikasihagape.vercel.app/">
+    <meta property="og:title" content="Panti Asuhan Kasih Agape - Diberkati Untuk Menjadi Berkat">
+    <meta property="og:description" content="Bergabunglah bersama kami dalam memberikan masa depan yang cerah bagi anak-anak asuh di Panti Asuhan Kasih Agape.">
+    
+    <title>Panti Asuhan Kasih Agape | Diberkati Untuk Menjadi Berkat</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" />
+    <script src="https://cdn.jsdelivr.net/gh/mcstudios/glightbox/dist/js/glightbox.min.js"></script>
+    <style>
+        .swiper {
+            width: 100%;
+            padding: 20px 60px 50px 60px !important;
+            position: relative;
+        }
+        .swiper-slide {
+            height: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .gallery-card {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .company-box {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .company-box:hover {
+            transform: scale(1.02);
+        }
+        .company-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .gallery-info {
+            margin-top: 1.5rem;
+            text-align: center;
+            width: 100%;
+            padding: 0 1rem;
+        }
+        .gallery-info h4 {
+            font-size: 1.8rem;
+            color: var(--main-color);
+            margin-bottom: 0.5rem;
+        }
+        .gallery-info p {
+            font-size: 1.3rem;
+            color: var(--text-color);
+            line-height: 1.4;
+        }
+        .swiper-pagination-bullet-active {
+            background: var(--main-color) !important;
+        }
+        .swiper-button-next, .swiper-button-prev {
+            color: var(--main-color) !important;
+            background: rgba(255, 255, 255, 0.8);
+            width: 4.5rem !important;
+            height: 4.5rem !important;
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            top: 40% !important;
+        }
+        .swiper-button-next:after, .swiper-button-prev:after {
+            font-size: 1.8rem !important;
+            font-weight: bold;
+        }
+        .swiper-button-next {
+            right: 5px !important;
+        }
+        .swiper-button-prev {
+            left: 5px !important;
+        }
+        .swiper-button-next:hover, .swiper-button-prev:hover {
+            background: var(--main-color);
+            color: #fff !important;
+            transform: scale(1.1);
+        }
+    </style>
 </head>
 
 <body>
@@ -15,19 +112,25 @@
 
     <header class="header">
         <a href="#home" class="logo">
-            <span class="logo-top">PANTI ASUHAN</span>
-            <span class="logo-bottom">KASIH AGAPE</span>
+            <img src="assets/img/logoagape.png" alt="Logo Agape" class="logo-img">
+            <div class="logo-text">
+                <span class="logo-top">PANTI ASUHAN</span>
+                <span class="logo-bottom">KASIH AGAPE</span>
+            </div>
         </a>
-        <i class="fa-solid fa-bars" id="menu-icon"></i>
-        <nav class="navbar">
-            <a href="#home" class="active">Beranda</a>
-            <a href="#about">Tentang</a>
-            <a href="#background">Latar Belakang</a>
-            <a href="#vision">Visi & Misi</a>
-            <a href="#company">Galeri</a>
-            <a href="#contact">Kontak</a>
-            <a href="#" id="login-btn">Login</a>
-        </nav>
+        <div class="header-right">
+            <nav class="navbar">
+                <a href="#home" class="active">Beranda</a>
+                <a href="#about">Tentang</a>
+                <a href="#background">Latar Belakang</a>
+                <a href="#vision">Visi & Misi</a>
+                <a href="#company">Galeri</a>
+                <a href="#contact">Kontak</a>
+                <a href="#" class="donate-link"><i class="fa-solid fa-heart"></i> Donasi</a>
+                <a href="#" id="login-btn">Login</a>
+            </nav>
+            <i class="fa-solid fa-bars" id="menu-icon"></i>
+        </div>
     </header>
 
     <section class="home" id="home">
@@ -67,8 +170,8 @@
                 <p>Pada tahun 1996 Tuhan memberi Visi Dan Misi kepada Ibu Mariana Muskitta, sehingga membuka persekutuan
                     doa dirumahnya. Persekutuan ini di beri nama Kristus Pohon Sejahtera melalui persekutuan ini dapat
                     menjangkau beberapa orang terlantar dan anak-anak dari keluarga tidak mampu.</p>
-                <p>Kemudian pada tahun 2000 persekutuan doa ini dirubah menjadi Panti Asuhan yang diberi nama "Kasih
-                    Agape". Panti Asuhan ini dapat bertumbuh sebagai respon atas apa yang telah terjadi di pulau Ambon
+                <p>Kemudian pada tahun 2000 persekutuan doa ini dirubah menjadi Panti Asuhan yang diberi nama “Kasih
+                    Agape”. Panti Asuhan ini dapat bertumbuh sebagai respon atas apa yang telah terjadi di pulau Ambon
                     dan pulau-pulau lain di Indonesia yang dilanda kerusuhan dan bencana alam.</p>
             </div>
         </div>
@@ -78,80 +181,95 @@
         <div class="container">
             <h2 class="heading">Visi & Misi <span>Kami</span></h2>
             <div class="vision-content">
-                <h3>Visi</h3>
-                <p>Mengasuh, Mendidik & Membangun Generasi Muda seutuhnya yang Hidup Takut Akan Tuhan.</p>
-                <p>Menjadikan Generasi Muda yang Memiliki Tanggung Jawab dan Memiliki Masa Depan Yang Cerah & Penuh
-                    harapan.</p>
-                <h3>Misi</h3>
-                <p>Mendidik dan memberikan Mereka Pengajaran - Pengajaran Rohani Untuk Hidup Di Dalam Tuhan dan
-                    Memberikan Pendidikan Forman dan Informal Kepada Anak-Anak Sebagai Bekal Hidup Agar Menjadi Pribadi
-                    Yang Berintegritas dan
-                    Tangguh.</p>
-                <p>Memberikan mereka Makanan Rohani serta, pembentukan karakter dan etika kepribadian yang Baik untuk
-                    kemuliaan Nama Tuhan.</p>
+                <div class="vision-card">
+                    <i class="fa-solid fa-eye"></i>
+                    <h3>Visi</h3>
+                    <p>Mengasuh, Mendidik & Membangun Generasi Muda seutuhnya yang Hidup Takut Akan Tuhan.</p>
+                </div>
+                <div class="vision-card">
+                    <i class="fa-solid fa-bullseye"></i>
+                    <h3>Misi</h3>
+                    <p>Mendidik, memberikan pengajaran rohani, serta bekal pendidikan formal dan informal agar menjadi pribadi yang berintegritas.</p>
+                </div>
+                <div class="vision-card">
+                    <i class="fa-solid fa-heart-pulse"></i>
+                    <h3>Harapan</h3>
+                    <p>Menjadikan Generasi Muda yang Memiliki Tanggung Jawab dan Memiliki Masa Depan Yang Cerah & Penuh Harapan.</p>
+                </div>
+            </div>
+
+            <!-- Stats Section for Professionalism -->
+            <div class="stats">
+                <div class="stat-item">
+                    <h2>26+</h2>
+                    <p>Tahun Melayani</p>
+                </div>
+                <div class="stat-item">
+                    <h2>50+</h2>
+                    <p>Anak Asuh</p>
+                </div>
+                <div class="stat-item">
+                    <h2>100%</h2>
+                    <p>Penuh Kasih</p>
+                </div>
             </div>
         </div>
     </section>
 
     <section class="company" id="company">
-        <div class="container">
+        <div class="container overflow-hidden">
             <h2 class="heading">Galeri <span>Kami</span></h2>
-            <div class="company-container">
-                <div class="company-box">
-                    <img src="assets/img/cewe-pcm.jpg" alt="Galeri 1" loading="lazy">
-                    <div class="company-layer">
-                        <h4>Foto bersama Cewe- Cewe pada Acara Pakuwon</h4>
+            
+            <!-- Swiper Slider -->
+            <div class="swiper mySwiper">
+                <div class="swiper-wrapper">
+                    <!-- Slide 1 -->
+                    <div class="swiper-slide">
+                        <div class="gallery-card">
+                            <div class="company-box">
+                                <a class="glightbox" data-gallery="gallery1" href="assets/img/cewe-pcm.jpg">
+                                    <img src="assets/img/cewe-pcm.jpg" alt="Galeri 1" loading="lazy">
+                                </a>
+                            </div>
+                            <div class="gallery-info">
+                                <h4>Panti Asuhan Kasih Agape</h4>
+                                <p>Foto bersama Cewe-Cewe pada Acara Pakuwon</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Slide 2 -->
+                    <div class="swiper-slide">
+                        <div class="gallery-card">
+                            <div class="company-box">
+                                <a class="glightbox" data-gallery="gallery1" href="assets/img/Cowo-pcm.jpg">
+                                    <img src="assets/img/Cowo-pcm.jpg" alt="Galeri 2" loading="lazy">
+                                </a>
+                            </div>
+                            <div class="gallery-info">
+                                <h4>Panti Asuhan Kasih Agape</h4>
+                                <p>Foto bersama Cowo-Cowo pada Acara Pakuwon</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Slide 3 -->
+                    <div class="swiper-slide">
+                        <div class="gallery-card">
+                            <div class="company-box">
+                                <a class="glightbox" data-gallery="gallery1" href="assets/img/berbagikasih.jpg">
+                                    <img src="assets/img/berbagikasih.jpg" alt="Galeri 3" loading="lazy">
+                                </a>
+                            </div>
+                            <div class="gallery-info">
+                                <h4>Berbagi Kasih</h4>
+                                <p>Kegiatan berbagi kasih bersama komunitas SMILEY</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="company-box">
-                    <img src="assets/img/Cowo-pcm.jpg" alt="Galeri 2" loading="lazy">
-                    <div class="company-layer">
-                        <h4>Foto bersama Cowo - Cowo pada Acara Pakuwon</h4>
-                    </div>
-                </div>
-                <div class="company-box">
-                    <img src="assets/img/berbagikasih.jpg" alt="Galeri 3" loading="lazy">
-                    <div class="company-layer">
-                        <h4>Berbagi Kasih bersama SMILEY</h4>
-                    </div>
-                </div>
-                <div class="company-box">
-                    <img src="assets/img/Bakti-Sosial1.jpg" alt="Galeri 4" loading="lazy">
-                    <div class="company-layer">
-                        <h4>Bakti Sosial dari PT. ARTHA PERMAI KENCANA</h4>
-                    </div>
-                </div>
-                <div class="company-box">
-                    <img src="assets/img/anak-anak-panti-asuhan-kasih-agape-saat-berfoto-bersama-di-depan-artotel.jpg"
-                        alt="Galeri 5" loading="lazy">
-                    <div class="company-layer">
-                        <h4>Foto bersama di depan Artotel</h4>
-                    </div>
-                </div>
-                <div class="company-box">
-                    <img src="assets/img/manusiasalingberbagi.jpg" alt="Galeri 6" loading="lazy">
-                    <div class="company-layer">
-                        <h4>Manusia Saling Berbagi</h4>
-                    </div>
-                </div>
-                <div class="company-box">
-                    <img src="assets/img/HDCI.jpg" alt="Galeri 7" loading="lazy">
-                    <div class="company-layer">
-                        <h4>Natal Bersama HDCI</h4>
-                    </div>
-                </div>
-                <div class="company-box">
-                    <img src="assets/img/cewe2.jpg" alt="Galeri 8" loading="lazy">
-                    <div class="company-layer">
-                        <h4>Foto bersama depan Panti</h4>
-                    </div>
-                </div>
-                <div class="company-box">
-                    <img src="assets/img/natal2022panti.jpeg" alt="Galeri 9" loading="lazy">
-                    <div class="company-layer">
-                        <h4>Natal 2022 Bersama</h4>
-                    </div>
-                </div>
+                <!-- Add Navigation & Pagination -->
+                <div class="swiper-pagination"></div>
+                <div class="swiper-button-next d-none d-md-flex"></div>
+                <div class="swiper-button-prev d-none d-md-flex"></div>
             </div>
         </div>
     </section>
@@ -198,11 +316,159 @@
             </div>
         </div>
     </footer>
-
     <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
     <script src="https://unpkg.com/scrollreveal"></script>
     <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
-    <script src="assets/js/script.js"></script>
-</body>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-</html> 
+    <script>
+        // ===================================================
+        // 1. Konfigurasi tsParticles (OPTIMIZED FOR MOBILE)
+        // ===================================================
+        const isMobile = window.innerWidth < 768;
+        const doveSvgUri = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%23ffffff' d='M442.7,185.3H416V138.7c0-26.5-12.8-50.4-33.1-65.2c-20.3-14.8-46.4-19.1-70-11.3L159.3,131.5c-2.6,0.9-5.1,1.9-7.5,3.2 c-20.9,11.3-33.8,33.4-33.8,57.7v157.9c0,23.6,12.3,45.2,32.3,57l0.1,0.1c19.9,11.7,44.2,12,64.4,0.6l176.4-98.6 c24-13.4,39.8-38.6,39.8-66.9V185.3z M416,298.7c0,13.4-7.6,25.6-19.1,31.9l-176.4,98.6c-9.6,5.4-20.9,5.2-30.4-0.3 c-9.5-5.5-15.4-15.9-15.4-27.1V192.3c0-11.5,6.1-22.1,16.2-27.8c10.1-5.7,22.1-6,32.5-0.9l153.6,85.6 c2.6,1.4,5,3.1,7.3,4.9L416,275.4V298.7z'/%3E%3C/svg%3E";
+        const cloudSvgUri = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M41.5,16.5A14,14,0,0,0,29.28,20.6,10.5,10.5,0,1,0,16.5,41.5H41.5a14,14,0,0,0,0-28Z' fill='%23ffffff'/%3E%3C/svg%3E";
+
+        tsParticles.load('particles-js', {
+            fpsLimit: 30,
+            particles: {
+                number: { value: isMobile ? 10 : 15, density: { enable: true, value_area: 800 } },
+                color: { value: "#ffffff" },
+                shape: {
+                    type: "image",
+                    image: [
+                        { src: doveSvgUri, width: 100, height: 100 },
+                        { src: cloudSvgUri, width: 120, height: 80 }
+                    ]
+                },
+                opacity: { value: 0.4, random: true },
+                size: { value: { min: 15, max: 30 }, random: true },
+                move: {
+                    enable: true,
+                    speed: 1,
+                    direction: "right",
+                    random: true,
+                    out_mode: "out"
+                }
+            },
+            interactivity: { events: { onhover: { enable: false } } },
+            detectRetina: false
+        });
+
+        // ===================================================
+        // 2. Logika Navigasi (Menu & Scroll)
+        // ===================================================
+        const menuIcon = document.querySelector('#menu-icon');
+        const navbar = document.querySelector('.navbar');
+        const header = document.querySelector('.header');
+
+        menuIcon.onclick = () => {
+            menuIcon.classList.toggle('fa-xmark');
+            navbar.classList.toggle('active');
+        };
+
+        let lastScrollY = window.scrollY;
+        window.onscroll = () => {
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.navbar a');
+            sections.forEach(sec => {
+                let top = window.scrollY;
+                let offset = sec.offsetTop - 150;
+                let height = sec.offsetHeight;
+                let id = sec.getAttribute('id');
+                if(top >= offset && top < offset + height) {
+                    navLinks.forEach(links => {
+                        links.classList.remove('active');
+                        const target = document.querySelector('.navbar a[href*=' + id + ']');
+                        if(target) target.classList.add('active');
+                    });
+                };
+            });
+
+            let currentScrollY = window.scrollY;
+            if (currentScrollY > 100) {
+                if (currentScrollY > lastScrollY) {
+                    header.classList.add('hide-navbar');
+                } else {
+                    header.classList.remove('hide-navbar');
+                }
+            } else {
+                header.classList.remove('hide-navbar');
+            }
+            lastScrollY = currentScrollY;
+
+            if (navbar.classList.contains('active')) {
+                menuIcon.classList.remove('fa-xmark');
+                navbar.classList.remove('active');
+            }
+        };
+
+        // ===================================================
+        // 3. Animasi Elemen (ScrollReveal & Typed.js)
+        // ===================================================
+        new Typed(".multiple-text", {
+            strings: ["Selamat Datang", "Welcome", "DIBERKATI UNTUK MENJADI BERKAT"],
+            typeSpeed: 70, backSpeed: 40, backDelay: 2000, loop: true
+        });
+
+        ScrollReveal({
+            origin: 'top',
+            distance: '80px',
+            duration: 2000,
+            delay: 200
+        });
+        ScrollReveal().reveal('.home-content, .heading', { origin: 'top' });
+        ScrollReveal().reveal('.about-img, .contact form', { origin: 'bottom' });
+        ScrollReveal().reveal('.about-content h3, .about-content p', { origin: 'right' });
+
+        // ===================================================
+        // 4. Formulir Kontak WhatsApp
+        // ===================================================
+        const contactForm = document.getElementById("contact-form");
+        if (contactForm) {
+            contactForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                const name = document.getElementById("name").value.trim();
+                const message = document.getElementById("message").value.trim();
+                const phoneNumber = "6281331307503";
+                const url = `https://wa.me/${phoneNumber}?text=Nama: ${encodeURIComponent(name)}%0aPesan: ${encodeURIComponent(message)}`;
+                window.open(url, "_blank").focus();
+            });
+        }
+
+        // ===================================================
+        // 5. Initialize Swiper
+        // ===================================================
+        const swiper = new Swiper(".mySwiper", {
+            slidesPerView: 1,
+            spaceBetween: 30,
+            loop: true,
+            centeredSlides: true,
+            autoplay: {
+                delay: 3500,
+                disableOnInteraction: false,
+            },
+            pagination: {
+                el: ".swiper-pagination",
+                clickable: true,
+            },
+            navigation: {
+                nextEl: ".swiper-button-next",
+                prevEl: ".swiper-button-prev",
+            },
+            breakpoints: {
+                768: { slidesPerView: 1.5 },
+                1024: { slidesPerView: 2 },
+            },
+        });
+
+        const lightbox = GLightbox({
+            selector: '.glightbox',
+            touchNavigation: true,
+            loop: true,
+            autoplayVideos: true,
+            closeOnOutsideClick: true
+        });
+    </script>
+</body>
+</html>
