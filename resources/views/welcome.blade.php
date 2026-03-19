@@ -32,10 +32,20 @@
         }
         @media (max-width: 768px) {
             .swiper {
-                padding: 10px 10px 40px 10px !important; /* Hapus jarak samping besar di HP agar foto lebar */
+                padding: 10px 0px 40px 0px !important; /* Nol-kan jarak samping agar foto maksimal besarnya */
             }
             .swiper-button-next, .swiper-button-prev {
-                display: none !important; /* Di HP pakai swipe saja agar tidak menutupi foto */
+                opacity: 0 !important; /* Tidak kelihatan tapi tetap bisa diklik */
+                width: 40% !important; /* Area klik jadi lebih luas (kiri & kanan) */
+                height: 100% !important;
+                top: 0 !important;
+                margin-top: 0 !important;
+            }
+            .gallery-info h4 {
+                font-size: 2.2rem !important; /* Teks judul diperbesar menyesuaikan foto */
+            }
+            .gallery-info p {
+                font-size: 1.5rem !important; /* Teks keterangan diperbesar */
             }
         }
         .swiper-slide {

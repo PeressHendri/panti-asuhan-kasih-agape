@@ -171,17 +171,18 @@ section {
 
 @media (max-width: 450px) {
     .logo-img {
-        height: 3.8rem;
+        height: 4.2rem; /* Ukuran gambar logo diperbesar agar berwibawa */
     }
     .logo {
-        font-size: 1.5rem;
-        gap: 0.5rem; /* Lebih mepet sesuai permintaan */
+        gap: 0.4rem; /* Sangat mepet namun tetap rapi */
     }
     .logo-text .logo-top {
-        font-size: 0.9rem;
+        font-size: 1.1rem; /* Font diperbesar dikit */
+        letter-spacing: 0.8px;
     }
     .logo-text .logo-bottom {
-        font-size: 1.3rem;
+        font-size: 1.5rem; /* Font diperbesar agar dominan */
+        line-height: 0.8;
     }
 }
 
@@ -203,15 +204,17 @@ section {
 }
 
 .logo-text .logo-top {
-    font-size: 1.4rem;
+    font-size: 1.5rem; /* Ukuran desktop juga saya naikkan biar tegas */
     font-weight: 500;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.8px;
+    line-height: 1;
 }
 
 .logo-text .logo-bottom {
-    font-size: 2.3rem; 
+    font-size: 2.6rem; /* Lebih besar & dominan */
     font-weight: 700;
     color: var(--main-color);
+    line-height: 0.9;
 }
 
 .header-right {
@@ -678,34 +681,46 @@ body.no-scroll {
    =================================================== */
 @media (min-width: 768px) {
     #menu-icon {
-        display: none;
+        display: none !important; /* Hilangkan hamburger di laptop */
     }
 
     .navbar {
         position: static;
-        left: auto;
         width: auto;
         height: auto;
         background: transparent;
+        display: flex !important; /* Paksa muncul di desktop */
         flex-direction: row;
         align-items: center;
+        padding: 0;
+        gap: 0;
+        overflow: visible;
+        transition: none;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
         justify-content: flex-end;
+        gap: 1rem;
         flex: 1;
     }
 
     .navbar a {
-        font-size: 1.7rem;
-        margin: 0 1.5rem;
+        font-size: 1.6rem;
+        margin: 0 1rem;
+        color: var(--text-color);
+        font-weight: 500;
+    }
+
+    .navbar a.donate-link {
+        margin-left: 1.5rem;
+        white-space: nowrap;
     }
 
     #login-btn {
         margin-top: 0;
-        margin-left: 1.5rem;
-    }
-
-    .header-right {
-        flex: 1;
-        justify-content: flex-end;
+        margin-left: 0.5rem;
     }
 
     .about-content,
