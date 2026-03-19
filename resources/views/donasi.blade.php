@@ -15,20 +15,25 @@
 
     <header class="header">
         <a href="{{ url('/#home') }}" class="logo">
-            <span class="logo-top">PANTI ASUHAN</span>
-            <span class="logo-bottom">KASIH AGAPE</span>
+            <img src="{{ asset('assets/img/logoagape.png') }}" alt="Logo Agape" class="logo-img">
+            <div class="logo-text">
+                <span class="logo-top">PANTI ASUHAN</span>
+                <span class="logo-bottom">KASIH AGAPE</span>
+            </div>
         </a>
-        <i class="fa-solid fa-bars" id="menu-icon"></i>
-        <nav class="navbar">
-            <a href="{{ url('/#home') }}">Beranda</a>
-            <a href="{{ url('/#about') }}">Tentang</a>
-            <a href="{{ url('/#background') }}">Latar Belakang</a>
-            <a href="{{ url('/#vision') }}">Visi & Misi</a>
-            <a href="{{ url('/#company') }}">Galeri</a>
-            <a href="{{ url('/#contact') }}">Kontak</a>
-            <a href="{{ route('public.donasi') }}" class="active">Donasi</a>
-            <a href="{{ route('login') }}" id="login-btn">Login</a>
-        </nav>
+        <div class="header-right">
+            <nav class="navbar">
+                <a href="{{ url('/#home') }}">Beranda</a>
+                <a href="{{ url('/#about') }}">Tentang</a>
+                <a href="{{ url('/#background') }}">Latar Belakang</a>
+                <a href="{{ url('/#vision') }}">Visi & Misi</a>
+                <a href="{{ url('/#company') }}">Galeri</a>
+                <a href="{{ url('/#contact') }}">Kontak</a>
+                <a href="{{ route('public.donasi') }}" class="active">Donasi</a>
+                <a href="{{ route('login') }}" id="login-btn">Login</a>
+            </nav>
+            <i class="fa-solid fa-bars" id="menu-icon"></i>
+        </div>
     </header>
 
     <section class="donasi" id="donasi" style="padding-top: 12rem;">
@@ -57,51 +62,35 @@
                 <form action="{{ route('public.donasi.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
 
-                    <label style="font-size: 1.5rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">Nama
-                        Lengkap / Instansi Anda <span style="color:red">*</span></label>
+                    <label>Nama Lengkap / Instansi Anda <span style="color:red">*</span></label>
                     <input type="text" name="nama_donatur" value="{{ old('nama_donatur') }}" required
                         placeholder="Masukkan Nama Anda">
 
-                    <label style="font-size: 1.5rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">Alamat
-                        Email (Opsional)</label>
-                    <input type="email" name="email" value="{{ old('email') }}" placeholder="user@example.com">
+                    <label>Alamat Email (Opsional)</label>
+                    <input type="email" name="email" value="{{ old('email') }}" placeholder="Alamat email Anda">
 
-                    <label style="font-size: 1.5rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">Nomor
-                        Telepon / WhatsApp</label>
+                    <label>Nomor Telepon / WhatsApp</label>
                     <input type="text" name="telepon" value="{{ old('telepon') }}" placeholder="08xxxxxxxxxx">
 
-                    <label style="font-size: 1.5rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">Tanggal
-                        Donasi <span style="color:red">*</span></label>
+                    <label>Tanggal Donasi <span style="color:red">*</span></label>
                     <input type="date" name="tanggal" value="{{ old('tanggal') ?? date('Y-m-d') }}" required>
 
-                    <label style="font-size: 1.5rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">Pilih
-                        Jenis Donasi <span style="color:red">*</span></label>
-                    <select name="jenis_donasi"
-                        style="width: 100%; padding: 1.5rem; font-size: 1.6rem; border-radius: 0.8rem; margin-bottom: 2rem; border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.8); outline: none;"
-                        required onchange="toggleDonasiFields(this.value)">
+                    <label>Pilih Jenis Donasi <span style="color:red">*</span></label>
+                    <select name="jenis_donasi" required onchange="toggleDonasiFields(this.value)">
                         <option value="" disabled selected>-- Pilih Jenis Donasi --</option>
-                        <option value="uang" {{ old('jenis_donasi') == 'uang' ? 'selected' : '' }}>Donasi Berupa Uang /
-                            Finansial</option>
-                        <option value="barang" {{ old('jenis_donasi') == 'barang' ? 'selected' : '' }}>Donasi Barang
-                            (Titipan / Ekspedisi)</option>
-                        <option value="sponsor_anak" {{ old('jenis_donasi') == 'sponsor_anak' ? 'selected' : '' }}>Program
-                            Sponsor Pendidikan Anak</option>
+                        <option value="uang" {{ old('jenis_donasi') == 'uang' ? 'selected' : '' }}>Donasi Berupa Uang / Finansial</option>
+                        <option value="barang" {{ old('jenis_donasi') == 'barang' ? 'selected' : '' }}>Donasi Barang (Titipan / Ekspedisi)</option>
+                        <option value="sponsor_anak" {{ old('jenis_donasi') == 'sponsor_anak' ? 'selected' : '' }}>Program Sponsor Pendidikan Anak</option>
                     </select>
 
                     <div id="field_jumlah" style="display: {{ old('jenis_donasi') == 'uang' ? 'block' : 'none' }};">
-                        <label
-                            style="font-size: 1.5rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">Jumlah
-                            Nominal Donasi (Rp)</label>
+                        <label>Jumlah Nominal Donasi (Rp)</label>
                         <input type="number" name="jumlah" value="{{ old('jumlah') }}" placeholder="Contoh: 1000000">
                     </div>
 
-                    <div id="field_keterangan"
-                        style="display: {{ in_array(old('jenis_donasi'), ['uang', 'barang', 'sponsor_anak']) ? 'block' : 'none' }};">
-                        <label
-                            style="font-size: 1.5rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">Keterangan
-                            / Pesan Anda</label>
-                        <textarea name="keterangan" rows="4"
-                            placeholder="Sebutkan detail barang (jika barang) atau pesan kasih yang ingin disampaikan.">{{ old('keterangan') }}</textarea>
+                    <div id="field_keterangan" style="display: {{ in_array(old('jenis_donasi'), ['uang', 'barang', 'sponsor_anak']) ? 'block' : 'none' }};">
+                        <label>Keterangan / Pesan Anda</label>
+                        <textarea name="keterangan" rows="4" placeholder="Sebutkan detail barang (jika barang) atau pesan kasih yang ingin disampaikan.">{{ old('keterangan') }}</textarea>
                     </div>
 
                     <div
@@ -117,15 +106,16 @@
                             Anda dapat melampirkan foto resi di kolom bukti atau via WA Panti.</p>
                     </div>
 
-                    <label style="font-size: 1.5rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">Nomor
-                        Referensi Transfer / Resi Pengiriman (Opsional)</label>
+                    <label>Nomor Referensi Transfer / Resi Pengiriman (Opsional)</label>
                     <input type="text" name="nomor_resi" value="{{ old('nomor_resi') }}"
                         placeholder="Nomor referensi bank/resi">
 
-                    <label style="font-size: 1.5rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">Upload
-                        Struk Bukti Transfer / Resi (Opsional)</label>
-                    <input type="file" name="bukti_transfer" accept=".jpg, .jpeg, .png"
-                        style="padding: 1.5rem; background: rgba(255,255,255,0.8); width: 100%; border-radius: 0.8rem; border: 1px solid var(--border-color); margin-bottom: 2rem;">
+                    <div style="margin-bottom: 2rem;">
+                        <label>Upload Struk Bukti Transfer / Resi Pengiriman (Foto)</label>
+                        <input type="file" name="bukti_transfer" accept="image/*"
+                            style="padding: 1.5rem; background: rgba(255,255,255,0.8); width: 100%; border-radius: 0.8rem; border: 1px solid var(--border-color);">
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">Maksimal ukuran: 2MB (Hanya file gambar)</small>
+                    </div>
 
                     <button type="submit" class="btn" style="width: 100%; cursor: pointer;">Kirim Data Donasi <i
                             class="fa-solid fa-paper-plane" style="margin-left: 0.5rem;"></i></button>
@@ -138,23 +128,23 @@
     <footer class="footer">
         <div class="row">
             <div class="footer-col">
-                <h1>KASIH AGAPE</h1>
-                <p>Bersama kami ciptakan senyuman dan harapan bagi anak-anak Indonesia yang membutuhkan.</p>
+                <h1>Panti Asuhan Kasih Agape</h1>
+                <p>DIBERKATI UNTUK MENJADI BERKAT</p>
             </div>
             <div class="footer-col">
-                <h4>KONTAK</h4>
-                <p>0813 3130 7503</p>
-                <p>pantiagape@example.com</p>
+                <h4>Lokasi</h4>
+                <p><a href="https://www.google.com/maps/place/Panti+Asuhan+Kasih+Agape/@-7.2859815,112.7211483,831m/data=!3m2!1e3!4b1!4m6!3m5!1s0x2dd7fbf305035865:0x6dbc0df2c71cbcff!8m2!3d-7.2859815!4d112.7237232!16s%2Fg%2F11bxfmh0mt?entry=ttu&g_ep=EgoyMDI1MDcyMy4wIKXMDSoASAFQAw%3D%3D"
+                        target="_blank">Jl. Pakis Gunung I / 133 B,
+                        Surabaya, Jawa Timur</a></p>
             </div>
             <div class="footer-col">
-                <h4>ALAMAT</h4>
-                <p>Jl. Contoh No. 123, Surabaya, Jawa Timur, Indonesia.</p>
-            </div>
-            <div class="footer-col wa">
-                <h4>SOSIAL MEDIA</h4>
-                <a href="#"><i class="fa-brands fa-whatsapp"></i></a>
-                <a href="#"><i class="fa-brands fa-instagram"></i></a>
-                <a href="#"><i class="fa-brands fa-facebook"></i></a>
+                <h4>Hubungi Kami</h4>
+                <div class="wa">
+                    <a href="https://wa.me/6281331307503" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
+                    <a href="https://wa.me/6281231663336" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
+                    <!-- Instagram Placeholder -->
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                </div>
             </div>
         </div>
     </footer>
