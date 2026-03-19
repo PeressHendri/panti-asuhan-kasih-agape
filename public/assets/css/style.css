@@ -162,10 +162,10 @@ section {
         overflow: hidden;
     }
     .logo-text .logo-top {
-        font-size: 0.8rem;
+        font-size: 1rem;
     }
     .logo-text .logo-bottom {
-        font-size: 1.1rem;
+        font-size: 1.4rem;
     }
 }
 
@@ -178,22 +178,19 @@ section {
 .logo-text {
     display: flex;
     flex-direction: column;
-}
-
-.logo-text span {
-    display: block;
-    line-height: 1.1;
+    text-align: left;
 }
 
 .logo-text .logo-top {
-    font-size: 1.1rem;
-    font-weight: 400;
+    font-size: 1.4rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
 }
 
 .logo-text .logo-bottom {
-    font-size: 1.4rem;
-    color: var(--main-color);
+    font-size: 2.3rem; 
     font-weight: 700;
+    color: var(--main-color);
 }
 
 .header-right {
