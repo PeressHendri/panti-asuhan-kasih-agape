@@ -169,6 +169,22 @@ section {
     }
 }
 
+@media (max-width: 450px) {
+    .logo-img {
+        height: 3.8rem;
+    }
+    .logo {
+        font-size: 1.5rem;
+        gap: 0.5rem; /* Lebih mepet sesuai permintaan */
+    }
+    .logo-text .logo-top {
+        font-size: 0.9rem;
+    }
+    .logo-text .logo-bottom {
+        font-size: 1.3rem;
+    }
+}
+
 @media (max-width: 380px) {
     .logo-text {
         display: none;
@@ -179,6 +195,11 @@ section {
     display: flex;
     flex-direction: column;
     text-align: left;
+}
+
+.logo-text span {
+    display: block;
+    line-height: 0.9; /* Membuat teks lebih mepet/rapat */
 }
 
 .logo-text .logo-top {
