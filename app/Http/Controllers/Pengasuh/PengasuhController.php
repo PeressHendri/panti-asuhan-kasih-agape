@@ -58,7 +58,10 @@ class PengasuhController extends Controller
         $query = Child::query();
 
         if ($search) {
-            $query->where('nama', 'like', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                  ->orWhere('nim', 'like', "%{$search}%");
+            });
         }
 
         $children = $query->paginate(10);

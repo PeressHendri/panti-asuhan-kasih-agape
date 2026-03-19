@@ -21,7 +21,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}?v={{ time() }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" />
     <script src="https://cdn.jsdelivr.net/gh/mcstudios/glightbox/dist/js/glightbox.min.js"></script>
     <style>
@@ -136,8 +136,7 @@
     <section class="home" id="home">
         <div class="home-content">
             <h3><span class="multiple-text"></span></h3>
-            <h1>PANTI ASUHAN</h1>
-            <h1 class="hcontent">KASIH AGAPE</h1>
+            <h1 class="main-title">PANTI ASUHAN<br><span class="hcontent">KASIH AGAPE</span></h1>
             <h2>"DIBERKATI UNTUK MENJADI BERKAT"</h2>
             <div class="tombol">
                 <a href="https://wa.me/6281331307503" class="btn">Hubungi Kami</a>
@@ -399,10 +398,8 @@
             let currentScrollY = window.scrollY;
             if (currentScrollY > 100) {
                 if (currentScrollY > lastScrollY) {
-                    // Scrolling Down
                     header.classList.add('hide-navbar');
                 } else {
-                    // Scrolling Up
                     header.classList.remove('hide-navbar');
                 }
             } else {

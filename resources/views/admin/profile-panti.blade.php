@@ -33,11 +33,12 @@
             <table class="table table-hover table-striped align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th>Foto</th>
-                        <th>Nama</th>
-                        <th>NIK</th>
+                        <th style="width: 70px;">Foto</th>
+                        <th style="width: 50px;">ID</th>
+                        <th>Nama Lengkap</th>
+                        <th>Asal Daerah</th>
                         <th>Usia</th>
-                        <th>Jenis Kelamin</th>
+                        <th>Sekolah</th>
                         <th class="text-center">Aksi</th>
                     </tr>
                 </thead>
@@ -46,30 +47,34 @@
                         <tr>
                             <td>
                                 @if($child->photo)
-                                    <img src="{{ asset('storage/' . $child->photo) }}" alt="{{ $child->nama }}" style="width: 60px; height: 60px; object-fit: cover;" class="rounded">
+                                    <img src="{{ asset('storage/' . $child->photo) }}" alt="{{ $child->nama }}" style="width: 50px; height: 50px; object-fit: cover;" class="rounded-circle border">
                                 @else
-                                    <div class="d-flex align-items-center justify-content-center bg-light rounded" style="width: 60px; height: 60px;"><i class="fas fa-user fa-lg text-secondary"></i></div>
+                                    <div class="d-flex align-items-center justify-content-center bg-light rounded-circle border text-secondary" style="width: 50px; height: 50px;"><i class="fas fa-user"></i></div>
                                 @endif
                             </td>
-                            <td>{{ $child->nama }}</td>
-                            <td class="fw-bold">{{ $child->nim ?? '-' }}</td>
-                            <td>{{ $child->tanggal_lahir ? $child->tanggal_lahir->age . ' tahun' : '-' }}</td>
-                            <td>{{ $child->jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan' }}</td>
+                            <td class="text-muted fw-bold">#{{ str_pad($child->id, 2, '0', STR_PAD_LEFT) }}</td>
+                            <td>
+                                <div class="fw-bold">{{ $child->nama }}</div>
+                                <small class="text-muted">{{ $child->tanggal_lahir ? $child->tanggal_lahir->format('d/m/Y') : '-' }}</small>
+                            </td>
+                            <td>{{ $child->asal_daerah ?? '-' }}</td>
+                            <td>{{ $child->tanggal_lahir ? $child->tanggal_lahir->age . ' thn' : '-' }}</td>
+                            <td>{{ $child->sekolah ?? '-' }}</td>
                             <td class="text-center">
-                                <a href="{{ route(auth()->user()->role . '.profile.panti.edit', $child->id) }}" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>
-                                
-                                {{-- Tombol ini sudah benar, tidak perlu diubah --}}
-                                <button type="button" class="btn btn-sm btn-danger" title="Hapus" 
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#deleteConfirmModal"
-                                        data-name="{{ $child->nama }}"
-                                        data-url="{{ route(auth()->user()->role . '.profile.panti.destroy', $child->id) }}">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <div class="btn-group shadow-sm" role="group">
+                                    <a href="{{ route(auth()->user()->role . '.profile.panti.edit', $child->id) }}" class="btn btn-sm btn-outline-warning" title="Edit"><i class="fas fa-edit"></i></a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" title="Hapus" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#deleteConfirmModal"
+                                            data-name="{{ $child->nama }}"
+                                            data-url="{{ route(auth()->user()->role . '.profile.panti.destroy', $child->id) }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="text-center text-muted">Data tidak ditemukan.</td></tr>
+                        <tr><td colspan="7" class="text-center text-muted py-5">Data anak panti tidak ditemukan.</td></tr>
                     @endforelse
                 </tbody>
             </table>

@@ -36,6 +36,31 @@ Selamat datang di sistem manajemen dan website resmi **Panti Asuhan Kasih Agape*
   - `FontAwesome 6` (Icons)
 - **Database**: MySQL/PostgreSQL
 
+## 📂 Struktur Folder Proyek
+
+```text
+panti-asuhan-kasih-agape/
+├── app/                      # Logika utama (Model, Controller, Provider)
+├── bootstrap/                # Inisialisasi framework
+├── config/                   # File ekosistem Laravel
+├── database/                 # Migrasi & Seeder Database
+├── public/                   # Aset publik (CSS, JS, Gambar)
+├── resources/                # View (Blade templates) & Source Aset
+├── routes/                   # Routing aplikasi (Web & API)
+├── storage/                  # File sistem & data unggahan (poto/video)
+├── tests/                    # Unit & Feature Testing
+│
+├── recognition_engine/       # 🧠 Core Sistem Pengenalan Wajah
+│   ├── models/               # Model hasil training (LBPH & VGG16)
+│   ├── research/             # Dokumentasi riset (Akurasi & Matrix)
+│   ├── scripts/              # Script Python untuk pemrosesan CCTV
+│   └── README.md             # Dokumentasi teknis engine
+│
+├── api/                      # Konfigurasi Vercel Deployment
+├── artisan                   # CLI Laravel
+└── README.md                 # Dokumentasi proyek utama
+```
+
 ## ⚙️ Instalasi & Setup
 
 1. Clone repository.

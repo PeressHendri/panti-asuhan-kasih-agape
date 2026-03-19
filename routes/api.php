@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\FaceRecognitionController;
+use App\Http\Controllers\Api\FaceLogController;
 use App\Http\Controllers\Api\CctvController;
 use App\Http\Controllers\ChildController;
 
@@ -24,6 +25,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::middleware('api.token')->group(function () {
     // Face Recognition dari Raspberry Pi
     Route::post('/face-recognition', [FaceRecognitionController::class, 'store']);
+    Route::post('/face-log', [FaceLogController::class, 'store']); 
     Route::get('/face-recognition/today', [FaceRecognitionController::class, 'today']);
     Route::get('/face-recognition', [FaceRecognitionController::class, 'index']);
 
