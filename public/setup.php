@@ -66,6 +66,7 @@ if ($isAuthenticated && $action) {
         'clear_cache' => ['optimize:clear', 'cache:clear', 'config:clear', 'view:clear'],
         'fix_perms' => [],
         'view_logs' => [],
+        'deploy' => [],
     ];
 
     if ($action == 'fix_perms') {
@@ -80,6 +81,18 @@ if ($isAuthenticated && $action) {
         } else {
             $output .= "❌ File log tidak ditemukan.";
         }
+    } elseif ($action == 'deploy') {
+        // Logika CI/CD Deployment GitHub
+        $output .= "🚀 Memulai CI/CD Deployment dari GitHub...\n" . str_repeat("-", 40) . "\n";
+        $output .= "🏃 [1/4] Mengambil kode terbaru (git pull)\n";
+        $output .= shell_exec("cd .. && git pull origin main 2>&1") . "\n";
+        $output .= "🏃 [2/4] Install Dependencies (composer install)\n";
+        $output .= shell_exec("cd .. && composer install --no-interaction --prefer-dist --optimize-autoloader 2>&1") . "\n";
+        $output .= "🏃 [3/4] Clear Cache (optimize:clear)\n";
+        $output .= shell_exec("cd .. && php artisan optimize:clear 2>&1") . "\n";
+        $output .= "🏃 [4/4] Migrate Database (migrate --force)\n";
+        $output .= shell_exec("cd .. && php artisan migrate --force 2>&1") . "\n";
+        $output .= "\n✅ Pembaruan Selesai & Bersih dari Cache!\n";
     } elseif (isset($commands[$action])) {
         if ($action == 'full_setup' && file_exists('index.html')) unlink('index.html');
         foreach ($commands[$action] as $cmd) {
@@ -167,7 +180,8 @@ if ($isAuthenticated && $action) {
                 <div class="grid" style="grid-template-columns: 1fr 1fr;">
                     <div>
                         <h3>Eksekusi Perintah</h3>
-                        <a href="?action=full_setup" class="btn btn-blue" onclick="return confirm('Database akan direset. Sangat berisiko di server produksi. Lanjutkan?')">🚀 Reset & Setup Database</a>
+                        <a href="?action=deploy" class="btn btn-blue" style="background:#4f46e5;box-shadow: 0 4px 15px #4f46e530;" onclick="return confirm('Mulai proses tarik update otomatis dari GitHub?')">🛰️ Tarik Update GitHub (CI/CD)</a>
+                        <a href="?action=full_setup" class="btn btn-red" onclick="return confirm('Database akan direset. Sangat berisiko di server produksi. Lanjutkan?')">🚀 Reset & Setup Database</a>
                         <a href="?action=clear_cache" class="btn btn-gray">🧹 Bersihkan Semua Cache</a>
                         <a href="?action=fix_perms" class="btn btn-gray">🔑 Perbaiki Izin Folder</a>
                     </div>
