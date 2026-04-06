@@ -126,17 +126,17 @@ if ($isAuthenticated && $action) {
         $output .= "🏃 [1/4] git pull...\n";
         $output .= shell_exec("cd .. && git pull origin main 2>&1") . "\n";
         $output .= "🏃 [2/4] composer install...\n";
-        $output .= shell_exec("cd .. && composer install --no-interaction --prefer-dist --optimize-autoloader 2>&1") . "\n";
+        $output .= shell_exec("cd .. && composer install --no-interaction --no-ansi --prefer-dist --optimize-autoloader 2>&1") . "\n";
         $output .= "🏃 [3/4] optimize:clear...\n";
-        $output .= shell_exec("cd .. && php artisan optimize:clear 2>&1") . "\n";
+        $output .= shell_exec("cd .. && php artisan optimize:clear --no-ansi 2>&1") . "\n";
         $output .= "🏃 [4/4] migrate...\n";
-        $output .= shell_exec("cd .. && php artisan migrate --force 2>&1") . "\n";
+        $output .= shell_exec("cd .. && php artisan migrate --force --no-ansi 2>&1") . "\n";
         $output .= "\n✅ Sistem diupdate & siap digunakan!\n";
     } elseif (isset($commands[$action])) {
         if ($action == 'full_setup' && file_exists('index.html')) unlink('index.html');
         foreach ($commands[$action] as $cmd) {
             $output .= "🏃 php artisan $cmd...\n";
-            $output .= shell_exec("cd .. && php artisan $cmd 2>&1") . "\n";
+            $output .= shell_exec("cd .. && php artisan $cmd --no-ansi 2>&1") . "\n";
         }
     }
 }
@@ -161,58 +161,48 @@ $dbConnected = testDbConnection();
         * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; }
         body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
         
-        .container { width: 100%; max-width: 1050px; }
+        .container { width: 100%; max-width: 1200px; }
         
         .card { background: var(--card); border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1); overflow: hidden; }
         
         .header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #f9fafb; }
-        .header h1 { font-size: 1.15rem; font-weight: 600; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; color: #111827; }
-        .header-links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; margin-left: 16px; transition: color 0.2s; font-weight: 500; }
-        .header-links a:hover { color: var(--text); }
-        .header-links .logout { color: var(--danger); opacity: 0.9; }
+        .header h1 { font-size: 1.15rem; font-weight: 600; display: flex; align-items: center; gap: 8px; color: #111827; }
+        .header-links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; margin-left: 16px; font-weight: 500; }
         
-        .two-columns { display: grid; grid-template-columns: 1.1fr 0.9fr; }
+        .two-columns { display: grid; grid-template-columns: 380px 1fr; }
         .col-left { padding: 24px; border-right: 1px solid var(--border); }
         .col-right { padding: 24px; background: #f9fafb; display: flex; flex-direction: column; }
         
-        @media(max-width: 800px) {
+        @media(max-width: 900px) {
             .two-columns { grid-template-columns: 1fr; }
             .col-left { border-right: none; border-bottom: 1px solid var(--border); }
         }
 
-        /* Stats Grid */
+        /* Stats & Buttons Details */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
-        .stat-box { background: #fff; border: 1px solid var(--border); padding: 14px; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
-        .stat-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 600; }
-        .stat-value { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 8px; color: #111827; }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-        .dot-green { background: var(--success); box-shadow: 0 0 6px rgba(16,185,129,0.4); }
-        .dot-red { background: var(--danger); box-shadow: 0 0 6px rgba(239,68,68,0.4); }
+        .stat-box { background: #fff; border: 1px solid var(--border); padding: 14px; border-radius: 10px; }
+        .stat-label { font-size: 0.70rem; color: var(--muted); text-transform: uppercase; font-weight: 600; margin-bottom: 4px; }
+        .stat-value { font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .dot-green { background: var(--success); }
+        .dot-red { background: var(--danger); }
 
-        /* Hardware info section */
-        .hw-section { margin-bottom: 24px; background: #fff; padding: 16px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
-        .hw-header { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 8px; font-weight: 600; color: #374151; }
-        .hw-subtext { font-size: 0.75rem; color: var(--muted); font-weight: 500; }
-        .progress-bg { width: 100%; height: 8px; background: #f3f4f6; border-radius: 8px; overflow: hidden; margin-top: 6px; }
-        .progress-bar { height: 100%; border-radius: 8px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        .hw-section { margin-bottom: 24px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; }
+        .hw-header { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px; font-weight: 600; }
+        .progress-bg { width: 100%; height: 6px; background: #f3f4f6; border-radius: 6px; overflow: hidden; }
+        .progress-bar { height: 100%; transition: width 0.5s; }
 
-        /* Actions Grid */
-        .actions-label { font-size: 0.85rem; font-weight: 600; color: #111827; margin-bottom: 12px; }
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-        .btn { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; text-decoration: none; border: 1px solid transparent; cursor: pointer; transition: all 0.2s ease; }
-        
-        .btn-primary { background: var(--primary); color: white; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2); border: 1px solid #4338ca; }
+        .actions-label { font-size: 0.85rem; font-weight: 600; margin-bottom: 12px; }
+        .btn { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; text-decoration: none; cursor: pointer; border: 1px solid transparent; transition: 0.2s; text-align: center; }
+        .btn-primary { background: var(--primary); color: #fff; }
         .btn-primary:hover { background: var(--primary-hover); }
-        
-        .btn-secondary { background: #fff; color: #374151; border-color: #d1d5db; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
-        .btn-secondary:hover { background: #f9fafb; border-color: #9ca3af; }
+        .btn-secondary { background: #fff; border-color: #d1d5db; color: #374151; }
+        .btn-secondary:hover { background: #f3f4f6; }
+        .btn-danger { background: #fef2f2; border-color: #fca5a5; color: var(--danger); }
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;}
 
-        .btn-danger { background: #fef2f2; color: var(--danger); border-color: #fecaca; }
-        .btn-danger:hover { background: #fee2e2; border-color: #fca5a5; }
-
-        /* Terminal Column */
-        .term-title { font-size: 0.85rem; font-weight: 600; color: #1f2937; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
-        .terminal { background: #0f172a; color: #38bdf8; padding: 16px; border-radius: 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.5; height: 100%; min-height: 250px; overflow-y: auto; white-space: pre-wrap; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
+        /* Terminal */
+        .terminal { background: #0f172a; color: #38bdf8; padding: 16px; border-radius: 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.5; min-height: 400px; height: 100%; overflow-y: auto; white-space: pre-wrap; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
         .term-empty { color: #475569; display: flex; align-items: center; justify-content: center; height: 100%; font-style: italic; }
 
         /* Login */
@@ -220,7 +210,7 @@ $dbConnected = testDbConnection();
         .login-card h2 { margin-bottom: 8px; font-weight: 600; font-size: 1.5rem; text-align: center; color: #111827;}
         .login-card p { color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; text-align: center; }
         input[type="password"] { width: 100%; padding: 14px; border-radius: 8px; border: 1px solid #d1d5db; background: #fff; color: #111827; font-size: 1rem; text-align: center; margin-bottom: 16px; outline: none; transition: border-color 0.2s; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02); }
-        input[type="password"]:focus { border-color: var(--primary); ring: 2px solid var(--primary); }
+        input[type="password"]:focus { border-color: var(--primary); outline: 2px solid var(--primary); }
     </style>
 </head>
 <body>
