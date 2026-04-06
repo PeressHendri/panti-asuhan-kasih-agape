@@ -131,7 +131,7 @@
                 <a href="{{ route('pengasuh.attendance') }}" class="btn btn-primary btn-lg">
                     <i class="fas fa-clipboard-check me-2"></i>Catat Kehadiran
                 </a>
-                <a href="{{ route('pengasuh.cctv') }}" class="btn btn-dark btn-lg">
+                <a href="{{ route('dashboard.cctv') }}" class="btn btn-dark btn-lg">
                     <i class="fas fa-video me-2"></i>Monitoring CCTV
                 </a>
                 <a href="{{ route(auth()->user()->role . '.profile.panti') }}" class="btn btn-outline-secondary btn-lg">

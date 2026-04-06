@@ -100,7 +100,7 @@
                     <i class="fas fa-video fa-3x text-secondary mb-3"></i>
                     <h5 class="card-title">Monitoring CCTV</h5>
                     <p class="card-text">Pantau aktivitas anak-anak secara transparan melalui akses CCTV.</p>
-                    <a href="{{ route('sponsor.cctv') }}" class="btn btn-outline-secondary">Lihat CCTV</a>
+                    <a href="{{ route('dashboard.cctv') }}" class="btn btn-outline-secondary">Lihat CCTV</a>
                 </div>
             </div>
         </div>
