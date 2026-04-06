@@ -171,9 +171,18 @@ if ($isAuthenticated) {
     }
 }
 
-$disk = getDiskInfo();
-$ram = getRamInfo();
-$dbConnected = testDbConnection();
+// Variabel default
+$disk = null;
+$ram = null;
+$dbConnected = false;
+
+if ($isAuthenticated) {
+    // Fungsi-fungsi berat dijalankan hanya ketika user sudah berhasil login
+    // Ini menghemat waktu loading awal halaman login.
+    $disk = getDiskInfo();
+    $ram = getRamInfo();
+    $dbConnected = testDbConnection();
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
