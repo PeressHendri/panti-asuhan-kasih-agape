@@ -99,8 +99,37 @@
                 $('.list-group-item').removeClass('active');
                 $(this).addClass('active');
                 var cameraName = $(this).find('strong').text();
-                $('.camera-placeholder h4').text('Live Feed: ' + cameraName);
+                $('.card-header h5').text('Live Monitoring: ' + cameraName);
             });
+
+            // Reverb Real-Time Listener (WebSocket)
+            if (window.Echo) {
+                window.Echo.channel('cctv-channel')
+                    .listen('CctvMotionDetected', (e) => {
+                        console.log('🔴 Sinyal Real-Time Masuk:', e);
+                        
+                        // Menampilkan notifikasi visual di web saat Pi mendeteksi gerakan
+                        Swal.fire({
+                            title: 'Gerakan Terdeteksi!',
+                            html: `<b>Lokasi:</b> ${e.data.lokasi} <br> <b>Status:</b> ${e.data.status}`,
+                            icon: 'warning',
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 5000,
+                            timerProgressBar: true
+                        });
+                        
+                        // Ubah status badge di UI
+                        let badge = $('.list-group-item.active .badge');
+                        badge.removeClass('bg-success').addClass('bg-danger').text('MOTION DETECTED!');
+                        setTimeout(() => {
+                           badge.removeClass('bg-danger').addClass('bg-success').text('Aktif');
+                        }, 5000);
+                    });
+            } else {
+                console.warn('Echo tidak terdeteksi. Harap kompilasi NPM (npm run build).');
+            }
         });
     </script>
 @endsection
