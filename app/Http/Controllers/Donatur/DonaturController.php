@@ -40,8 +40,12 @@ class DonaturController extends Controller
         $children = \App\Models\Child::all();
         return view('donatur.profile-panti', compact('children'));
     }
-    public function attendance() {
-        $attendances = \App\Models\Attendance::with('child')->orderBy('date', 'desc')->paginate(10);
+    public function attendance(Request $request) {
+        $date = $request->input('date', now()->format('Y-m-d'));
+        $attendances = \App\Models\Attendance::with('child')
+            ->whereDate('date', $date)
+            ->orderBy('date', 'desc')
+            ->paginate(15);
         $children = \App\Models\Child::all();
         return view('donatur.attendance', compact('attendances', 'children'));
     }

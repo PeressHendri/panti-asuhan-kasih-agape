@@ -42,11 +42,42 @@
                         style="width: 170px; height: 170px; border: 2px solid var(--border-color); object-fit: cover; object-position: center;">
                 </div>
             </div>
+            
+            <div class="col-12 mt-3">
+                <div class="form-check form-switch pt-2">
+                    <input class="form-check-input" style="cursor: pointer;" type="checkbox" role="switch" id="enable_manual_attendance" name="enable_manual_attendance" value="1" {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? 'checked' : '' }}>
+                    <label class="form-check-label" for="enable_manual_attendance" style="cursor: pointer; color: var(--text-color);">Absensi Manual</label>
+                </div>
+            </div>
+
+            {{-- Pengaturan AI: Confidence Threshold --}}
+            <div class="col-12 mt-3">
+                <div class="card border-0 shadow-sm p-3" style="background: #f8fafc; border-radius: 12px;">
+                    <label class="fw-bold mb-1" style="color: var(--text-color);">
+                        <i class="fas fa-sliders-h text-primary me-2"></i>Threshold Akurasi AI (LBPH)
+                    </label>
+                    <small class="text-muted d-block mb-2">Nilai ini menentukan seberapa ketat sistem mengenali wajah. Semakin tinggi nilainya, semakin ketat (hanya mau mengenali jika mirip sekali). <strong>Default: 75</strong></small>
+                    <div class="d-flex align-items-center gap-3">
+                        <input type="range" name="confidence_threshold" id="confidenceSlider"
+                            class="form-range flex-grow-1"
+                            min="40" max="99" step="1"
+                            value="{{ $confidenceThreshold ?? 75 }}"
+                            oninput="document.getElementById('thresholdDisplay').innerText = this.value">
+                        <span class="badge bg-primary fs-6 px-3 py-2" id="thresholdDisplay">{{ $confidenceThreshold ?? 75 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mt-1">
+                        <small class="text-success">40 = Longgar (Lebih Banyak Dikenali)</small>
+                        <small class="text-danger">99 = Ketat (Hanya Sangat Mirip)</small>
+                    </div>
+                </div>
+            </div>
+
             <div class="col-12">
                 <button type="button" class="btn btn-primary" id="btn-simpan-profil">Simpan</button>
             </div>
         </form>
     </div>
+
 @endsection
 
 @push('scripts')

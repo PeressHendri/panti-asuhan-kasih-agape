@@ -154,10 +154,11 @@
     <section class="home" id="home">
         <div class="home-content">
             <h3><span class="multiple-text"></span></h3>
-            <h1 class="main-title">PANTI ASUHAN<br><span class="hcontent">KASIH AGAPE</span></h1>
+            <h1>PANTI ASUHAN</h1>
+            <h1 class="hcontent">KASIH AGAPE</h1>
             <h2>"DIBERKATI UNTUK MENJADI BERKAT"</h2>
             <div class="tombol">
-                <a href="https://wa.me/6281331307503" class="btn">Hubungi Kami</a>
+                <a href="https://wa.me/6281231663336" class="btn">Hubungi Kami</a>
                 <a href="#contact" class="location"><i class="fa-solid fa-location-dot"></i></a>
             </div>
         </div>
@@ -248,7 +249,7 @@
                                         @php
                                             $extension = pathinfo($gallery->image, PATHINFO_EXTENSION);
                                             $isVideo = in_array(strtolower($extension), ['mp4', 'webm', 'ogg']);
-                                            $fileUrl = Storage::url($gallery->image);
+                                            $fileUrl = str_starts_with($gallery->image, 'assets/') ? asset($gallery->image) : Storage::url($gallery->image);
                                         @endphp
 
                                         @if($isVideo)
@@ -337,8 +338,8 @@
             <div class="footer-col">
                 <h4>Hubungi Kami</h4>
                 <div class="wa">
-                    <a href="https://wa.me/6281331307503" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
                     <a href="https://wa.me/6281231663336" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
+                    <a href="https://wa.me/6281331307503" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
                 </div>
             </div>
         </div>
@@ -459,7 +460,7 @@
                 e.preventDefault();
                 const name = document.getElementById("name").value.trim();
                 const message = document.getElementById("message").value.trim();
-                const phoneNumber = "6281331307503";
+                const phoneNumber = "6281231663336";
                 const url = `https://wa.me/${phoneNumber}?text=Nama: ${encodeURIComponent(name)}%0aPesan: ${encodeURIComponent(message)}`;
                 window.open(url, "_blank").focus();
             });

@@ -34,6 +34,10 @@ Route::middleware('api.token')->group(function () {
     Route::post('/cctv/status', [CctvController::class, 'updateStatus']);
     Route::get('/cctv/cameras', [CctvController::class, 'getCameras']);
 
+    // [GAP 3 FIX] Endpoint khusus YOLO Activity Tracker (dari ruang bersama)
+    // Menerima data: kamera_id, total_anak_terdeteksi, status_ruangan, detail_aktivitas
+    Route::post('/cctv/yolo-log', [CctvController::class, 'yoloLog']);
+
     // Sync data anak untuk training LBPH di Pi
     Route::get('/children/for-training', [ChildController::class, 'forTraining']);
 });

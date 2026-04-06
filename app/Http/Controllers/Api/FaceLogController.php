@@ -29,18 +29,44 @@ class FaceLogController extends Controller
             $imagePath = $request->file('image')->store('face_logs', 'public');
         }
 
-        // Simpan log ke tabel face_recognition_logs (atau buat tabel face_logs baru jika diinginkan)
-        // Disini kita gunakan tabel yang sudah ada agar data tetap sinkron dengan dashboard Filament
-        $log = FaceRecognitionLog::create([
+        // Simpan log ke tabel face_recognition_logs
+        $log = \App\Models\FaceRecognitionLog::create([
             'id' => \Illuminate\Support\Str::uuid(),
             'child_id' => $validated['child_id'],
             'confidence_score' => $validated['confidence'],
             'waktu_deteksi' => Carbon::parse($validated['detected_at']),
             'kamera_id' => $validated['source'],
             'foto_capture_path' => $imagePath,
-            'algoritma' => $validated['source'] === 'lbph' ? 'lbph' : 'cnn', // Deteksi nama algoritma dari source jika perlu
+            'algoritma' => in_array($validated['source'], ['lbph', 'cnn']) ? $validated['source'] : 'lbph',
             'status' => $validated['child_id'] ? 'check_in' : 'tidak_dikenal'
         ]);
+
+        // Sync with Attendance table
+        if ($validated['child_id']) {
+            $today = Carbon::parse($validated['detected_at'])->startOfDay();
+            $attendance = \App\Models\Attendance::firstOrNew([
+                'child_id' => $validated['child_id'],
+                'date' => $today
+            ]);
+
+            if ($log->status === 'check_in') {
+                if (!$attendance->check_in) {
+                    $attendance->check_in = $log->waktu_deteksi;
+                    $attendance->status = 'hadir';
+                }
+            } else if ($log->status === 'check_out') {
+                $attendance->check_out = $log->waktu_deteksi;
+            }
+
+            // Sync AI attributes to Attendance record
+            $attendance->kamera_id = $validated['source'];
+            $attendance->confidence_score = $validated['confidence'];
+            $attendance->algoritma = $log->algoritma;
+            if ($imagePath) {
+                $attendance->foto_capture_path = $imagePath;
+            }
+            $attendance->save();
+        }
 
         return response()->json([
             'success' => true,

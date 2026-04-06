@@ -14,7 +14,9 @@ class DatabaseSeeder extends Seeder
         // Panggil seeder lain di sini
         $this->call([
             UserSeeder::class,
-            // Tambahkan seeder lain jika ada
+            ChildSeeder::class,
+            CctvCameraSeeder::class,
+            GallerySeeder::class,
         ]);
     }
 }

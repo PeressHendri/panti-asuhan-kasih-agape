@@ -293,6 +293,9 @@
                            <input type="checkbox" class="form-check-input" id="remember" name="remember">
                            <label class="form-check-label" for="remember">Ingat saya</label>
                         </div>
+                        <a href="{{ route('password.request') }}" style="font-size:1.4rem; color:var(--main-color); text-decoration:none;">
+                            Lupa Password?
+                        </a>
                     </div>
                     <button type="submit" class="btn btn-login w-100">
                         <i class="fas fa-sign-in-alt me-2"></i>Masuk

@@ -5,40 +5,39 @@ namespace App\Http\Controllers\Pengasuh;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Child;
-use App\Models\Panti;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\ActivityLog;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage; // Tambahkan untuk menghapus file foto
-use Illuminate\Support\Facades\Log; // Tambahkan untuk debugging
-use App\Models\User; // Tambahkan untuk menghitung total pengasuh
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use App\Models\User;
 
 class PengasuhController extends Controller
 {
     public function dashboard()
     {
         $today = Carbon::today();
-    
+
         $stats = [
             'total_children' => Child::count(),
             'total_pengasuh' => User::where('role', 'pengasuh')->count(),
             'total_laki' => Child::where('jenis_kelamin', 'L')->count(),
             'total_perempuan' => Child::where('jenis_kelamin', 'P')->count(),
         ];
-    
+
         $recent_activities = Attendance::with('child')
             ->whereDate('created_at', $today)
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
-    
+
         ActivityLog::create([
             'user_id' => Auth::id(),
             'activity' => 'Mengakses Dashboard Pengasuh',
             'status' => 'Berhasil'
         ]);
-    
+
         return view('pengasuh.dashboard', compact('stats', 'recent_activities'));
     }
 
@@ -58,9 +57,9 @@ class PengasuhController extends Controller
         $query = Child::query();
 
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('nama', 'like', "%{$search}%")
-                  ->orWhere('nim', 'like', "%{$search}%");
+                  ->orWhere('asal_daerah', 'like', "%{$search}%");
             });
         }
 
@@ -92,10 +91,8 @@ class PengasuhController extends Controller
             'nama' => 'required|string|max:255',
             'tanggal_lahir' => 'required|date',
             'jenis_kelamin' => 'required|in:L,P',
-            'nim' => 'nullable|digits:16|numeric',
             'sekolah' => 'nullable|string|max:255',
-            'panti_id' => 'nullable|exists:pantis,id',
-            'photo' => 'nullable|image|max:10240', // 10MB
+            'photo' => 'nullable|image|max:10240',
         ]);
 
         if ($request->hasFile('photo')) {
@@ -103,10 +100,10 @@ class PengasuhController extends Controller
         }
 
         $child = Child::create($validated);
-        \Log::info('Data disimpan: ', $child->toArray());
+        Log::info('Data disimpan: ', $child->toArray());
 
         ActivityLog::create([
-            'user_id' => \Auth::id(),
+            'user_id' => Auth::id(),
             'activity' => 'Menambahkan Data Anak: ' . $validated['nama'],
             'status' => 'Berhasil'
         ]);
@@ -120,28 +117,28 @@ class PengasuhController extends Controller
             'nama' => 'nullable|string|max:255',
             'tanggal_lahir' => 'nullable|date',
             'jenis_kelamin' => 'nullable|in:L,P',
-            'nim' => 'nullable|digits:16|numeric',
             'sekolah' => 'nullable|string|max:255',
-            'panti_id' => 'nullable|exists:pantis,id',
-            'photo' => 'nullable|image|max:10240', // 10MB
+            'photo' => 'nullable|image|max:10240',
         ]);
 
-        $child = \App\Models\Child::findOrFail($id);
+        $child = Child::findOrFail($id);
 
-        $data = array_filter($validated, function($v) { return $v !== null && $v !== ''; });
+        $data = array_filter($validated, function ($v) {
+            return $v !== null && $v !== '';
+        });
 
         if ($request->hasFile('photo')) {
             if ($child->photo) {
-                \Storage::disk('public')->delete($child->photo);
+                Storage::disk('public')->delete($child->photo);
             }
             $data['photo'] = $request->file('photo')->store('children-photos', 'public');
         }
 
         $child->update($data);
-        \Log::info('Data diperbarui: ', $child->toArray());
+        Log::info('Data diperbarui: ', $child->toArray());
 
-        \App\Models\ActivityLog::create([
-            'user_id' => \Auth::id(),
+        ActivityLog::create([
+            'user_id' => Auth::id(),
             'activity' => 'Mengedit Data Anak: ' . $child->nama,
             'status' => 'Berhasil'
         ]);
@@ -152,9 +149,9 @@ class PengasuhController extends Controller
     public function destroy($id)
     {
         $child = Child::findOrFail($id);
-        $nama = $child->nama; // Simpan nama sebelum dihapus
+        $nama = $child->nama;
         if ($child->photo) {
-            Storage::disk('public')->delete($child->photo); // Hapus foto jika ada
+            Storage::disk('public')->delete($child->photo);
         }
         $child->delete();
 
@@ -167,138 +164,137 @@ class PengasuhController extends Controller
         return redirect()->route('pengasuh.profile.panti')->with('success', 'Data anak berhasil dihapus.');
     }
 
-    public function attendance()
-{
-    $today = Carbon::today();
-    $attendances = Attendance::with('child')
-        ->whereDate('date', $today) // Ganti dari 'created_at' ke 'date'
-        ->orderBy('date', 'desc')
-        ->get();
+    public function attendance(Request $request)
+    {
+        $date = $request->input('date', Carbon::today()->toDateString());
 
-    $children = Child::all();
+        $attendances = Attendance::with('child')
+            ->whereDate('date', $date)
+            ->orderBy('check_in', 'desc')
+            ->get();
 
-    ActivityLog::create([
-        'user_id' => Auth::id(),
-        'activity' => 'Melihat Data Kehadiran Anak',
-        'status' => 'Berhasil'
-    ]);
+        $children = Child::orderBy('nama')->get();
 
-    return view('attendance.attendance', compact('attendances', 'children')); // Gunakan view universal
-}
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'activity' => 'Melihat Data Kehadiran Anak',
+            'status' => 'Berhasil'
+        ]);
 
-public function checkIn(Request $request)
-{
-    $request->validate([
-        'child_id' => 'required|exists:children,id',
-        'date' => 'required|date', // Tambahkan validasi date
-        'status' => 'required|in:hadir,sakit,izin',
-        'note' => 'nullable|string'
-    ]);
-
-    $existing = Attendance::where('child_id', $request->child_id)
-        ->whereDate('date', $request->date)
-        ->first();
-
-    if ($existing) {
-        return back()->with('error', 'Anak ini sudah melakukan check-in untuk tanggal tersebut');
+        return view('pengasuh.attendance', compact('attendances', 'children'));
     }
 
-    $attendance = Attendance::create([
-        'child_id' => $request->child_id,
-        'date' => $request->date,
-        'check_in' => Carbon::now(),
-        'status' => $request->status,
-        'note' => $request->note,
-    ]);
+    public function checkIn(Request $request)
+    {
+        $request->validate([
+            'child_id' => 'required|exists:children,id',
+            'date' => 'required|date',
+            'status' => 'required|in:hadir,sakit,izin',
+            'note' => 'nullable|string'
+        ]);
 
-    ActivityLog::create([
-        'user_id' => Auth::id(),
-        'activity' => 'Check-in anak: ' . optional($attendance->child)->nama,
-        'status' => 'Berhasil'
-    ]);
+        $existing = Attendance::where('child_id', $request->child_id)
+            ->whereRaw('DATE(date) = ?', [$request->date])
+            ->first();
 
-    return back()->with('success', 'Check-in berhasil dicatat');
-}
+        if ($existing) {
+            return back()->with('error', 'Anak ini sudah melakukan check-in untuk tanggal tersebut');
+        }
 
-public function checkOut($id)
-{
-    $attendance = Attendance::findOrFail($id);
+        $attendance = Attendance::create([
+            'child_id' => $request->child_id,
+            'date' => $request->date,
+            'check_in' => Carbon::now(),
+            'status' => $request->status,
+            'note' => $request->note,
+        ]);
 
-    if ($attendance->check_out) {
-        return back()->with('error', 'Anak ini sudah check-out');
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'activity' => 'Check-in anak: ' . optional($attendance->child)->nama,
+            'status' => 'Berhasil'
+        ]);
+
+        return back()->with('success', 'Check-in berhasil dicatat');
     }
 
-    $attendance->update([
-        'check_out' => Carbon::now()
-    ]);
+    public function checkOut($id)
+    {
+        $attendance = Attendance::findOrFail($id);
 
-    ActivityLog::create([
-        'user_id' => Auth::id(),
-        'activity' => 'Check-out anak: ' . $attendance->child->nama,
-        'status' => 'Berhasil'
-    ]);
+        if ($attendance->check_out) {
+            return back()->with('error', 'Anak ini sudah check-out');
+        }
 
-    return back()->with('success', 'Check-out berhasil dicatat');
-}
+        $attendance->update([
+            'check_out' => Carbon::now()
+        ]);
 
-// Tambahkan manualAttendance jika diperlukan
-public function manualAttendance(Request $request)
-{
-    $request->validate([
-        'child_id' => 'required|exists:children,id',
-        'date' => 'required|date',
-        'check_in' => 'required|date_format:H:i',
-        'check_out' => 'nullable|date_format:H:i',
-        'status' => 'required|in:hadir,izin,sakit,alpha',
-        'note' => 'nullable|string'
-    ]);
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'activity' => 'Check-out anak: ' . $attendance->child->nama,
+            'status' => 'Berhasil'
+        ]);
 
-    $checkIn = Carbon::createFromFormat('Y-m-d H:i', $request->date . ' ' . $request->check_in);
-    $checkOut = $request->check_out
-        ? Carbon::createFromFormat('Y-m-d H:i', $request->date . ' ' . $request->check_out)
-        : null;
+        return back()->with('success', 'Check-out berhasil dicatat');
+    }
 
-    $attendance = Attendance::create([
-        'child_id' => $request->child_id,
-        'date' => $request->date,
-        'check_in' => $checkIn,
-        'check_out' => $checkOut,
-        'status' => $request->status,
-        'note' => $request->note
-    ]);
+    public function manualAttendance(Request $request)
+    {
+        $request->validate([
+            'child_id' => 'required|exists:children,id',
+            'date' => 'required|date',
+            'check_in' => 'required|date_format:H:i',
+            'check_out' => 'nullable|date_format:H:i',
+            'status' => 'required|in:hadir,izin,sakit,alpha',
+            'note' => 'nullable|string'
+        ]);
 
-    ActivityLog::create([
-        'user_id' => Auth::id(),
-        'activity' => 'Input manual kehadiran untuk: ' . optional($attendance->child)->nama,
-        'status' => 'Berhasil'
-    ]);
+        $checkIn = Carbon::createFromFormat('Y-m-d H:i', $request->date . ' ' . $request->check_in);
+        $checkOut = $request->check_out
+            ? Carbon::createFromFormat('Y-m-d H:i', $request->date . ' ' . $request->check_out)
+            : null;
 
-    return back()->with('success', 'Data kehadiran manual berhasil disimpan');
-}
+        $attendance = Attendance::create([
+            'child_id' => $request->child_id,
+            'date' => $request->date,
+            'check_in' => $checkIn,
+            'check_out' => $checkOut,
+            'status' => $request->status,
+            'note' => $request->note
+        ]);
 
-public function updateAttendance(Request $request)
-{
-    $request->validate([
-        'id' => 'required|exists:attendances,id',
-        'status' => 'required|in:hadir,sakit,izin',
-        'note' => 'nullable|string'
-    ]);
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'activity' => 'Input manual kehadiran untuk: ' . optional($attendance->child)->nama,
+            'status' => 'Berhasil'
+        ]);
 
-    $attendance = Attendance::findOrFail($request->id);
-    $attendance->update([
-        'status' => $request->status,
-        'note' => $request->note
-    ]);
+        return back()->with('success', 'Data kehadiran manual berhasil disimpan');
+    }
 
-    ActivityLog::create([
-        'user_id' => Auth::id(),
-        'activity' => 'Mengupdate kehadiran untuk: ' . $attendance->child->nama,
-        'status' => 'Berhasil'
-    ]);
+    public function updateAttendance(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:attendances,id',
+            'status' => 'required|in:hadir,sakit,izin',
+            'note' => 'nullable|string'
+        ]);
 
-    return redirect()->back()
-        ->with('success', 'Data kehadiran berhasil diperbarui');
-}
+        $attendance = Attendance::findOrFail($request->id);
+        $attendance->update([
+            'status' => $request->status,
+            'note' => $request->note
+        ]);
+
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'activity' => 'Mengupdate kehadiran untuk: ' . $attendance->child->nama,
+            'status' => 'Berhasil'
+        ]);
+
+        return redirect()->back()->with('success', 'Data kehadiran berhasil diperbarui');
+    }
 
     public function edit($id)
     {

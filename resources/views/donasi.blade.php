@@ -97,9 +97,9 @@
                         style="background: rgba(0, 119, 182, 0.1); padding: 2rem; border-radius: 1rem; margin-bottom: 2rem; border: 1px dashed var(--main-color);">
                         <h3 style="font-size: 1.8rem; color: var(--main-color); margin-bottom: 1rem;"><i
                                 class="fa-solid fa-credit-card"></i> Rekening Tujuan Panti</h3>
-                        <p style="font-size: 1.5rem; margin-bottom: 0.5rem;"><strong>Bank BCA:</strong> 123-456-7890 a/n
+                        <p style="font-size: 1.5rem; margin-bottom: 0.5rem;"><strong>Bank BCA:</strong> GANTI_NOREK_BCA a/n
                             Panti Asuhan Kasih Agape</p>
-                        <p style="font-size: 1.5rem; margin-bottom: 0.5rem;"><strong>Bank Mandiri:</strong> 098-765-4321
+                        <p style="font-size: 1.5rem; margin-bottom: 0.5rem;"><strong>Bank Mandiri:</strong> GANTI_NOREK_MANDIRI
                             a/n Panti Asuhan Kasih Agape</p>
                         <hr style="margin: 1.5rem 0; border: 0; border-top: 1px dashed var(--main-color);">
                         <p style="font-size: 1.3rem; color: #555;">Bagi donatur yang menitipkan barang melalui kurir,
@@ -140,7 +140,7 @@
             <div class="footer-col">
                 <h4>Hubungi Kami</h4>
                 <div class="wa">
-                    <a href="https://wa.me/6281331307503" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
+                    <a href="https://wa.me/6281231663336" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
                     <a href="https://wa.me/6281231663336" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
                     <!-- Instagram Placeholder -->
                     <a href="#"><i class="fa-brands fa-instagram"></i></a>

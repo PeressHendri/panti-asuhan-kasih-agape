@@ -9,7 +9,7 @@
         <div class="card-header" style="background-color: var(--card-header-bg); border: none; padding-bottom: 0.5rem;">
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="mb-0 fw-bold" style="color: var(--heading-color);">Kehadiran Hari Ini - {{ now()->format('d F Y') }}</h5>
-                @if (auth()->user()->role === 'admin' || auth()->user()->role === 'pengasuh')
+                @if ((auth()->user()->role === 'admin' || auth()->user()->role === 'pengasuh') && \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false))
                     <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addAttendanceModal"
                         style="color: var(--text-color); background-color: var(--btn-primary-bg);">
                         <i class="fas fa-plus me-2"></i>Tambah Kehadiran
@@ -27,7 +27,7 @@
                             <th style="color: var(--heading-color);">Check In</th>
                             <th style="color: var(--heading-color);">Check Out</th>
                             <th style="color: var(--heading-color);">Keterangan</th>
-                            @if (auth()->user()->role === 'admin' || auth()->user()->role === 'pengasuh')
+                            @if ((auth()->user()->role === 'admin' || auth()->user()->role === 'pengasuh') && \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false))
                                 <th style="color: var(--heading-color);">Aksi</th>
                             @endif
                         </tr>
@@ -46,7 +46,7 @@
                                     @if($attendance->check_out)
                                         {{ $attendance->check_out->format('H:i') }}
                                     @else
-                                        @if (auth()->user()->role === 'admin' || auth()->user()->role === 'pengasuh')
+                                        @if ((auth()->user()->role === 'admin' || auth()->user()->role === 'pengasuh') && \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false))
                                             <form action="{{ route(auth()->user()->role . '.attendance.check-out', $attendance->id) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 <button type="submit" class="btn btn-sm btn-outline-primary" style="color: var(--text-color); border-color: var(--btn-primary-bg);">Check Out</button>
@@ -57,7 +57,7 @@
                                     @endif
                                 </td>
                                 <td style="color: var(--text-color);">{{ $attendance->note ?? '-' }}</td>
-                                @if (auth()->user()->role === 'admin' || auth()->user()->role === 'pengasuh')
+                                @if ((auth()->user()->role === 'admin' || auth()->user()->role === 'pengasuh') && \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false))
                                     <td>
                                         <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editAttendanceModal"
                                             onclick="editAttendance({{ $attendance->id }}, '{{ $attendance->status }}', '{{ $attendance->note ?? '' }}')"
@@ -69,7 +69,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ auth()->user()->role === 'admin' || auth()->user()->role === 'pengasuh' ? 6 : 5 }}" class="text-center py-5">
+                                <td colspan="{{ (auth()->user()->role === 'admin' || auth()->user()->role === 'pengasuh') && \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? 6 : 5 }}" class="text-center py-5">
                                     <div class="d-flex flex-column align-items-center">
                                         <i class="fas fa-calendar-times fa-3x mb-3 text-secondary" style="color: var(--muted-text-color); opacity: 0.5;"></i>
                                         <div class="fs-5 mb-1" style="color: var(--text-color);">Belum ada data kehadiran hari ini</div>

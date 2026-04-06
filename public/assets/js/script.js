@@ -118,7 +118,7 @@ if (contactForm) {
         const name = document.getElementById("name").value.trim();
         const message = document.getElementById("message").value.trim();
         if (name && message) {
-            const phoneNumber = "6281331307503";
+            const phoneNumber = "6281231663336";
             const url = `https://wa.me/${phoneNumber}?text=` +
                 `Nama: ${encodeURIComponent(name)}%0a` +
                 `Pesan: ${encodeURIComponent(message)}`;

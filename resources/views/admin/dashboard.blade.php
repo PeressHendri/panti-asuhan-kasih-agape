@@ -130,6 +130,14 @@
                             Waktu Sekarang <span class="text-muted small">{{ \Carbon\Carbon::now()->format('d/m/Y H:i') }}</span>
                         </li>
                     </ul>
+                    <div class="mt-4 pt-3 border-top">
+                        <form action="{{ route('admin.deploy') }}" method="POST" onsubmit="return confirm('Tarik pembaruan terbaru dari GitHub sekarang? Ini akan memperbarui kode sistem ke versi terbaru.');">
+                            @csrf
+                            <button type="submit" class="btn btn-primary w-100 fw-bold shadow-sm d-flex justify-content-center align-items-center gap-2" style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); border: none; padding: 10px;">
+                                <i class="fas fa-cloud-download-alt"></i> Tarik Pembaruan Sekarang
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

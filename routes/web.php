@@ -41,11 +41,17 @@ Route::get('/favicon.ico', function () {
     return response()->file(public_path('favicon.ico'));
 });
 
-// Route lainnya (akan di-disable sementara untuk Vercel)
-if (env('APP_ENV') !== 'production' || env('ENABLE_FULL_APP', false)) {
+// Route lainnya
+Route::group([], function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.post');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+
+    // Lupa Password
+    Route::get('/forgot-password', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'showForm'])->name('password.request');
+    Route::post('/forgot-password', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLink'])->name('password.email');
+    Route::get('/reset-password/{token}', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'showResetForm'])->name('password.reset.form');
+    Route::post('/reset-password', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'resetPassword'])->name('password.reset');
 
     Route::middleware(['auth', 'role:admin,pengasuh'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
@@ -70,6 +76,7 @@ if (env('APP_ENV') !== 'production' || env('ENABLE_FULL_APP', false)) {
         Route::post('/kehadiran/check-out/{id}', [AdminController::class, 'checkOut'])->name('attendance.check-out');
         Route::post('/kehadiran/manual', [AdminController::class, 'manualAttendance'])->name('attendance.manual');
         Route::put('/kehadiran/update', [AdminController::class, 'updateAttendance'])->name('attendance.update');
+        Route::get('/kehadiran/export', [AdminController::class, 'exportAttendance'])->name('attendance.export');
 
         Route::resource('gallery', \App\Http\Controllers\GalleryController::class);
     });
@@ -119,6 +126,7 @@ if (env('APP_ENV') !== 'production' || env('ENABLE_FULL_APP', false)) {
 
         // CCTV Monitoring & Face Recognition (Unified)
         Route::get('/dashboard/cctv', [CctvController::class, 'index'])->name('dashboard.cctv');
+        Route::get('/dashboard/cctv/live-data', [CctvController::class, 'liveData'])->name('dashboard.cctv.live');
         Route::post('/dashboard/cctv/{id}/refresh', [CctvController::class, 'refresh'])->name('dashboard.cctv.refresh');
 
         Route::get('/dashboard/face-log', [FaceRecognitionController::class, 'dashboard'])->name('dashboard.face-log');
@@ -127,10 +135,23 @@ if (env('APP_ENV') !== 'production' || env('ENABLE_FULL_APP', false)) {
     Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/admin/profile/edit', [AdminController::class, 'editProfile'])->name('admin.profile.edit');
         Route::post('/admin/profile/update', [AdminController::class, 'updateProfile'])->name('admin.profile.update');
+        Route::get('/admin/settings', [AdminController::class, 'getSettings'])->name('admin.settings');
 
         // Admin CRUD CCTV
         Route::post('/dashboard/cctv', [CctvController::class, 'store'])->name('admin.cctv.store');
         Route::put('/dashboard/cctv/{id}', [CctvController::class, 'update'])->name('admin.cctv.update');
         Route::delete('/dashboard/cctv/{id}', [CctvController::class, 'destroy'])->name('admin.cctv.destroy');
+
+        Route::delete('/admin/kehadiran/{id}', [AdminController::class, 'deleteAttendance'])->name('admin.attendance.delete');
+
+        // Donasi Management
+        Route::get('/admin/donasi', [AdminController::class, 'donasiIndex'])->name('admin.donasi');
+        Route::post('/admin/donasi/{id}/verify', [AdminController::class, 'donasiVerify'])->name('admin.donasi.verify');
+
+        // Sinkronisasi label_map
+        Route::get('/admin/sync-label-map', [AdminController::class, 'syncLabelMap'])->name('admin.sync.label');
+
+        // CI/CD Deployment Route
+        Route::post('/admin/deploy', [AdminController::class, 'deploy'])->name('admin.deploy');
     });
-}
+});

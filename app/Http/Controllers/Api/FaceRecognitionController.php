@@ -61,10 +61,14 @@ class FaceRecognitionController extends Controller
             if ($validated['status'] === 'check_in') {
                 if (!$attendance->check_in) {
                     $attendance->check_in = now();
-                    $attendance->status = 'hadir';
                 }
+                $attendance->status = 'hadir';
             } else if ($validated['status'] === 'check_out') {
                 $attendance->check_out = now();
+                // Jika belum ada status, pastikan dianggap hadir karena dia terdeteksi di panti
+                if (!$attendance->status) {
+                    $attendance->status = 'hadir';
+                }
             }
 
             $attendance->kamera_id = $kamera_id;

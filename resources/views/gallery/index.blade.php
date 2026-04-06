@@ -35,20 +35,21 @@
                     <tr>
                         <td>{{ $index + 1 }}</td>
                         <td>
-                            @php
-                                $extension = pathinfo($gallery->image, PATHINFO_EXTENSION);
-                                $isVideo = in_array(strtolower($extension), ['mp4', 'webm', 'ogg']);
-                            @endphp
-                            @if($isVideo)
-                                <div class="position-relative d-inline-block">
-                                    <video src="{{ Storage::url($gallery->image) }}" width="100" class="img-thumbnail"></video>
-                                    <div class="position-absolute top-50 left-50 translate-middle">
-                                        <i class="fas fa-play-circle text-white fs-4 shadow-sm"></i>
+                                @php
+                                    $extension = pathinfo($gallery->image, PATHINFO_EXTENSION);
+                                    $isVideo = in_array(strtolower($extension), ['mp4', 'webm', 'ogg']);
+                                    $fileUrl = str_starts_with($gallery->image, 'assets/') ? asset($gallery->image) : Storage::url($gallery->image);
+                                @endphp
+                                @if($isVideo)
+                                    <div class="position-relative d-inline-block">
+                                        <video src="{{ $fileUrl }}" width="100" class="img-thumbnail"></video>
+                                        <div class="position-absolute top-50 left-50 translate-middle">
+                                            <i class="fas fa-play-circle text-white fs-4 shadow-sm"></i>
+                                        </div>
                                     </div>
-                                </div>
-                            @else
-                                <img src="{{ Storage::url($gallery->image) }}" class="img-thumbnail" width="100" alt="Galeri">
-                            @endif
+                                @else
+                                    <img src="{{ $fileUrl }}" class="img-thumbnail" width="100" alt="Galeri">
+                                @endif
                         </td>
                         <td>{{ $gallery->title ?: '-' }}</td>
                         <td class="text-start">{{ $gallery->description ?: '-' }}</td>

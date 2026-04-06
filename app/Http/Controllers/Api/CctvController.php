@@ -9,6 +9,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
+/**
+ * CctvController - Menangani semua request API dari Raspberry Pi terkait CCTV.
+ *
+ * [GAP 3 FIX] Ditambahkan method yoloLog() untuk menerima data dari
+ * yolo_activity_tracker.py yang mengirimkan data aktivitas ruang bersama.
+ */
+
 class CctvController extends Controller
 {
     public function logActivity(Request $request)
@@ -80,7 +87,68 @@ class CctvController extends Controller
         $cameras = CctvCamera::where('is_active', true)->get();
         return response()->json([
             'success' => true,
-            'data' => $cameras
+            'data'    => $cameras
+        ]);
+    }
+
+    /**
+     * [GAP 3 FIX] yoloLog - Menerima data aktivitas dari YOLOv8 Activity Tracker.
+     *
+     * Payload yang diterima dari yolo_activity_tracker.py:
+     *   kamera_id       : ID kamera sumber (string)
+     *   jenis_aktivitas : 'object_tracked'
+     *   keterangan      : JSON string berisi total_anak, status_ruangan, detail_aktivitas
+     *
+     * Metode ini menggunakan endpoint yang SAMA dengan logActivity() (/api/cctv/activity).
+     * Data YOLO sudah di-format ulang di Python agar cocok dengan skema validasi ini.
+     * Method ini disediakan sebagai alias eksplisit untuk endpoint /api/cctv/yolo-log
+     * sehingga bisa dibedakan di log server.
+     */
+    public function yoloLog(Request $request)
+    {
+        $validated = $request->validate([
+            'kamera_id'              => 'required|string|max:50',
+            'total_anak_terdeteksi'  => 'required|integer|min:0',
+            'status_ruangan'         => 'required|string|max:100',
+            'detail_aktivitas'       => 'required|array',
+        ]);
+
+        $kamera_id = $validated['kamera_id'];
+
+        // Pastikan kamera ID ada di database, buat otomatis jika belum ada
+        // (agar tidak gagal karena foreign key constraint saat pertama kali jalan)
+        CctvCamera::firstOrCreate(
+            ['kamera_id' => $kamera_id],
+            [
+                'nama'      => 'Ruang Bersama (YOLO Auto)',
+                'lokasi'    => 'Ruang Bersama',
+                'is_active' => true,
+                'is_online' => true,
+            ]
+        );
+
+        $log = CctvActivityLog::create([
+            'id'              => (string) Str::uuid(),
+            'kamera_id'       => $kamera_id,
+            'jenis_aktivitas' => 'object_tracked',
+            'keterangan'      => json_encode([
+                'total_anak'      => $validated['total_anak_terdeteksi'],
+                'status_ruangan'  => $validated['status_ruangan'],
+                'detail'          => $validated['detail_aktivitas'],
+                'timestamp'       => now()->toDateTimeString(),
+            ], JSON_UNESCAPED_UNICODE),
+        ]);
+
+        // Perbarui status online kamera
+        CctvCamera::where('kamera_id', $kamera_id)->update([
+            'is_online' => true,
+            'last_ping' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'YOLO activity log saved.',
+            'data'    => $log
         ]);
     }
 }

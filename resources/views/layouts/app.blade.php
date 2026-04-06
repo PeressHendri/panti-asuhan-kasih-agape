@@ -308,19 +308,18 @@
 
                 <a class="nav-link {{ request()->routeIs('admin.attendance') ? 'active' : '' }}"
                     href="{{ route('admin.attendance') }}"><i class="fas fa-clipboard-check"></i><span>Kehadiran</span></a>
-                <a class="nav-link {{ request()->routeIs('dashboard.face-log') ? 'active' : '' }}"
-                    href="{{ route('dashboard.face-log') }}">
-                    <i class="fas fa-eye"></i><span>Face Recognition</span>
-                    @if($todayUnknown > 0)
-                        <span class="badge bg-danger ms-2 pulse" style="font-size:0.75rem; border-radius:50%;">{{ $todayUnknown }}</span>
-                    @endif
-                </a>
                 <a class="nav-link {{ request()->routeIs('dashboard.cctv') ? 'active' : '' }}"
                     href="{{ route('dashboard.cctv') }}"><i class="fas fa-video"></i><span>Monitoring CCTV</span></a>
                 <a class="nav-link {{ request()->routeIs('admin.gallery.*') ? 'active' : '' }}"
                     href="{{ route('admin.gallery.index') }}"><i class="fas fa-images"></i><span>Galeri</span></a>
+                <a class="nav-link {{ request()->routeIs('admin.donasi') ? 'active' : '' }}"
+                    href="{{ route('admin.donasi') }}"><i class="fas fa-hand-holding-usd"></i><span>Donasi
+                    @php $pendingDonasi = \App\Models\Donation::where('status','pending')->count(); @endphp
+                    @if($pendingDonasi > 0)<span class="badge bg-danger ms-1" style="font-size:10px;">{{ $pendingDonasi }}</span>@endif
+                    </span></a>
                 <a class="nav-link {{ request()->routeIs('admin.profile.edit') ? 'active' : '' }}"
                     href="{{ route('admin.profile.edit') }}"><i class="fas fa-user-cog"></i><span>Profil Saya</span></a>
+
             @elseif($role === 'pengasuh')
                 <a class="nav-link {{ request()->routeIs('pengasuh.dashboard') ? 'active' : '' }}"
                     href="{{ route('pengasuh.dashboard') }}"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
@@ -330,13 +329,6 @@
                 <a class="nav-link {{ request()->routeIs('pengasuh.attendance') ? 'active' : '' }}"
                     href="{{ route('pengasuh.attendance') }}"><i
                         class="fas fa-clipboard-check"></i><span>Kehadiran</span></a>
-                <a class="nav-link {{ request()->routeIs('dashboard.face-log') ? 'active' : '' }}"
-                    href="{{ route('dashboard.face-log') }}">
-                    <i class="fas fa-eye"></i><span>Face Recognition</span>
-                    @if($todayUnknown > 0)
-                        <span class="badge bg-danger ms-2 pulse" style="font-size:0.75rem; border-radius:50%;">{{ $todayUnknown }}</span>
-                    @endif
-                </a>
                 <a class="nav-link {{ request()->routeIs('dashboard.cctv') ? 'active' : '' }}"
                     href="{{ route('dashboard.cctv') }}"><i class="fas fa-video"></i><span>Monitoring CCTV</span></a>
                 <a class="nav-link {{ request()->routeIs('pengasuh.gallery.*') ? 'active' : '' }}"
@@ -353,13 +345,6 @@
                 <a class="nav-link {{ request()->routeIs('sponsor.attendance') ? 'active' : '' }}"
                     href="{{ route('sponsor.attendance') }}"><i class="fas fa-calendar-check"></i><span>Kehadiran
                         Anak</span></a>
-                <a class="nav-link {{ request()->routeIs('dashboard.face-log') ? 'active' : '' }}"
-                    href="{{ route('dashboard.face-log') }}">
-                    <i class="fas fa-eye"></i><span>Face Recognition</span>
-                    @if($todayUnknown > 0)
-                        <span class="badge bg-danger ms-2 pulse" style="font-size:0.75rem; border-radius:50%;">{{ $todayUnknown }}</span>
-                    @endif
-                </a>
                 <a class="nav-link {{ request()->routeIs('dashboard.cctv') ? 'active' : '' }}"
                     href="{{ route('dashboard.cctv') }}"><i class="fas fa-video"></i><span>Monitoring CCTV</span></a>
                 <a class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}"

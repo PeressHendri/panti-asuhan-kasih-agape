@@ -8,9 +8,10 @@ use App\Models\Attendance;
 use App\Models\Child;
 use App\Models\User;
 use App\Models\ActivityLog;
+use App\Models\Donation;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage; // Untuk menghapus file foto
-use Illuminate\Support\Facades\Log; // Untuk debugging
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class AdminController extends Controller
@@ -33,7 +34,31 @@ class AdminController extends Controller
 
         $activities = ActivityLog::with('user')->latest()->take(5)->get();
 
-        return view('admin.dashboard', compact('stats', 'activities'));
+        // Data grafik 7 hari kehadiran
+        $chartLabels = [];
+        $chartHadir  = [];
+        $chartAlpa   = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $day = Carbon::today()->subDays($i);
+            $chartLabels[] = $day->translatedFormat('D, d M');
+            $chartHadir[]  = Attendance::whereDate('date', $day)->where('status', 'hadir')->count();
+            $chartAlpa[]   = Attendance::whereDate('date', $day)->whereIn('status', ['alpa', 'alfa'])->count();
+        }
+
+        // Statistik kehadiran hari ini
+        $todayHadir = Attendance::whereDate('date', Carbon::today())->where('status', 'hadir')->count();
+        $todayAlpa  = Attendance::whereDate('date', Carbon::today())->whereNotIn('status', ['hadir'])->count();
+        $totalAnak  = Child::count();
+
+        // Unknown face total hari ini
+        $unknownToday = \App\Models\FaceRecognitionLog::whereDate('waktu_deteksi', Carbon::today())
+            ->where('status', 'tidak_dikenal')->count();
+
+        return view('admin.dashboard', compact(
+            'stats', 'activities',
+            'chartLabels', 'chartHadir', 'chartAlpa',
+            'todayHadir', 'todayAlpa', 'totalAnak', 'unknownToday'
+        ));
     }
 
     public function profilePanti(Request $request)
@@ -190,28 +215,78 @@ class AdminController extends Controller
     {
         ActivityLog::create([
             'user_id' => Auth::id(),
-            'activity' => 'Melihat Data Kehadiran Anak',
+            'activity' => 'Melihat Dashboard Kehadiran Terpadu',
             'status' => 'Berhasil'
         ]);
 
-        $query = Attendance::with('child')
-            ->orderBy('date', 'desc'); // ✅ Sekarang akan berfungsi
+        $date = $request->input('date', Carbon::today()->toDateString());
+        $range = $request->input('range', 'today'); // 'today', 'week', 'month', 'custom'
 
-        if ($request->has('date')) {
-            $query->whereDate('date', $request->date); // ✅ Sekarang akan berfungsi
+        // 1. Fetch Official Attendance
+        $attendancesQuery = Attendance::with('child')->orderBy('date', 'desc')->orderBy('check_in', 'desc');
+
+        // Apply Range Filter
+        if ($range === 'week') {
+            $startDate = Carbon::today()->subDays(7);
+            $attendancesQuery->whereDate('date', '>=', $startDate);
+        } elseif ($range === 'month') {
+            $startDate = Carbon::today()->subDays(30);
+            $attendancesQuery->whereDate('date', '>=', $startDate);
+        } elseif ($range === 'custom') {
+            $attendancesQuery->whereRaw('DATE(date) = ?', [$date]);
         } else {
-            $query->whereDate('date', Carbon::today()); // ✅ Sekarang akan berfungsi
+            // today (default)
+            $attendancesQuery->whereRaw('DATE(date) = ?', [Carbon::today()->toDateString()]);
         }
 
-        if ($request->has('status') && $request->status != '') {
-            $query->where('status', $request->status);
+        if ($request->filled('status')) {
+            $attendancesQuery->where('status', $request->status);
+        }
+        $attendances = $attendancesQuery->get();
+
+        // 2. Fetch Face Recognition Logs (History)
+        $faceLogsQuery = \App\Models\FaceRecognitionLog::with('child');
+
+        if ($range === 'week') {
+            $faceLogsQuery->whereDate('waktu_deteksi', '>=', $startDate);
+        } elseif ($range === 'month') {
+            $faceLogsQuery->whereDate('waktu_deteksi', '>=', $startDate);
+        } elseif ($range === 'custom') {
+            $faceLogsQuery->whereDate('waktu_deteksi', $date);
+        } else {
+            $faceLogsQuery->whereDate('waktu_deteksi', Carbon::today()->toDateString());
+        }
+        
+        if ($request->filled('status_ai')) {
+            $faceLogsQuery->where('status', $request->status_ai);
+        }
+        $faceLogs = $faceLogsQuery->latest('waktu_deteksi')->paginate(50, ['*'], 'face_page');
+
+        // Prepare raw query components for stats
+        $baseFaceLogQuery = \App\Models\FaceRecognitionLog::query();
+        if ($range === 'week' || $range === 'month') {
+            $baseFaceLogQuery->whereDate('waktu_deteksi', '>=', $startDate);
+        } elseif ($range === 'custom') {
+            $baseFaceLogQuery->whereDate('waktu_deteksi', $date);
+        } else {
+            $baseFaceLogQuery->whereDate('waktu_deteksi', Carbon::today()->toDateString());
         }
 
-        $attendances = $query->paginate(10);
-        $children = Child::all();
+        // 3. Simple Stats
+        $stats = [
+            'total_attendance' => $attendances->count(),
+            'total_ai_logs' => (clone $baseFaceLogQuery)->count(),
+            'unknown_faces' => (clone $baseFaceLogQuery)->where('status', 'tidak_dikenal')->count(),
+            'check_in_ai' => (clone $baseFaceLogQuery)->where('status', 'check_in')->count(),
+        ];
 
-        Log::info('Attendance query result: ', ['attendances' => $attendances->items(), 'query' => $query->toSql()]);
-        return view('admin.attendance', compact('attendances', 'children'));
+        // 4. Raspberry Pi Status (Check last ping from any camera log)
+        $maxPing = \App\Models\FaceRecognitionLog::max('waktu_deteksi');
+        $isPiOnline = $maxPing && Carbon::parse($maxPing)->diffInMinutes(now()) <= 10; // 10 mins threshold
+
+        $children = Child::orderBy('nama')->get();
+
+        return view('admin.attendance', compact('attendances', 'faceLogs', 'stats', 'date', 'isPiOnline', 'children'));
     }
 
     public function checkIn(Request $request)
@@ -223,7 +298,7 @@ class AdminController extends Controller
         ]);
 
         $existing = Attendance::where('child_id', $request->child_id)
-            ->whereDate('date', $request->date)
+            ->whereRaw('DATE(date) = ?', [$request->date])
             ->first();
 
         if ($existing) {
@@ -249,6 +324,23 @@ class AdminController extends Controller
             ->with('success', 'Check-in berhasil dicatat');
     }
 
+    public function checkOut($id)
+    {
+        $attendance = Attendance::findOrFail($id);
+        $attendance->update([
+            'check_out' => now()
+        ]);
+
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'activity' => 'Check-out anak: ' . ($attendance->child->nama ?? 'Unknown'),
+            'status' => 'Berhasil'
+        ]);
+
+        return redirect()->back()
+            ->with('success', 'Check-out berhasil dicatat');
+    }
+
     public function manualAttendance(Request $request)
     {
         $request->validate([
@@ -267,7 +359,7 @@ class AdminController extends Controller
 
         // Cek apakah sudah ada data untuk anak dan tanggal yang sama
         $existing = Attendance::where('child_id', $request->child_id)
-            ->whereDate('date', $request->date)
+            ->whereRaw('DATE(date) = ?', [$request->date])
             ->first();
 
         if ($existing) {
@@ -318,23 +410,92 @@ class AdminController extends Controller
             ->with('success', 'Data kehadiran berhasil diperbarui');
     }
 
+    public function deleteAttendance($id)
+    {
+        $attendance = Attendance::findOrFail($id);
+        $nama = $attendance->child->nama ?? 'Unknown';
+        
+        $attendance->delete();
+
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'activity' => 'Menghapus data kehadiran: ' . $nama,
+            'status' => 'Berhasil'
+        ]);
+
+        return redirect()->back()->with('success', 'Data kehadiran berhasil dihapus.');
+    }
+
+    // =============================================
+    // EXPORT LAPORAN KEHADIRAN (CSV)
+    // =============================================
+    public function exportAttendance(Request $request)
+    {
+        $range  = $request->input('range', 'month');
+        $date   = $request->input('date', Carbon::today()->toDateString());
+
+        $query = Attendance::with('child')->orderBy('date', 'desc');
+        if ($range === 'week')  { $query->whereDate('date', '>=', Carbon::today()->subDays(7)); }
+        elseif ($range === 'month') { $query->whereDate('date', '>=', Carbon::today()->subDays(30)); }
+        elseif ($range === 'custom') { $query->whereRaw('DATE(date) = ?', [$date]); }
+        else { $query->whereDate('date', Carbon::today()); }
+
+        $attendances = $query->get();
+
+        $filename = 'laporan_kehadiran_' . $range . '_' . now()->format('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename={$filename}",
+        ];
+
+        $callback = function() use ($attendances) {
+            $file = fopen('php://output', 'w');
+            // BOM for Excel compatibility
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            fputcsv($file, ['No', 'Nama Anak', 'Tanggal', 'Check In', 'Check Out', 'Status', 'Keterangan', 'Algoritma']);
+            foreach ($attendances as $i => $a) {
+                fputcsv($file, [
+                    $i + 1,
+                    $a->child->nama ?? '-',
+                    Carbon::parse($a->date)->format('d/m/Y'),
+                    $a->check_in  ? Carbon::parse($a->check_in)->format('H:i:s')  : '-',
+                    $a->check_out ? Carbon::parse($a->check_out)->format('H:i:s') : '-',
+                    strtoupper($a->status),
+                    $a->note ?? '-',
+                    strtoupper($a->algoritma ?? 'manual'),
+                ]);
+            }
+            fclose($file);
+        };
+
+        ActivityLog::create([
+            'user_id'  => Auth::id(),
+            'activity' => 'Export Laporan Kehadiran (' . $range . ')',
+            'status'   => 'Berhasil'
+        ]);
+
+        return response()->stream($callback, 200, $headers);
+    }
+
     public function editProfile()
     {
         $user = auth()->user();
-        return view('admin.edit-profile', compact('user'));
+        $confidenceThreshold = \Illuminate\Support\Facades\Cache::get('confidence_threshold', 75);
+        return view('admin.edit-profile', compact('user', 'confidenceThreshold'));
     }
 
     public function updateProfile(Request $request)
     {
         $user = auth()->user();
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'password' => 'nullable|confirmed|min:6',
-            'photo' => 'nullable|image|max:2048',
+            'name'                 => 'required|string|max:255',
+            'email'                => 'required|email|unique:users,email,' . $user->id,
+            'password'             => 'nullable|confirmed|min:6',
+            'photo'                => 'nullable|image|max:2048',
+            'confidence_threshold' => 'nullable|integer|min:40|max:99',
         ]);
 
-        $user->name = $request->name;
+        $user->name  = $request->name;
         $user->email = $request->email;
         if ($request->password) {
             $user->password = bcrypt($request->password);
@@ -347,12 +508,159 @@ class AdminController extends Controller
         }
         $user->save();
 
+        if ($request->has('enable_manual_attendance')) {
+            \Illuminate\Support\Facades\Cache::forever('enable_manual_attendance', true);
+        } else {
+            \Illuminate\Support\Facades\Cache::forever('enable_manual_attendance', false);
+        }
+
+        // Simpan Confidence Threshold
+        $threshold = $request->input('confidence_threshold', 75);
+        \Illuminate\Support\Facades\Cache::forever('confidence_threshold', (int) $threshold);
+
         ActivityLog::create([
-            'user_id' => $user->id,
+            'user_id'  => $user->id,
             'activity' => 'Mengedit Profil Admin',
-            'status' => 'Berhasil'
+            'status'   => 'Berhasil'
         ]);
 
         return redirect()->route('admin.dashboard')->with('success', 'Profil berhasil diperbarui!');
+    }
+
+    // Endpoint API-like untuk ambil threshold (dipanggil Python)
+    public function getSettings()
+    {
+        return response()->json([
+            'confidence_threshold'     => \Illuminate\Support\Facades\Cache::get('confidence_threshold', 75),
+            'enable_manual_attendance' => \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false),
+        ]);
+    }
+
+    // =============================================
+    // MANAJEMEN DONASI (Verifikasi)
+    // =============================================
+    public function donasiIndex(Request $request)
+    {
+        $status = $request->input('status', 'all');
+        $query = Donation::with(['child', 'user'])->orderBy('created_at', 'desc');
+        if ($status !== 'all') {
+            $query->where('status', $status);
+        }
+        $donations = $query->paginate(15);
+
+        $stats = [
+            'pending'   => Donation::where('status', 'pending')->count(),
+            'konfirmasi'=> Donation::where('status', 'konfirmasi')->count(),
+            'ditolak'   => Donation::where('status', 'ditolak')->count(),
+            'total'     => Donation::count(),
+        ];
+
+        return view('admin.donasi', compact('donations', 'stats', 'status'));
+    }
+
+    public function donasiVerify(Request $request, $id)
+    {
+        $request->validate([
+            'status'        => 'required|in:konfirmasi,ditolak',
+            'catatan_admin' => 'nullable|string|max:500',
+        ]);
+
+        $donation = Donation::findOrFail($id);
+        $donation->status        = $request->status;
+        $donation->catatan_admin = $request->catatan_admin;
+        $donation->save();
+
+        ActivityLog::create([
+            'user_id'  => Auth::id(),
+            'activity' => 'Verifikasi donasi dari ' . $donation->nama_donatur . ' → ' . strtoupper($request->status),
+            'status'   => 'Berhasil'
+        ]);
+
+        $msg = $request->status === 'konfirmasi' ? 'Donasi berhasil dikonfirmasi! ✅' : 'Donasi telah ditolak.';
+        return redirect()->back()->with('success', $msg);
+    }
+
+    // Sinkronisasi label_map.json → child_id database
+    public function syncLabelMap()
+    {
+        $labelMapPath = base_path('recognition_engine/models/lbph/label_map.json');
+
+        if (!file_exists($labelMapPath)) {
+            return response()->json(['error' => 'label_map.json tidak ditemukan!'], 404);
+        }
+
+        $rawMap = json_decode(file_get_contents($labelMapPath), true);
+        $synced = [];
+        $notFound = [];
+
+        foreach ($rawMap as $lbphIndex => $labelName) {
+            // Format nama di label_map: Nama_Lengkap_NIM  → pisahkan bagian terakhir (NIM/nomor)
+            // Coba cocokkan berdasarkan sebagian nama
+            $parts = explode('_', $labelName);
+            // Nama biasanya 3-4 kata, nomor di akhir
+            $nameParts = array_filter($parts, fn($p) => !is_numeric($p));
+            $searchName = implode(' ', array_slice(array_values($nameParts), 0, 3));
+
+            $child = Child::where('nama', 'like', '%' . $searchName . '%')->first();
+
+            if ($child) {
+                $synced[$lbphIndex] = [
+                    'label_name' => $labelName,
+                    'child_id'   => $child->id,
+                    'nama_db'    => $child->nama,
+                ];
+            } else {
+                $notFound[$lbphIndex] = $labelName;
+            }
+        }
+
+        return response()->json([
+            'message'   => 'Sinkronisasi selesai.',
+            'synced'    => $synced,
+            'not_found' => $notFound,
+            'total'     => count($rawMap),
+            'matched'   => count($synced),
+        ]);
+    }
+
+    // =============================================
+    // CI/CD DEPLOYMENT (PULL DARI GITHUB)
+    // =============================================
+    public function deploy(Request $request)
+    {
+        try {
+            $basePath = base_path();
+            $commands = [
+                "git pull origin main 2>&1",
+                "composer install --no-interaction --prefer-dist --optimize-autoloader 2>&1",
+                "php artisan optimize:clear 2>&1",
+                "php artisan migrate --force 2>&1"
+            ];
+            
+            $output = [];
+            foreach ($commands as $command) {
+                $output[] = shell_exec("cd {$basePath} && {$command}");
+            }
+            
+            \Illuminate\Support\Facades\Log::info("Deployment dijalankan oleh User ID: " . Auth::id(), $output);
+
+            ActivityLog::create([
+                'user_id'  => Auth::id(),
+                'activity' => 'Menarik Pembaruan Sistem (CI/CD Deployment)',
+                'status'   => 'Berhasil'
+            ]);
+
+            return redirect()->back()->with('success', 'Duar! 💥 Kode web berhasil ter-update dari GitHub dan bersih dari cache!');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Deployment gagal: " . $e->getMessage());
+            
+            ActivityLog::create([
+                'user_id'  => Auth::id(),
+                'activity' => 'Gagal Menarik Pembaruan Sistem',
+                'status'   => 'Gagal'
+            ]);
+
+            return redirect()->back()->with('error', 'Gagal menarik pembaruan: ' . $e->getMessage());
+        }
     }
 }
