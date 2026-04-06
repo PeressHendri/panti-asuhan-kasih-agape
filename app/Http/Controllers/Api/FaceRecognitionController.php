@@ -81,13 +81,25 @@ class FaceRecognitionController extends Controller
         }
 
         if ($validated['status'] === 'tidak_dikenal') {
-            // Bisa tambah notifikasi ke admin di sini sesuai requirement
-            // menggunakan notification system laravel
+            // Notifikasi WebSocket ke Web Dashboard secara Real-Time
+            event(new \App\Events\CctvMotionDetected([
+                'lokasi' => $kamera_id,
+                'status' => 'Penyusup / Wajah Tidak Dikenal'
+            ]));
+        } else {
+            // Jika anak dikenali, kirim siapa yang masuk
+            $anak = Child::find($validated['child_id']);
+            $namaAnak = $anak ? $anak->name : 'Siswa';
+            
+            event(new \App\Events\CctvMotionDetected([
+                'lokasi' => $kamera_id,
+                'status' => "Absen Wajah: {$namaAnak} ({$validated['status']})"
+            ]));
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Face recognition log saved.',
+            'message' => 'Face recognition log saved and event broadcasted.',
             'data' => $log
         ]);
     }
