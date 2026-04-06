@@ -16,12 +16,22 @@
             </div>
             <div class="col-12 col-md-6">
                 <label class="dashboard-label">Password Baru (opsional)</label>
-                <input type="password" name="password" class="form-control">
+                <div class="input-group">
+                    <input type="password" name="password" id="password" class="form-control">
+                    <button class="btn btn-outline-secondary toggle-password" type="button" data-target="password">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
                 <small class="dashboard-label">Kosongkan jika tidak ingin ganti password</small>
             </div>
             <div class="col-12 col-md-6">
                 <label class="dashboard-label">Konfirmasi Password Baru</label>
-                <input type="password" name="password_confirmation" class="form-control">
+                <div class="input-group">
+                    <input type="password" name="password_confirmation" id="password_confirmation" class="form-control">
+                    <button class="btn btn-outline-secondary toggle-password" type="button" data-target="password_confirmation">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
             </div>
             <div class="col-12">
                 <label class="dashboard-label" style="color: var(--text-color);">Foto Profil</label>
@@ -118,6 +128,23 @@
                 document.getElementById('new-photo-preview-container').style.display = 'block';
             }
         }
+
+        document.querySelectorAll('.toggle-password').forEach(button => {
+            button.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const targetInput = document.getElementById(targetId);
+                const icon = this.querySelector('i');
+                if (targetInput.type === 'password') {
+                    targetInput.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    targetInput.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+        });
     </script>
     @if(session('success'))
         <script>

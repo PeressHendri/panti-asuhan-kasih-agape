@@ -335,6 +335,8 @@
                     href="{{ route('dashboard.cctv') }}"><i class="fas fa-video"></i><span>Monitoring CCTV</span></a>
                 <a class="nav-link {{ request()->routeIs('pengasuh.gallery.*') ? 'active' : '' }}"
                     href="{{ route('pengasuh.gallery.index') }}"><i class="fas fa-images"></i><span>Galeri</span></a>
+                <a class="nav-link {{ request()->routeIs('admin.donasi') ? 'active' : '' }}"
+                    href="{{ route('admin.donasi') }}"><i class="fas fa-hand-holding-usd"></i><span>Donasi</span></a>
                 <a class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}"
                     href="{{ route('profile.edit') }}"><i class="fas fa-user"></i><span>Profil Saya</span></a>
             @elseif($role === 'sponsor')

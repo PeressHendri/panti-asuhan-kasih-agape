@@ -54,10 +54,14 @@ class AdminController extends Controller
         $unknownToday = \App\Models\FaceRecognitionLog::whereDate('waktu_deteksi', Carbon::today())
             ->where('status', 'tidak_dikenal')->count();
 
+        // Raspberry Pi Status (Check last ping from any camera log)
+        $maxPing = \App\Models\FaceRecognitionLog::max('waktu_deteksi');
+        $isPiOnline = $maxPing && Carbon::parse($maxPing)->diffInMinutes(now()) <= 10;
+
         return view('admin.dashboard', compact(
             'stats', 'activities',
             'chartLabels', 'chartHadir', 'chartAlpa',
-            'todayHadir', 'todayAlpa', 'totalAnak', 'unknownToday'
+            'todayHadir', 'todayAlpa', 'totalAnak', 'unknownToday', 'isPiOnline'
         ));
     }
 

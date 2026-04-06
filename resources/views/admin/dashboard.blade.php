@@ -118,7 +118,15 @@
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Status Server <span class="badge bg-success">Online</span>
+                            Status Server Web <span class="badge bg-success">Online</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            AI CCTV (Raspberry Pi)
+                            @if($isPiOnline)
+                                <span class="badge bg-success">Online</span>
+                            @else
+                                <span class="badge bg-danger">Offline</span>
+                            @endif
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             Database <span class="badge bg-success">Terhubung</span>

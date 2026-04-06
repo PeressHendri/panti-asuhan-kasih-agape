@@ -79,6 +79,9 @@ Route::group([], function () {
         Route::get('/kehadiran/export', [AdminController::class, 'exportAttendance'])->name('attendance.export');
 
         Route::resource('gallery', \App\Http\Controllers\GalleryController::class);
+
+        // Donasi Management (Viewable by admin & pengasuh)
+        Route::get('/donasi', [AdminController::class, 'donasiIndex'])->name('donasi');
     });
 
 
@@ -144,8 +147,7 @@ Route::group([], function () {
 
         Route::delete('/admin/kehadiran/{id}', [AdminController::class, 'deleteAttendance'])->name('admin.attendance.delete');
 
-        // Donasi Management
-        Route::get('/admin/donasi', [AdminController::class, 'donasiIndex'])->name('admin.donasi');
+        // Donasi Management (Action only for admin)
         Route::post('/admin/donasi/{id}/verify', [AdminController::class, 'donasiVerify'])->name('admin.donasi.verify');
 
         // Sinkronisasi label_map

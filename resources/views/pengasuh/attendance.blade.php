@@ -175,6 +175,7 @@
             </div>
 
             <div class="d-flex gap-2 flex-wrap">
+                @if(\Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false))
                 {{-- Quick Check-In --}}
                 <form action="{{ route('pengasuh.attendance.check-in') }}" method="POST" class="quick-form">
                     @csrf
@@ -201,6 +202,7 @@
                         style="font-weight:700;font-size:.8rem;">
                     <i class="fas fa-pen me-1"></i>Input Manual
                 </button>
+                @endif
             </div>
         </div>
 
@@ -239,12 +241,16 @@
                             @if($att->check_out)
                                 <span class="time-badge">{{ \Carbon\Carbon::parse($att->check_out)->format('H:i') }}</span>
                             @elseif($att->status === 'hadir' && $att->check_in)
-                                <form action="{{ route('pengasuh.attendance.check-out', $att->id) }}" method="POST" class="d-inline m-0">
-                                    @csrf
-                                    <button type="submit" class="btn-checkout">
-                                        <i class="fas fa-sign-out-alt me-1"></i>Check-Out
-                                    </button>
-                                </form>
+                                @if(\Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false))
+                                    <form action="{{ route('pengasuh.attendance.check-out', $att->id) }}" method="POST" class="d-inline m-0">
+                                        @csrf
+                                        <button type="submit" class="btn-checkout">
+                                            <i class="fas fa-sign-out-alt me-1"></i>Check-Out
+                                        </button>
+                                    </form>
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
                             @else
                                 <span class="text-muted">-</span>
                             @endif
@@ -274,11 +280,15 @@
                             <span class="text-muted" style="font-size:.82rem;">{{ $att->note ?? '-' }}</span>
                         </td>
                         <td>
-                            <button class="btn-edit"
-                                    data-bs-toggle="modal" data-bs-target="#modalEdit"
-                                    onclick="prefillEdit({{ $att->id }}, '{{ $att->status }}', '{{ $att->note ?? '' }}', '{{ $att->child->nama ?? '' }}')">
-                                <i class="fas fa-edit"></i>
-                            </button>
+                            @if(\Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false))
+                                <button class="btn-edit"
+                                        data-bs-toggle="modal" data-bs-target="#modalEdit"
+                                        onclick="prefillEdit({{ $att->id }}, '{{ $att->status }}', '{{ $att->note ?? '' }}', '{{ $att->child->nama ?? '' }}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
                         </td>
                     </tr>
                     @empty
