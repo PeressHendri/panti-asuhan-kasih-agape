@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Panti Asuhan Kasih Agape - Mengasuh, Mendidik & Membangun Generasi Muda yang Berintegritas dan Takut Akan Tuhan. Berlokasi di Tangerang, melayani dengan sepenuh hati sejak tahun 2000.">
+    <meta name="description" content="Panti Asuhan Kasih Agape - Mengasuh, Mendidik & Membangun Generasi Muda yang Berintegritas dan Takut Akan Tuhan. Berlokasi di Surabaya, melayani dengan sepenuh hati sejak tahun 2000.">
     <meta name="keywords" content="panti asuhan, kasih agape, donasi panti, bantuan anak yatim, yayasan kasih agape, panti asuhan tangerang">
     <meta name="author" content="Panti Asuhan Kasih Agape">
     
@@ -15,6 +15,31 @@
     <meta property="og:description" content="Bergabunglah bersama kami dalam memberikan masa depan yang cerah bagi anak-anak asuh di Panti Asuhan Kasih Agape.">
     
     <title>Panti Asuhan Kasih Agape | Diberkati Untuk Menjadi Berkat</title>
+    
+    <!-- Schema Markup (Structured Data) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "NGO",
+      "name": "Panti Asuhan Kasih Agape",
+      "url": "https://pantiasuhankasihagape.id/",
+      "logo": "https://pantiasuhankasihagape.id/assets/img/logoagape.png",
+      "description": "Panti Asuhan Kasih Agape adalah yayasan sosial yang menaungi dan mendidik anak-anak kurang mampu di Surabaya.",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Jl. Pakis Gunung I / 133 B",
+        "addressLocality": "Surabaya",
+        "addressRegion": "Jawa Timur",
+        "postalCode": "60256",
+        "addressCountry": "ID"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+62-81231663336",
+        "contactType": "customer support"
+      }
+    }
+    </script>
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
