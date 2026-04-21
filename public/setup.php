@@ -8,8 +8,24 @@ header('Pragma: no-cache');
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// --- CONFIGURATION ---
-define('ACCESS_PASSWORD', 'agape2026');
+// --- BASE PATH AWAL (perlu untuk baca .env) ---
+$_BASE_PATH_EARLY = dirname(__DIR__);
+
+// --- BACA PASSWORD DARI .env (bukan hardcode di sini!) ---
+// Tambahkan di .env server: SETUP_PANEL_PASSWORD=kata_sandi_rahasia_kamu
+function readEnvPassword(string $basePath): string {
+    $envFile = $basePath . '/.env';
+    if (!file_exists($envFile)) return '';
+    foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        $parts = explode('=', $line, 2);
+        if (count($parts) === 2 && trim($parts[0]) === 'SETUP_PANEL_PASSWORD') {
+            return trim($parts[1], " \t\"'");
+        }
+    }
+    return ''; // Kosong = akses ditolak
+}
+define('ACCESS_PASSWORD', readEnvPassword($_BASE_PATH_EARLY));
 
 // --- BASE PATH: Gunakan __DIR__ agar selalu akurat di server manapun ---
 // setup.php ada di public/, jadi base Laravel = satu level di atas
@@ -176,7 +192,8 @@ if ($isAuthenticated) {
     } elseif ($action == 'fix_perms') {
         $output .= "🔧 Memperbaiki Izin Folder...\n" . str_repeat("─", 50) . "\n";
         $output .= runCmd("chmod -R 775 storage bootstrap/cache") . "\n";
-        $output .= runCmd("chown -R " . posix_getpwuid(posix_geteuid())['name'] . ":www-data storage bootstrap/cache") . "\n";
+        $currentUser = trim(shell_exec('whoami') ?? 'www-data');
+        $output .= runCmd("chown -R " . escapeshellarg($currentUser) . ":www-data storage bootstrap/cache") . "\n";
         $output .= "✅ Selesai.\n";
     } elseif ($action == 'view_logs') {
         $logPath = BASE_PATH . '/storage/logs/laravel.log';
