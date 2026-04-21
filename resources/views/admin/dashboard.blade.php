@@ -49,53 +49,58 @@
         gap: 10px;
     }
 
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    @media (max-width: 1200px) {
+        .stats-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 768px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    }
+    @media (max-width: 480px) {
+        .stats-grid { grid-template-columns: 1fr; }
+    }
 </style>
 
-<div class="row g-4 mb-4">
-    <div class="col-md-2-4 col-sm-6" style="flex: 0 0 20%; max-width: 20%;">
-        <div class="card stat-card text-center">
-            <div class="stat-icon-wrapper bg-indigo">
-                <i class="fas fa-child"></i>
-            </div>
-            <h3 class="fw-bold mb-0">{{ $stats['total_children'] ?? 0 }}</h3>
-            <p class="text-muted small mb-0">Total Anak Panti</p>
+<div class="stats-grid">
+    <div class="card stat-card text-center">
+        <div class="stat-icon-wrapper bg-indigo">
+            <i class="fas fa-child"></i>
         </div>
+        <h3 class="fw-bold mb-0">{{ $stats['total_children'] ?? 0 }}</h3>
+        <p class="text-muted small mb-0">Total Anak Panti</p>
     </div>
-    <div class="col-md-2-4 col-sm-6" style="flex: 0 0 20%; max-width: 20%;">
-        <div class="card stat-card text-center">
-            <div class="stat-icon-wrapper bg-emerald">
-                <i class="fas fa-users"></i>
-            </div>
-            <h3 class="fw-bold mb-0">{{ $stats['total_users'] ?? 0 }}</h3>
-            <p class="text-muted small mb-0">Total Pengguna</p>
+    <div class="card stat-card text-center">
+        <div class="stat-icon-wrapper bg-emerald">
+            <i class="fas fa-users"></i>
         </div>
+        <h3 class="fw-bold mb-0">{{ $stats['total_users'] ?? 0 }}</h3>
+        <p class="text-muted small mb-0">Total Pengguna</p>
     </div>
-    <div class="col-md-2-4 col-sm-6" style="flex: 0 0 20%; max-width: 20%;">
-        <div class="card stat-card text-center">
-            <div class="stat-icon-wrapper bg-pink">
-                <i class="fas fa-user-shield"></i>
-            </div>
-            <h3 class="fw-bold mb-0">{{ $stats['total_admin'] ?? 0 }}</h3>
-            <p class="text-muted small mb-0">Admin</p>
+    <div class="card stat-card text-center">
+        <div class="stat-icon-wrapper bg-pink">
+            <i class="fas fa-user-shield"></i>
         </div>
+        <h3 class="fw-bold mb-0">{{ $stats['total_admin'] ?? 0 }}</h3>
+        <p class="text-muted small mb-0">Admin</p>
     </div>
-    <div class="col-md-2-4 col-sm-6" style="flex: 0 0 20%; max-width: 20%;">
-        <div class="card stat-card text-center">
-            <div class="stat-icon-wrapper bg-sky">
-                <i class="fas fa-user-tie"></i>
-            </div>
-            <h3 class="fw-bold mb-0">{{ $stats['total_pengasuh'] ?? 0 }}</h3>
-            <p class="text-muted small mb-0">Pengasuh</p>
+    <div class="card stat-card text-center">
+        <div class="stat-icon-wrapper bg-sky">
+            <i class="fas fa-user-tie"></i>
         </div>
+        <h3 class="fw-bold mb-0">{{ $stats['total_pengasuh'] ?? 0 }}</h3>
+        <p class="text-muted small mb-0">Pengasuh</p>
     </div>
-    <div class="col-md-2-4 col-sm-6" style="flex: 0 0 20%; max-width: 20%;">
-        <div class="card stat-card text-center">
-            <div class="stat-icon-wrapper bg-rose">
-                <i class="fas fa-hand-holding-heart"></i>
-            </div>
-            <h3 class="fw-bold mb-0">{{ $stats['total_sponsor'] ?? 0 }}</h3>
-            <p class="text-muted small mb-0">Sponsor</p>
+    <div class="card stat-card text-center">
+        <div class="stat-icon-wrapper bg-rose">
+            <i class="fas fa-hand-holding-heart"></i>
         </div>
+        <h3 class="fw-bold mb-0">{{ $stats['total_sponsor'] ?? 0 }}</h3>
+        <p class="text-muted small mb-0">Sponsor</p>
     </div>
 </div>
 

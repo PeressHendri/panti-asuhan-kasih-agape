@@ -34,7 +34,7 @@
 
     .cam-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 350px), 1fr));
         gap: 16px;
     }
 
@@ -59,8 +59,8 @@
     }
     .cam-name { color: #fff; font-weight: 700; font-size: .88rem; margin: 0; }
     .cam-badge { font-size: .68rem; font-weight: 700; padding: 3px 10px; border-radius: 50px; }
-    .cam-badge.online  { background: rgba(34,197,94,.2);  color: var(--nvr-green); border: 1px solid rgba(34,197,94,.4); }
-    .cam-badge.offline { background: rgba(100,116,139,.2); color: #94a3b8; border: 1px solid rgba(100,116,139,.3); }
+    .cam-badge.online  { background: rgba(34,197,94,.2);  color: var(--nvr-green); border: 1px solid rgba(34,197,94,.4); display: inline-block; }
+    .cam-badge.offline { display: none !important; }
     .cam-badge.pulse { animation: pulseBadge 1.5s infinite; }
 
     @keyframes pulseBadge {
@@ -74,23 +74,10 @@
         position: relative;
         background: #000;
         display: flex; align-items: center; justify-content: center;
-        cursor: zoom-in;
         transition: opacity .2s;
     }
-    .cam-feed:hover { opacity: 0.9; }
-    .cam-feed::after {
-        content: '\f00e';
-        font-family: 'Font Awesome 5 Free';
-        font-weight: 900;
-        position: absolute;
-        top: 50%; left: 50%;
-        transform: translate(-50%, -50%);
-        color: #fff; font-size: 2rem;
-        opacity: 0; transition: opacity .2s;
-        pointer-events: none;
-        text-shadow: 0 0 10px rgba(0,0,0,0.5);
-    }
-    .cam-feed:hover::after { opacity: 0.6; }
+    .cam-feed:hover { opacity: 0.95; }
+    /* Ikon zoom tidak lagi via ::after — sudah pakai tombol dedicated */
 
     .cam-feed video, .cam-feed img { width: 100%; height: 100%; object-fit: cover; }
 
@@ -291,8 +278,28 @@
     .form-control:focus, .form-select:focus { border-color: var(--nvr-accent); box-shadow: 0 0 0 3px rgba(59,130,246,.1); outline:none; }
 
     /* ─── Responsive ─────────────────────── */
+    @media (max-width: 1200px) {
+        .cam-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+    }
     @media (max-width: 992px) {
         .nvr-bottom-panels { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+        .nvr-wrapper { min-height: auto; gap: 12px; }
+        .nvr-topbar { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+        .cam-grid { grid-template-columns: 1fr; gap: 12px; }
+        .cam-card { border-radius: 12px; }
+        .cam-empty { padding: 40px 15px; }
+        
+        .panel-card { border-radius: 12px; }
+        .panel-header { padding: 12px 14px; }
+        .face-log-item, .act-log-item { padding: 8px 12px; }
+    }
+    @media (max-width: 480px) {
+        .cam-header { flex-direction: column; align-items: flex-start; gap: 6px; }
+        .cam-badge { align-self: flex-start; }
+        .cam-footer { flex-direction: column; align-items: flex-start; gap: 8px; }
+        .cam-actions { width: 100%; justify-content: flex-end; }
     }
     @media print { .cam-actions, .nvr-topbar .btn-nvr-add, .nvr-topbar button { display:none !important; } }
 
@@ -303,15 +310,28 @@
     #zoomCamContainer .cam-offline-overlay { color: #94a3b8; }
     #zoomCamContainer .cam-offline-overlay i { font-size: 4rem; margin-bottom: 20px; }
 
-    /* Fix modal tertutup sidebar */
+    /* Fix modal tertutup sidebar — hanya untuk zoom modal */
     #modalZoomCam { z-index: 9999 !important; }
-    .modal-backdrop { z-index: 9998 !important; background-color: rgba(0,0,0,0.85) !important; }
+    /* Backdrop khusus zoom modal — tidak ganggu modal lain */
+    #modalZoomCam ~ .modal-backdrop,
+    body.modal-open #modalZoomCam + .modal-backdrop { background-color: rgba(0,0,0,0.85); }
 
     .modal-xl { max-width: 1000px; width: 95%; }
     #zoomCamContainer { 
-        max-height: calc(100vh - 200px); 
         width: 100%;
+        aspect-ratio: 16/9;
+        max-height: calc(100vh - 150px); 
         margin: 0 auto;
+        background: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    @media (max-width: 768px) {
+        .modal-xl { width: 100%; margin: 10px; }
+        .modal-body { padding: 12px; }
+        #zoomCamContainer { max-height: 50vh; }
     }
 </style>
 @endpush
@@ -385,10 +405,23 @@
                         </span>
                     </div>
 
-                    {{-- Feed --}}
-                    <div class="cam-feed" onclick="zoomCamera('{{ $camera->kamera_id }}', '{{ $camera->nama }}')">
-                        @if($camera->is_online && !empty($camera->hls_url))
-                            @if(str_contains($camera->hls_url, '/video_feed/') || str_contains($camera->hls_url, '.mjpg') || str_contains($camera->hls_url, ':5000') || str_contains($camera->hls_url, ':8080'))
+                    {{-- Feed (tanpa onclick karena iframe block event) --}}
+                    <div class="cam-feed">
+                        @if(!empty($camera->hls_url))
+                            {{-- Selalu coba tampilkan jika URL ada; is_online hanya untuk badge status --}}
+                            @if(str_contains($camera->hls_url, ':1984') && str_contains($camera->hls_url, 'webrtc'))
+                                {{-- go2rtc: WebRTC iframe --}}
+                                <iframe src="{{ $camera->hls_url }}"
+                                        style="width:100%;height:100%;border:none;background:#000;"
+                                        allow="autoplay; camera; microphone"
+                                        title="Stream {{ $camera->nama }}"></iframe>
+                            @elseif(str_contains($camera->hls_url, ':1984'))
+                                {{-- go2rtc: MJPEG stream --}}
+                                <img src="{{ $camera->hls_url }}"
+                                     alt="Stream {{ $camera->nama }}"
+                                     style="width:100%;height:100%;object-fit:cover;"
+                                     onerror="this.parentElement.innerHTML='<div class=\'cam-offline-overlay\'><i class=\'fas fa-plug\'></i><span>go2rtc tidak terhubung</span></div>'">
+                            @elseif(str_contains($camera->hls_url, '/video_feed/') || str_contains($camera->hls_url, '.mjpg') || str_contains($camera->hls_url, ':5000') || str_contains($camera->hls_url, ':8080'))
                                 {{-- MJPEG Stream (Python Flask / Raspberry Pi) --}}
                                 <img src="{{ $camera->hls_url }}"
                                      alt="Stream {{ $camera->nama }}"
@@ -436,6 +469,12 @@
                             </span>
                         </span>
                         <div class="cam-actions">
+                            {{-- Tombol Zoom: di luar iframe, selalu bisa diklik --}}
+                            <button class="cam-btn" 
+                                    onclick="zoomCamera('{{ $camera->kamera_id }}', '{{ $camera->nama }}')"
+                                    title="Perbesar Layar">
+                                <i class="fas fa-expand"></i>
+                            </button>
                             @if(auth()->user()->role === 'admin')
                                 <button class="cam-btn"
                                         data-bs-toggle="modal"
@@ -855,29 +894,44 @@ function zoomCamera(id, name) {
     title.textContent = `${name}`;
     container.innerHTML = '';
     
-    // Kloning seluruh isi kontainer (untuk mendukung video, img, atau overlay pesan offline)
-    const cloned = originalFeed.cloneNode(true);
-    cloned.id = `zoom-inner-${id}`;
-    cloned.style.width = '100%';
-    cloned.style.height = '100%';
-    cloned.style.cursor = 'default';
-    cloned.onclick = null; // hapus event click pada kloningan
+    const iframe = originalFeed.querySelector('iframe');
+    const img    = originalFeed.querySelector('img');
+    const video  = originalFeed.querySelector('video');
     
-    // Pastikan video tetap berjalan jika itu HLS/Video
-    const video = cloned.querySelector('video');
-    if (video) {
-        // Video yang di-clone biasanya kehilangan session Playback-nya
-        // Maka kita arahkan SRC-nya ke video asli atau play ulang
-        const originalVideo = originalFeed.querySelector('video');
-        if (originalVideo) {
-            setTimeout(() => {
-                video.currentTime = originalVideo.currentTime;
-                video.play().catch(() => {});
-            }, 100);
-        }
+    if (iframe) {
+        // go2rtc WebRTC: buat iframe BARU — WebRTC tidak bisa diklon
+        const newIframe = document.createElement('iframe');
+        newIframe.src = iframe.src;
+        newIframe.style.cssText = 'width:100%;height:100%;border:none;background:#000;';
+        newIframe.allow = 'autoplay; camera; microphone';
+        container.appendChild(newIframe);
+
+    } else if (img) {
+        // MJPEG: img baru
+        const newImg = document.createElement('img');
+        newImg.src = img.src;
+        newImg.alt = img.alt || name;
+        newImg.style.cssText = 'width:100%;height:100%;object-fit:contain;';
+        newImg.onerror = () => {
+            container.innerHTML = '<div class="text-white-50 text-center p-4"><i class="fas fa-plug fa-2x mb-2"></i><br>Stream tidak tersedia</div>';
+        };
+        container.appendChild(newImg);
+
+    } else if (video) {
+        // HLS Video: clone dan play ulang
+        const newVideo = video.cloneNode(true);
+        newVideo.style.cssText = 'width:100%;height:100%;object-fit:contain;';
+        newVideo.autoplay = true;
+        newVideo.muted = true;
+        container.appendChild(newVideo);
+        setTimeout(() => {
+            newVideo.currentTime = video.currentTime;
+            newVideo.play().catch(() => {});
+        }, 100);
+
+    } else {
+        container.innerHTML = '<div class="text-white-50 text-center p-4"><i class="fas fa-video-slash fa-2x mb-2"></i><br>Kamera Offline</div>';
     }
-    
-    container.appendChild(cloned);
     
     const modal = new bootstrap.Modal(document.getElementById('modalZoomCam'));
     modal.show();

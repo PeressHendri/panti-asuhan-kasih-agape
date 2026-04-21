@@ -148,6 +148,15 @@
             font-weight: 500;
         }
 
+        /* Overlay backdrop untuk mobile */
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
         @media (max-width: 991.98px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -155,10 +164,16 @@
 
             .sidebar.mobile-show {
                 transform: translateX(0);
+                width: var(--sidebar-width) !important;
+                box-shadow: 4px 0 15px rgba(0,0,0,0.1);
             }
 
             .main-content {
-                margin-left: 0;
+                margin-left: 0 !important;
+            }
+
+            .sidebar-backdrop.show {
+                display: block;
             }
         }
     </style>
@@ -166,6 +181,9 @@
 </head>
 
 <body>
+    <!-- Mobile Sidebar Backdrop -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
     <div class="sidebar" id="sidebar">
         <div class="brand">
             <img src="{{ asset('favicon.ico') }}" alt="Logo Agape" class="brand-icon">
@@ -360,19 +378,41 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.getElementById('sidebarToggle').addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-            document.getElementById('main-content').classList.toggle('expanded');
-            
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+        const backdrop = document.getElementById('sidebarBackdrop');
+
+        function toggleSidebar() {
             if (window.innerWidth <= 991.98) {
-                document.getElementById('sidebar').classList.toggle('mobile-show');
+                // Mobile behavior: show full width sidebar
+                sidebar.classList.toggle('mobile-show');
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('expanded');
+                backdrop.classList.toggle('show');
+            } else {
+                // Desktop behavior: collapse sidebar
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                sidebar.classList.remove('mobile-show');
+                backdrop.classList.remove('show');
+            }
+        }
+
+        document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
+
+        // Close sidebar on mobile when backdrop clicked
+        backdrop.addEventListener('click', function() {
+            if (window.innerWidth <= 991.98) {
+                sidebar.classList.remove('mobile-show');
+                backdrop.classList.remove('show');
             }
         });
 
         // Close sidebar on mobile when window resized
         window.addEventListener('resize', function() {
             if (window.innerWidth > 991.98) {
-                document.getElementById('sidebar').classList.remove('mobile-show');
+                sidebar.classList.remove('mobile-show');
+                backdrop.classList.remove('show');
             }
         });
     </script>
