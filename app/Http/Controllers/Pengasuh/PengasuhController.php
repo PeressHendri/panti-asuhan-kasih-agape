@@ -246,7 +246,7 @@ class PengasuhController extends Controller
             'date' => 'required|date',
             'check_in' => 'required|date_format:H:i',
             'check_out' => 'nullable|date_format:H:i',
-            'status' => 'required|in:hadir,izin,sakit,alpha',
+            'status' => 'required|in:hadir,izin,sakit,alpa',
             'note' => 'nullable|string'
         ]);
 

@@ -229,7 +229,8 @@ class AdminController extends Controller
         // 1. Fetch Official Attendance
         $attendancesQuery = Attendance::with('child')->orderBy('date', 'desc')->orderBy('check_in', 'desc');
 
-        // Apply Range Filter
+        // Apply Range Filter — define $startDate at top level to avoid undefined variable error
+        $startDate = null;
         if ($range === 'week') {
             $startDate = Carbon::today()->subDays(7);
             $attendancesQuery->whereDate('date', '>=', $startDate);
@@ -298,7 +299,7 @@ class AdminController extends Controller
         $request->validate([
             'child_id' => 'required|exists:children,id', // Pastikan nama tabel benar
             'date' => 'required|date',
-            'status' => 'required|in:hadir,izin,sakit,alpha'
+            'status' => 'required|in:hadir,izin,sakit,alpa'
         ]);
 
         $existing = Attendance::where('child_id', $request->child_id)
@@ -352,7 +353,7 @@ class AdminController extends Controller
             'date' => 'required|date',
             'check_in' => 'required|date_format:H:i',
             'check_out' => 'nullable|date_format:H:i',
-            'status' => 'required|in:hadir,izin,sakit,alpha',
+            'status' => 'required|in:hadir,izin,sakit,alpa',
             'note' => 'nullable|string'
         ]);
 
@@ -485,7 +486,8 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         $confidenceThreshold = \Illuminate\Support\Facades\Cache::get('confidence_threshold', 75);
-        return view('admin.edit-profile', compact('user', 'confidenceThreshold'));
+        $dashboard = route('admin.dashboard');
+        return view('admin.edit-profile', compact('user', 'confidenceThreshold', 'dashboard'));
     }
 
     public function updateProfile(Request $request)

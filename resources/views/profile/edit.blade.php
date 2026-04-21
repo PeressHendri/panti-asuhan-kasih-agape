@@ -123,13 +123,13 @@
             Swal.fire({
                 icon: 'success',
                 title: 'Berhasil',
-                text: '{{ session('success') }}',
+                text: '{{ session("success") }}',
                 showConfirmButton: false,
                 timer: 1800
             }).then(() => {
                 @php
                     $role = auth()->user()->role;
-                    $dashboard = $role === 'sponsor' ? route('sponsor.dashboard') : ($role === 'pengasuh' ? route('pengasuh.dashboard') : '/');
+                    $dashboard = $role === 'sponsor' ? route('sponsor.dashboard') : ($role === 'pengasuh' ? route('pengasuh.dashboard') : route('admin.dashboard'));
                 @endphp
                 window.location.href = "{{ $dashboard }}";
             });

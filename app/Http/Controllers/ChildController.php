@@ -24,7 +24,7 @@ class ChildController extends Controller
 
     public function create()
     {
-        return view('admin.profile-panti-create');
+        return view('crud.profile-panti-create');
     }
 
     public function store(Request $request)
@@ -50,7 +50,7 @@ class ChildController extends Controller
     public function edit($id)
     {
         $child = Child::findOrFail($id);
-        return view('admin.profile-panti-edit', compact('child'));
+        return view('crud.profile-panti-edit', compact('child'));
     }
 
     public function update(Request $request, $id)

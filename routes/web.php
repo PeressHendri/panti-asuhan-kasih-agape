@@ -116,9 +116,9 @@ Route::group([], function () {
         Route::get('/kehadiran', [DonaturController::class, 'attendance'])->name('attendance');
     });
 
-    Route::get('sponsor/pengasuh', [DonaturController::class, 'pengasuh'])->name('sponsor.pengasuh');
+    Route::get('sponsor/pengasuh', [DonaturController::class, 'pengasuh'])->name('sponsor.pengasuh')->middleware('auth');
 
-    Route::middleware(['auth', 'role:pengasuh,sponsor'])->group(function () {
+    Route::middleware(['auth', 'role:pengasuh,sponsor,admin'])->group(function () {
         Route::get('/profil-saya', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
         Route::post('/profil-saya', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
     });

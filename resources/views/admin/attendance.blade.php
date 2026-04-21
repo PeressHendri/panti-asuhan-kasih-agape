@@ -706,8 +706,7 @@
 
     // ── Edit attendance modal ──────────────────────────────────────
     function prefillEdit(id, status, note) {
-        const base = '{{ route("admin.attendance.update", ["attendance"=>":id"]) }}';
-        document.getElementById('editAttForm').action = base.replace(':id', id);
+        document.getElementById('editAttForm').action = '{{ route("admin.attendance.update") }}';
         document.getElementById('editId').value = id;
         document.getElementById('editStatus').value = status;
         document.getElementById('editNote').value = note;

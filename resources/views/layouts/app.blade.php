@@ -1,14 +1,13 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Panti Asuhan Kasih Agape')</title>
+    <title>@yield('title', 'Admin Dashboard') | Panti Kasih Agape</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
@@ -47,232 +46,119 @@
             border-right: 1px solid var(--sidebar-border);
         }
 
-        /* Collapsed logic for desktop */
-        @media (min-width: 992px) {
-            .sidebar.collapsed {
-                width: var(--sidebar-collapsed-width);
-            }
-
-            .sidebar.collapsed:hover {
-                width: var(--sidebar-width);
-                box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
-            }
-
-            .main-content.expanded {
-                margin-left: var(--sidebar-collapsed-width);
-            }
-
-            .sidebar.collapsed:hover~#main-content.expanded {
-                margin-left: var(--sidebar-width);
-            }
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed-width);
         }
 
         .sidebar .brand {
-            height: var(--header-height);
-            padding: 0 20px;
+            padding: 1.5rem;
             display: flex;
             align-items: center;
             border-bottom: 1px solid var(--sidebar-border);
-            white-space: nowrap;
+            height: var(--header-height);
             overflow: hidden;
-            transition: padding 0.3s, justify-content 0.3s;
         }
 
         .sidebar .brand-icon {
-            min-width: 40px;
             width: 40px;
             height: 40px;
-            object-fit: contain;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: margin 0.3s;
+            margin-right: 12px;
+            flex-shrink: 0;
         }
 
-        .sidebar .brand h5 {
-            margin: 0;
-            font-size: 1.2rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            transition: opacity 0.3s, max-width 0.3s, transform 0.3s, margin 0.3s;
-            overflow: hidden;
-            max-width: 200px;
+        .sidebar .nav-item {
+            padding: 0.25rem 1rem;
         }
 
         .sidebar .nav-link {
-            color: var(--sidebar-text);
-            padding: 12px 15px;
             display: flex;
             align-items: center;
-            white-space: nowrap;
-            transition: all 0.2s ease;
-            border-radius: 8px;
-            margin: 4px 15px;
+            padding: 0.85rem 1rem;
+            color: var(--sidebar-text);
+            border-radius: 0.75rem;
             font-weight: 500;
-            overflow: hidden;
+            transition: all 0.2s;
+            white-space: nowrap;
         }
 
         .sidebar .nav-link i {
-            min-width: 30px;
+            width: 24px;
+            font-size: 1.1rem;
+            margin-right: 12px;
             text-align: center;
-            font-size: 1.2rem;
-            margin-right: 15px;
-            display: flex;
-            justify-content: center;
-            transition: margin 0.3s;
-        }
-
-        .sidebar .nav-link span {
-            transition: opacity 0.3s, max-width 0.3s, transform 0.3s, margin 0.3s;
-            overflow: hidden;
-            max-width: 200px;
-        }
-
-        @media (min-width: 992px) {
-            .sidebar.collapsed:not(:hover) .brand {
-                padding: 20px 0;
-                justify-content: center;
-            }
-
-            .sidebar.collapsed:not(:hover) .brand h5 {
-                opacity: 0;
-                max-width: 0;
-                margin: 0;
-                transform: translateX(-10px);
-            }
-
-            .sidebar.collapsed:not(:hover) .nav-link {
-                margin: 4px 15px;
-                padding: 12px 0;
-                justify-content: center;
-            }
-
-            .sidebar.collapsed:not(:hover) .nav-link i {
-                margin-right: 0;
-                width: auto;
-            }
-
-            .sidebar.collapsed:not(:hover) .nav-link span {
-                opacity: 0;
-                max-width: 0;
-                margin: 0;
-                pointer-events: none;
-                transform: translateX(-10px);
-            }
         }
 
         .sidebar .nav-link:hover {
-            color: var(--text-color);
             background-color: var(--sidebar-hover);
-            transform: translateX(3px);
+            color: var(--primary-color);
         }
 
         .sidebar .nav-link.active {
             background-color: var(--primary-color);
             color: #ffffff;
-            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
 
-        /* MAIN CONTENT */
+        /* MAIN CONTENT STYLES */
         .main-content {
             margin-left: var(--sidebar-width);
             transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+        }
+
+        .main-content.expanded {
+            margin-left: var(--sidebar-collapsed-width);
         }
 
         .header {
-            background: #ffffff;
             height: var(--header-height);
-            padding: 0 30px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--sidebar-border);
             display: flex;
             align-items: center;
-            border-bottom: 1px solid #e2e8f0;
+            justify-content: space-between;
+            padding: 0 1.5rem;
             position: sticky;
             top: 0;
             z-index: 1000;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         }
 
-        .hamburger {
-            background: none;
+        .content-body {
+            padding: 2rem;
+        }
+
+        /* CARD STYLES */
+        .card {
             border: none;
-            font-size: 1.2rem;
-            color: #64748b;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 6px;
-            transition: background 0.2s, color 0.2s;
-            margin-right: 20px;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: transform 0.2s;
         }
 
-        .hamburger:hover {
-            background: #f1f5f9;
-            color: var(--sidebar-bg);
+        /* UTILS */
+        .text-primary {
+            color: var(--primary-color) !important;
         }
 
-        .profile-img {
-            width: 38px;
-            height: 38px;
-            object-fit: cover;
-            border-radius: 50%;
-            border: 2px solid transparent;
-            transition: border-color 0.2s;
-        }
-
-        .dropdown-toggle:hover .profile-img {
+        .btn-primary {
+            background-color: var(--primary-color);
             border-color: var(--primary-color);
+            border-radius: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            font-weight: 500;
         }
 
-        .dropdown-menu {
-            border: none;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            border-radius: 8px;
-            padding: 8px 0;
-        }
-
-        .dropdown-item {
-            padding: 10px 20px;
-            font-size: 0.9rem;
-            color: #475569;
-        }
-
-        .dropdown-item:hover {
-            background-color: #f8fafc;
-            color: #0f172a;
-        }
-
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(15, 23, 42, 0.5);
-            backdrop-filter: blur(2px);
-            z-index: 1099;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        @media (max-width: 991px) {
+        @media (max-width: 991.98px) {
             .sidebar {
                 transform: translateX(-100%);
             }
 
-            .sidebar.mobile-active {
+            .sidebar.mobile-show {
                 transform: translateX(0);
             }
 
             .main-content {
-                margin-left: 0 !important;
-            }
-
-            .sidebar-overlay.active {
-                display: block;
-                opacity: 1;
+                margin-left: 0;
             }
         }
     </style>
@@ -289,199 +175,207 @@
         </div>
         <nav class="nav flex-column">
             @php 
-                $role = auth()->user()->role ?? 'guest'; 
-                $todayUnknown = 0;
-                if (auth()->check()) {
-                    try {
-                        $todayUnknown = \App\Models\FaceRecognitionLog::whereDate('waktu_deteksi', today())
-                                                                      ->where('status', 'tidak_dikenal')
-                                                                      ->count();
-                    } catch (\Exception $e) {}
-                }
+                $currentRoute = Route::currentRouteName();
+                $userRole = Auth::user()->role ?? 'guest';
             @endphp
-
-            @if($role === 'admin')
-                <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"
-                    href="{{ route('admin.dashboard') }}"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
-                <a class="nav-link {{ request()->routeIs('admin.profile.panti') ? 'active' : '' }}"
-                    href="{{ route('admin.profile.panti') }}"><i class="fas fa-child"></i><span>Data Anak</span></a>
-                <a class="nav-link {{ request()->routeIs('admin.manage.users') ? 'active' : '' }}"
-                    href="{{ route('admin.manage.users') }}"><i class="fas fa-users"></i><span>Manajemen Pengguna</span></a>
-
-                <a class="nav-link {{ request()->routeIs('admin.attendance') ? 'active' : '' }}"
-                    href="{{ route('admin.attendance') }}"><i class="fas fa-clipboard-check"></i><span>Kehadiran</span></a>
-                <a class="nav-link {{ request()->routeIs('dashboard.cctv') ? 'active' : '' }}"
-                    href="{{ route('dashboard.cctv') }}"><i class="fas fa-video"></i><span>Monitoring CCTV</span></a>
-                <a class="nav-link {{ request()->routeIs('admin.gallery.*') ? 'active' : '' }}"
-                    href="{{ route('admin.gallery.index') }}"><i class="fas fa-images"></i><span>Galeri</span></a>
-                <a class="nav-link {{ request()->routeIs('admin.donasi') ? 'active' : '' }}"
-                    href="{{ route('admin.donasi') }}"><i class="fas fa-hand-holding-usd"></i><span>Donasi
-                    @php $pendingDonasi = \App\Models\Donation::where('status','pending')->count(); @endphp
-                    @if($pendingDonasi > 0)<span class="badge bg-danger ms-1" style="font-size:10px;">{{ $pendingDonasi }}</span>@endif
-                    </span></a>
-                <a class="nav-link {{ request()->routeIs('admin.profile.edit') ? 'active' : '' }}"
-                    href="{{ route('admin.profile.edit') }}"><i class="fas fa-user-cog"></i><span>Profil Saya</span></a>
-
-            @elseif($role === 'pengasuh')
-                <a class="nav-link {{ request()->routeIs('pengasuh.dashboard') ? 'active' : '' }}"
-                    href="{{ route('pengasuh.dashboard') }}"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
-                <a class="nav-link {{ request()->routeIs('pengasuh.profile.panti') ? 'active' : '' }}"
-                    href="{{ route('pengasuh.profile.panti') }}"><i class="fas fa-child"></i><span>Data Anak</span></a>
-
-                <a class="nav-link {{ request()->routeIs('pengasuh.attendance') ? 'active' : '' }}"
-                    href="{{ route('pengasuh.attendance') }}"><i
-                        class="fas fa-clipboard-check"></i><span>Kehadiran</span></a>
-                <a class="nav-link {{ request()->routeIs('dashboard.cctv') ? 'active' : '' }}"
-                    href="{{ route('dashboard.cctv') }}"><i class="fas fa-video"></i><span>Monitoring CCTV</span></a>
-                <a class="nav-link {{ request()->routeIs('pengasuh.gallery.*') ? 'active' : '' }}"
-                    href="{{ route('pengasuh.gallery.index') }}"><i class="fas fa-images"></i><span>Galeri</span></a>
-                <a class="nav-link {{ request()->routeIs('admin.donasi') ? 'active' : '' }}"
-                    href="{{ route('admin.donasi') }}"><i class="fas fa-hand-holding-usd"></i><span>Donasi</span></a>
-                <a class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}"
-                    href="{{ route('profile.edit') }}"><i class="fas fa-user"></i><span>Profil Saya</span></a>
-            @elseif($role === 'sponsor')
-                <a class="nav-link {{ request()->routeIs('sponsor.dashboard') ? 'active' : '' }}"
-                    href="{{ route('sponsor.dashboard') }}"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
-                <a class="nav-link {{ request()->routeIs('sponsor.profile.panti') ? 'active' : '' }}"
-                    href="{{ route('sponsor.profile.panti') }}"><i class="fas fa-child"></i><span>Data Anak</span></a>
-                <a class="nav-link {{ request()->routeIs('sponsor.pengasuh') ? 'active' : '' }}"
-                    href="{{ route('sponsor.pengasuh') }}"><i class="fas fa-user-nurse"></i><span>Data Pengasuh</span></a>
-                <a class="nav-link {{ request()->routeIs('sponsor.attendance') ? 'active' : '' }}"
-                    href="{{ route('sponsor.attendance') }}"><i class="fas fa-calendar-check"></i><span>Kehadiran
-                        Anak</span></a>
-                <a class="nav-link {{ request()->routeIs('dashboard.cctv') ? 'active' : '' }}"
-                    href="{{ route('dashboard.cctv') }}"><i class="fas fa-video"></i><span>Monitoring CCTV</span></a>
-                <a class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}"
-                    href="{{ route('profile.edit') }}"><i class="fas fa-user"></i><span>Profil Saya</span></a>
+            
+            {{-- ADMIN NAVIGATION --}}
+            @if($userRole === 'admin')
+            <div class="nav-item mt-3">
+                <a class="nav-link {{ $currentRoute == 'admin.dashboard' ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link {{ str_contains($currentRoute ?? '', 'profile.panti') || $currentRoute == 'children.index' ? 'active' : '' }}" href="{{ route('admin.profile.panti') }}">
+                    <i class="fas fa-user-graduate"></i>
+                    <span>Data Anak</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link {{ str_contains($currentRoute ?? '', 'manage.users') || str_contains($currentRoute ?? '', 'users.') ? 'active' : '' }}" href="{{ route('admin.manage.users') }}">
+                    <i class="fas fa-users-cog"></i>
+                    <span>Manajemen Pengguna</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link {{ str_contains($currentRoute ?? '', 'attendance') ? 'active' : '' }}" href="{{ route('admin.attendance') }}">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Kehadiran</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link {{ $currentRoute == 'dashboard.cctv' ? 'active' : '' }}" href="{{ route('dashboard.cctv') }}">
+                    <i class="fas fa-video"></i>
+                    <span>Monitoring CCTV</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link {{ str_contains($currentRoute ?? '', 'gallery') ? 'active' : '' }}" href="{{ route('admin.gallery.index') }}">
+                    <i class="fas fa-images"></i>
+                    <span>Galeri</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link {{ $currentRoute == 'admin.donasi' ? 'active' : '' }}" href="{{ route('admin.donasi') }}">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    <span>Donasi</span>
+                </a>
+            </div>
+            
+            {{-- PENGASUH NAVIGATION --}}
+            @elseif($userRole === 'pengasuh')
+            <div class="nav-item mt-3">
+                <a class="nav-link {{ $currentRoute == 'pengasuh.dashboard' ? 'active' : '' }}" href="{{ route('pengasuh.dashboard') }}">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link {{ str_contains($currentRoute ?? '', 'pengasuh.profile.panti') ? 'active' : '' }}" href="{{ route('pengasuh.profile.panti') }}">
+                    <i class="fas fa-user-graduate"></i>
+                    <span>Data Anak</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link {{ str_contains($currentRoute ?? '', 'pengasuh.attendance') ? 'active' : '' }}" href="{{ route('pengasuh.attendance') }}">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Kehadiran</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link {{ $currentRoute == 'dashboard.cctv' ? 'active' : '' }}" href="{{ route('dashboard.cctv') }}">
+                    <i class="fas fa-video"></i>
+                    <span>Monitoring CCTV</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link {{ str_contains($currentRoute ?? '', 'gallery') ? 'active' : '' }}" href="{{ route('pengasuh.gallery.index') }}">
+                    <i class="fas fa-images"></i>
+                    <span>Galeri</span>
+                </a>
+            </div>
+            
+            {{-- SPONSOR NAVIGATION --}}
+            @elseif($userRole === 'sponsor')
+            <div class="nav-item mt-3">
+                <a class="nav-link {{ $currentRoute == 'sponsor.dashboard' ? 'active' : '' }}" href="{{ route('sponsor.dashboard') }}">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link {{ $currentRoute == 'sponsor.profile.panti' ? 'active' : '' }}" href="{{ route('sponsor.profile.panti') }}">
+                    <i class="fas fa-user-graduate"></i>
+                    <span>Data Anak</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link {{ $currentRoute == 'sponsor.pengasuh' ? 'active' : '' }}" href="{{ route('sponsor.pengasuh') }}">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Data Pengasuh</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link {{ $currentRoute == 'sponsor.attendance' ? 'active' : '' }}" href="{{ route('sponsor.attendance') }}">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Kehadiran</span>
+                </a>
+            </div>
             @endif
-
-            <a class="nav-link" href="{{ route('logout') }}"
-                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                <i class="fas fa-sign-out-alt"></i><span>Logout</span>
-            </a>
-            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                @csrf
-            </form>
+            
+            {{-- COMMON (all roles) --}}
+            <div class="nav-item border-top mt-3 pt-3">
+                <a class="nav-link {{ $currentRoute == 'profile.edit' ? 'active' : '' }}" href="{{ route('profile.edit') }}">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Profil Saya</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <form action="{{ route('logout') }}" method="POST" class="d-inline w-100">
+                    @csrf
+                    <button type="submit" class="nav-link border-0 bg-transparent w-100 text-start">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
+            </div>
         </nav>
     </div>
 
-    <div class="sidebar-overlay" id="sidebar-overlay"></div>
-
     <div class="main-content" id="main-content">
         <header class="header">
-            <div class="d-flex align-items-center w-100 justify-content-between">
-                <div class="d-flex align-items-center">
-                    <button class="hamburger" id="sidebarToggle" type="button" aria-label="Toggle Menu">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <div>
-                        <h4 class="mb-0 fw-bold" style="color: #0f172a; font-size: 1.25rem;">
-                            @yield('header-title', 'Dashboard')</h4>
-                    </div>
-                </div>
-
+            <div class="d-flex align-items-center">
+                <button class="btn btn-link text-dark p-0 me-3" id="sidebarToggle">
+                    <i class="fas fa-bars fa-lg"></i>
+                </button>
+                <h4 class="mb-0 fw-bold">@yield('header-title', 'Dashboard')</h4>
+            </div>
+            <div class="d-flex align-items-center">
                 <div class="dropdown">
-                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle"
-                        id="navbarUserDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        @if(Auth::user() && Auth::user()->photo)
-                            <img src="{{ asset('storage/' . Auth::user()->photo) }}" class="profile-img me-2"
-                                alt="Foto Profil">
-                        @endif
-                        <span class="fw-semibold d-none d-md-inline">{{ Auth::user()->name ?? '' }}</span>
+                    <a class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark" href="#"
+                        role="button" data-bs-toggle="dropdown">
+                        <img src="{{ Auth::user()->photo ? asset('storage/' . Auth::user()->photo) : 'https://ui-avatars.com/api/?name=' . Auth::user()->name }}"
+                            alt="Admin" class="rounded-circle me-2" width="35" height="35" style="object-fit: cover;">
+                        <div class="d-none d-md-block">
+                            <span class="fw-semibold d-block" style="font-size: 0.9rem;">{{ Auth::user()->name }}</span>
+                            <small class="text-primary text-capitalize" style="font-size: 0.75rem;">{{ Auth::user()->role }}</small>
+                        </div>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
-                        @if (Auth::user()->role == 'admin')
-                            <a class="dropdown-item" href="{{ route('admin.profile.edit') }}">
-                                <i class="fas fa-user-cog me-2"></i>Profil Saya
-                            </a>
-                        @else
-                            <a class="dropdown-item" href="{{ route('profile.edit') }}">
-                                <i class="fas fa-user-cog me-2"></i>Profil Saya
-                            </a>
-
-                        @endif
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                        <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i class="fas fa-user me-2"></i> Profil</a></li>
+                        <li><hr class="dropdown-divider"></li>
                         <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li>
-                            <a class="dropdown-item text-danger" href="{{ route('logout') }}"
-                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                <i class="fas fa-sign-out-alt me-2"></i>Logout
-                            </a>
-                            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                            <form action="{{ route('logout') }}" method="POST">
                                 @csrf
+                                <button type="submit" class="dropdown-item text-danger">
+                                    <i class="fas fa-sign-out-alt me-2"></i> Logout
+                                </button>
                             </form>
                         </li>
                     </ul>
                 </div>
+            </div>
         </header>
 
-        <main class="container-fluid p-4">
+        <main class="content-body">
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show mb-4 border-0 shadow-sm" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show mb-4 border-0 shadow-sm" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+
             @yield('content')
         </main>
     </div>
 
-    <div class="toast-container position-fixed top-0 end-0 p-3">
-        @if(session('success'))
-            <div class="toast show align-items-center text-bg-success border-0" role="alert" aria-live="assertive"
-                aria-atomic="true">
-                <div class="d-flex">
-                    <div class="toast-body"><i class="fas fa-check-circle me-2"></i>{{ session('success') }}</div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                        aria-label="Close"></button>
-                </div>
-            </div>
-        @endif
-        @if(session('error'))
-            <div class="toast show align-items-center text-bg-danger border-0" role="alert" aria-live="assertive"
-                aria-atomic="true">
-                <div class="d-flex">
-                    <div class="toast-body"><i class="fas fa-times-circle me-2"></i>{{ session('error') }}</div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                        aria-label="Close"></button>
-                </div>
-            </div>
-        @endif
-    </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('main-content');
-            const sidebarToggle = document.getElementById('sidebarToggle');
-            const sidebarOverlay = document.getElementById('sidebar-overlay');
-
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', () => {
-                    const isMobile = window.innerWidth < 992;
-                    if (isMobile) {
-                        // Di mode HP, buka panel pull-over
-                        sidebar.classList.add('mobile-active');
-                        sidebarOverlay.classList.add('active');
-                    } else {
-                        // Di mode Desktop, toggle expand/collapse
-                        sidebar.classList.toggle('collapsed');
-                        mainContent.classList.toggle('expanded');
-                    }
-                });
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+            document.getElementById('main-content').classList.toggle('expanded');
+            
+            if (window.innerWidth <= 991.98) {
+                document.getElementById('sidebar').classList.toggle('mobile-show');
             }
+        });
 
-            if (sidebarOverlay) {
-                sidebarOverlay.addEventListener('click', () => {
-                    sidebar.classList.remove('mobile-active');
-                    sidebarOverlay.classList.remove('active');
-                });
+        // Close sidebar on mobile when window resized
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 991.98) {
+                document.getElementById('sidebar').classList.remove('mobile-show');
             }
-
-            const toastElList = document.querySelectorAll('.toast');
-            const toastList = [...toastElList].map(toastEl => new bootstrap.Toast(toastEl, { delay: 5000 }));
-            toastList.forEach(toast => toast.show());
         });
     </script>
-
     @stack('scripts')
 </body>
 
