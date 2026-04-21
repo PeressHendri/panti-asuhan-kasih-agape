@@ -23,19 +23,18 @@
 
     /* ─── Main NVR wrapper ──────────────────── */
     .nvr-wrapper {
-        display: grid;
-        grid-template-columns: 1fr 340px;
-        grid-template-rows: auto 1fr;
+        display: flex;
+        flex-direction: column;
         gap: 20px;
         min-height: calc(100vh - 120px);
     }
 
     /* ─── Camera Grid ───────────────────────── */
-    .cam-grid-section { grid-column: 1; }
+    .cam-grid-section { width: 100%; }
 
     .cam-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
         gap: 16px;
     }
 
@@ -75,7 +74,24 @@
         position: relative;
         background: #000;
         display: flex; align-items: center; justify-content: center;
+        cursor: zoom-in;
+        transition: opacity .2s;
     }
+    .cam-feed:hover { opacity: 0.9; }
+    .cam-feed::after {
+        content: '\f00e';
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        color: #fff; font-size: 2rem;
+        opacity: 0; transition: opacity .2s;
+        pointer-events: none;
+        text-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    .cam-feed:hover::after { opacity: 0.6; }
+
     .cam-feed video, .cam-feed img { width: 100%; height: 100%; object-fit: cover; }
 
     .cam-offline-overlay {
@@ -127,8 +143,13 @@
     }
     .cam-empty i { font-size: 3.5rem; color: #cbd5e1; margin-bottom: 16px; }
 
-    /* ─── Sidebar Panel ─────────────────────── */
-    .nvr-sidebar { grid-column: 2; display: flex; flex-direction: column; gap: 16px; }
+    /* ─── Bottom Panels ─────────────────────── */
+    .nvr-bottom-panels {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 10px;
+    }
 
     .panel-card {
         background: #fff;
@@ -146,7 +167,7 @@
         background: #f8fafc;
     }
     .panel-title { font-size: .82rem; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: .6px; }
-    .panel-body { padding: 0; max-height: 350px; overflow-y: auto; }
+    .panel-body { padding: 0; min-height: 380px; max-height: 450px; overflow-y: auto; }
     .panel-body::-webkit-scrollbar { width: 4px; }
     .panel-body::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
 
@@ -270,11 +291,28 @@
     .form-control:focus, .form-select:focus { border-color: var(--nvr-accent); box-shadow: 0 0 0 3px rgba(59,130,246,.1); outline:none; }
 
     /* ─── Responsive ─────────────────────── */
-    @media (max-width: 1100px) {
-        .nvr-wrapper { grid-template-columns: 1fr; }
-        .nvr-sidebar { grid-column: 1; }
+    @media (max-width: 992px) {
+        .nvr-bottom-panels { grid-template-columns: 1fr; }
     }
     @media print { .cam-actions, .nvr-topbar .btn-nvr-add, .nvr-topbar button { display:none !important; } }
+
+    /* Polishing Zoom Modal */
+    #zoomCamContainer .cam-feed { cursor: default !important; }
+    #zoomCamContainer .cam-feed::after { display: none !important; } /* Sembunyikan ikon zoom saat di modal */
+    #zoomCamContainer .cam-feed:hover { opacity: 1 !important; }
+    #zoomCamContainer .cam-offline-overlay { color: #94a3b8; }
+    #zoomCamContainer .cam-offline-overlay i { font-size: 4rem; margin-bottom: 20px; }
+
+    /* Fix modal tertutup sidebar */
+    #modalZoomCam { z-index: 9999 !important; }
+    .modal-backdrop { z-index: 9998 !important; background-color: rgba(0,0,0,0.85) !important; }
+
+    .modal-xl { max-width: 1000px; width: 95%; }
+    #zoomCamContainer { 
+        max-height: calc(100vh - 200px); 
+        width: 100%;
+        margin: 0 auto;
+    }
 </style>
 @endpush
 
@@ -348,7 +386,7 @@
                     </div>
 
                     {{-- Feed --}}
-                    <div class="cam-feed">
+                    <div class="cam-feed" onclick="zoomCamera('{{ $camera->kamera_id }}', '{{ $camera->nama }}')">
                         @if($camera->is_online && !empty($camera->hls_url))
                             @if(str_contains($camera->hls_url, '/video_feed/') || str_contains($camera->hls_url, '.mjpg') || str_contains($camera->hls_url, ':5000') || str_contains($camera->hls_url, ':8080'))
                                 {{-- MJPEG Stream (Python Flask / Raspberry Pi) --}}
@@ -433,8 +471,8 @@
             </div>
         </div>
 
-        {{-- ─── Sidebar Panel ────────────────────────────────────────────── --}}
-        <div class="nvr-sidebar">
+        {{-- ─── Bottom Panels ────────────────────────────────────────────── --}}
+        <div class="nvr-bottom-panels">
 
             {{-- ── Face Recognition Log ─────────────────────────────── --}}
             <div class="panel-card">
@@ -648,6 +686,36 @@
 @endforeach
 
 @endif
+
+{{-- ═══════════════════ MODAL: Zoom Camera (Premium Look) ════════════════════════════ --}}
+<div class="modal fade" id="modalZoomCam" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border-radius: 24px;">
+            <div class="modal-header border-0 px-4 pt-4 pb-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="record-dot pulse" style="width:10px; height:10px;"></div>
+                    <h5 class="modal-title text-white fw-bold mb-0" id="zoomCamTitle" style="letter-spacing: 0.5px; font-size: 1.1rem;">Zoom Kamera</h5>
+                </div>
+                <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal" style="opacity: 0.8;"></button>
+            </div>
+            <div class="modal-body p-2">
+                <div id="zoomCamContainer" class="rounded-4 overflow-hidden border border-secondary" 
+                     style="aspect-ratio: 16/9; background: #001; display:flex; align-items:center; justify-content:center; position:relative; box-shadow: inset 0 0 50px rgba(0,0,0,0.5); margin: 0 auto;">
+                    {{-- Content injected via JS --}}
+                </div>
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4 pt-1 justify-content-between">
+                <div class="d-flex align-items-center gap-2" style="color: #64748b;">
+                    <i class="fas fa-expand-arrows-alt small"></i>
+                    <span id="zoomCamInfo" style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">High-Definition Monitoring Mode</span>
+                </div>
+                <button type="button" class="btn btn-dark rounded-pill px-4 border-secondary fw-bold" data-bs-dismiss="modal" style="font-size: 0.8rem;">
+                    Selesai Melihat
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -774,6 +842,49 @@ function fetchLiveData() {
         if (dot) { dot.style.opacity = '0'; setTimeout(() => dot.style.opacity = '1', 300); }
     })
     .catch(err => console.warn('[NVR Polling] Error:', err));
+}
+
+// ── Zoom Camera Logic ──────────────────────────────────────────────────
+function zoomCamera(id, name) {
+    const originalFeed = document.querySelector(`#cam-card-${id} .cam-feed`);
+    const container = document.getElementById('zoomCamContainer');
+    const title = document.getElementById('zoomCamTitle');
+    
+    if (!originalFeed || !container) return;
+    
+    title.textContent = `${name}`;
+    container.innerHTML = '';
+    
+    // Kloning seluruh isi kontainer (untuk mendukung video, img, atau overlay pesan offline)
+    const cloned = originalFeed.cloneNode(true);
+    cloned.id = `zoom-inner-${id}`;
+    cloned.style.width = '100%';
+    cloned.style.height = '100%';
+    cloned.style.cursor = 'default';
+    cloned.onclick = null; // hapus event click pada kloningan
+    
+    // Pastikan video tetap berjalan jika itu HLS/Video
+    const video = cloned.querySelector('video');
+    if (video) {
+        // Video yang di-clone biasanya kehilangan session Playback-nya
+        // Maka kita arahkan SRC-nya ke video asli atau play ulang
+        const originalVideo = originalFeed.querySelector('video');
+        if (originalVideo) {
+            setTimeout(() => {
+                video.currentTime = originalVideo.currentTime;
+                video.play().catch(() => {});
+            }, 100);
+        }
+    }
+    
+    container.appendChild(cloned);
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalZoomCam'));
+    modal.show();
+    
+    document.getElementById('modalZoomCam').addEventListener('hidden.bs.modal', function () {
+        container.innerHTML = '';
+    }, { once: true });
 }
 
 // ── GLightbox ────────────────────────────────────────────────────────────
