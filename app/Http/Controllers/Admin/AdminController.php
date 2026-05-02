@@ -533,6 +533,35 @@ class AdminController extends Controller
         return redirect()->route('admin.dashboard')->with('success', 'Profil berhasil diperbarui!');
     }
 
+    // Toggle Absensi Manual ON/OFF (dipanggil via AJAX dari halaman Profil Saya)
+    public function toggleManualAttendance(Request $request)
+    {
+        $enabled = $request->boolean('enabled');
+        \Illuminate\Support\Facades\Cache::forever('enable_manual_attendance', $enabled);
+
+        \App\Models\ActivityLog::create([
+            'user_id'  => Auth::id(),
+            'activity' => 'Toggle Absensi Manual: ' . ($enabled ? 'Aktif' : 'Tidak Aktif'),
+            'status'   => 'Berhasil',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'enabled' => $enabled,
+            'message' => 'Absensi manual ' . ($enabled ? 'diaktifkan' : 'dinonaktifkan'),
+        ]);
+    }
+
+    // Set Confidence Threshold (dipanggil via AJAX dari slider)
+    public function setThreshold(Request $request)
+    {
+        $threshold = (int) $request->input('threshold', 75);
+        $threshold = max(40, min(99, $threshold));
+        \Illuminate\Support\Facades\Cache::forever('confidence_threshold', $threshold);
+
+        return response()->json(['success' => true, 'threshold' => $threshold]);
+    }
+
     // Endpoint API-like untuk ambil threshold (dipanggil Python)
     public function getSettings()
     {

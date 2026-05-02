@@ -28,13 +28,17 @@ class GenerateSitemap extends Command
      */
     public function handle()
     {
-        // Change default URL to match your domain
-        $url = config('app.url');
+        $this->info("Generating sitemap manually...");
 
-        $this->info("Generating sitemap for: {$url}");
+        $sitemap = \Spatie\Sitemap\Sitemap::create()
+            ->add(\Spatie\Sitemap\Tags\Url::create('/')
+                ->setPriority(1.0)
+                ->setChangeFrequency(\Spatie\Sitemap\Tags\Url::CHANGE_FREQUENCY_WEEKLY))
+            ->add(\Spatie\Sitemap\Tags\Url::create('/donasi')
+                ->setPriority(0.8)
+                ->setChangeFrequency(\Spatie\Sitemap\Tags\Url::CHANGE_FREQUENCY_MONTHLY));
 
-        SitemapGenerator::create($url)
-            ->writeToFile(public_path('sitemap.xml'));
+        $sitemap->writeToFile(public_path('sitemap.xml'));
 
         $this->info('Sitemap generated successfully.');
 

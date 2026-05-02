@@ -55,6 +55,61 @@
                         style="width: 170px; height: 170px; border: 2px solid var(--border-color); object-fit: cover; object-position: center;">
                 </div>
             </div>
+            @if(auth()->user()->role === 'admin')
+            {{-- Penanda bahwa form ini dari halaman admin --}}
+            <input type="hidden" name="is_admin_form" value="1">
+            <div class="col-12 mt-2">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" style="cursor: pointer; width: 3em; height: 1.5em;"
+                            type="checkbox" role="switch"
+                            id="enable_manual_attendance"
+                            {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? 'checked' : '' }}>
+                    </div>
+                    <label class="dashboard-label mb-0" for="enable_manual_attendance" style="cursor: pointer;">
+                        &mdash;
+                        <span id="manualStatusLabel" class="fw-bold"
+                            style="color: {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? '#22c55e' : '#94a3b8' }}">
+                            {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? 'Aktif' : 'Tidak Aktif' }}
+                        </span>
+                    </label>
+                    <span id="manualSaveIndicator" class="small text-muted ms-1" style="display:none;">
+                        <i class="fas fa-check-circle text-success"></i> Tersimpan
+                    </span>
+                </div>
+            </div>
+
+            {{-- Threshold Akurasi AI LBPH --}}
+            <div class="col-12 mt-3">
+                <div class="p-3 rounded-3 border" style="background: var(--card-bg, #fff);">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fw-semibold" style="color: var(--text-color); font-size: 0.9rem;">
+                            <i class="fas fa-sliders-h text-primary me-2"></i>Threshold Akurasi AI (LBPH)
+                        </span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span id="thresholdSaveIndicator" class="small text-success" style="display:none;">
+                                <i class="fas fa-check-circle"></i> Tersimpan
+                            </span>
+                            <span class="badge bg-primary rounded-pill px-3 py-2" id="thresholdDisplay"
+                                style="font-size: 1rem; min-width: 3rem; text-align: center;">
+                                {{ \Illuminate\Support\Facades\Cache::get('confidence_threshold', 75) }}
+                            </span>
+                        </div>
+                    </div>
+                    <input type="range" name="confidence_threshold" id="confidenceSlider"
+                        class="threshold-slider w-100"
+                        min="40" max="99" step="1"
+                        value="{{ \Illuminate\Support\Facades\Cache::get('confidence_threshold', 75) }}"
+                        oninput="updateSlider(this.value)">
+                    <div class="d-flex justify-content-between mt-2">
+                        <small class="text-success fw-semibold">40 — Longgar</small>
+                        <small class="text-muted">Semakin tinggi = semakin ketat</small>
+                        <small class="text-danger fw-semibold">99 — Ketat</small>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             <div class="col-12">
                 <button type="button" class="btn btn-primary" id="btn-simpan-profil">Simpan</button>
             </div>
@@ -64,7 +119,110 @@
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .threshold-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 8px;
+            border-radius: 99px;
+            outline: none;
+            cursor: pointer;
+            background: linear-gradient(to right,
+                #3b82f6 0%,
+                #3b82f6 {{ round((\Illuminate\Support\Facades\Cache::get('confidence_threshold', 75) - 40) / 59 * 100) }}%,
+                #e2e8f0 {{ round((\Illuminate\Support\Facades\Cache::get('confidence_threshold', 75) - 40) / 59 * 100) }}%,
+                #e2e8f0 100%
+            );
+        }
+        .threshold-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #fff;
+            border: 3px solid #3b82f6;
+            box-shadow: 0 2px 6px rgba(59,130,246,0.4);
+            cursor: pointer;
+            transition: box-shadow 0.15s;
+        }
+        .threshold-slider::-webkit-slider-thumb:hover {
+            box-shadow: 0 0 0 6px rgba(59,130,246,0.15);
+        }
+        .threshold-slider::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #fff;
+            border: 3px solid #3b82f6;
+            box-shadow: 0 2px 6px rgba(59,130,246,0.4);
+            cursor: pointer;
+        }
+    </style>
     <script>
+        function updateSlider(val) {
+            document.getElementById('thresholdDisplay').innerText = val;
+            const pct = ((val - 40) / 59) * 100;
+            document.getElementById('confidenceSlider').style.background =
+                `linear-gradient(to right, #3b82f6 ${pct}%, #e2e8f0 ${pct}%)`;
+
+            // Debounce: simpan ke server setelah 800ms berhenti geser
+            clearTimeout(window._thresholdTimer);
+            window._thresholdTimer = setTimeout(() => {
+                fetch('{{ route("admin.set.threshold") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ threshold: parseInt(val) })
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const ind = document.getElementById('thresholdSaveIndicator');
+                        ind.style.display = 'inline';
+                        setTimeout(() => ind.style.display = 'none', 2000);
+                    }
+                });
+            }, 800);
+        }
+
+        // Switch Absensi Manual → AJAX langsung saat toggle
+        @if(auth()->user()->role === 'admin')
+        document.getElementById('enable_manual_attendance').addEventListener('change', function () {
+            const enabled = this.checked;
+            const lbl = document.getElementById('manualStatusLabel');
+            const ind = document.getElementById('manualSaveIndicator');
+
+            // Update label UI dulu
+            lbl.textContent = enabled ? 'Aktif' : 'Tidak Aktif';
+            lbl.style.color  = enabled ? '#22c55e' : '#94a3b8';
+
+            // Kirim ke server
+            fetch('{{ route("admin.toggle.manual.attendance") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ enabled: enabled })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    ind.style.display = 'inline';
+                    setTimeout(() => ind.style.display = 'none', 2000);
+                }
+            })
+            .catch(() => {
+                // Rollback jika gagal
+                this.checked = !enabled;
+                lbl.textContent = !enabled ? 'Aktif' : 'Tidak Aktif';
+                lbl.style.color  = !enabled ? '#22c55e' : '#94a3b8';
+            });
+        });
+        @endif
+
         document.getElementById('btn-simpan-profil').addEventListener('click', function (e) {
             var pass = document.querySelector('input[name="password"]').value;
             var passConf = document.querySelector('input[name="password_confirmation"]').value;

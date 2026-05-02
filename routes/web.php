@@ -139,6 +139,8 @@ Route::group([], function () {
         Route::get('/admin/profile/edit', [AdminController::class, 'editProfile'])->name('admin.profile.edit');
         Route::post('/admin/profile/update', [AdminController::class, 'updateProfile'])->name('admin.profile.update');
         Route::get('/admin/settings', [AdminController::class, 'getSettings'])->name('admin.settings');
+        Route::post('/admin/toggle-manual-attendance', [AdminController::class, 'toggleManualAttendance'])->name('admin.toggle.manual.attendance');
+        Route::post('/admin/set-threshold', [AdminController::class, 'setThreshold'])->name('admin.set.threshold');
 
         // Admin CRUD CCTV
         Route::post('/dashboard/cctv', [CctvController::class, 'store'])->name('admin.cctv.store');
