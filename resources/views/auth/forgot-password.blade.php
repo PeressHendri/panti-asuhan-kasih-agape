@@ -160,6 +160,13 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 @endif
+                @if(session('info'))
+                    <div class="alert alert-info alert-dismissible fade show mb-3" role="alert"
+                        style="background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.4); color: #1e40af; border-radius: 10px; border-width: 1px; border-style: solid;">
+                        <i class="fas fa-info-circle me-2"></i>{{ session('info') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
 
                 {{-- Form kirim via Email --}}
                 <form method="POST" action="{{ route('password.email') }}">

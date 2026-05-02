@@ -63,7 +63,8 @@ class ForgotPasswordController extends Controller
                 return back()->with('success', 'Link reset password telah dikirim ke email Anda.');
             } catch (\Exception $e) {
                 \Log::error('Mail fallback gagal: ' . $e->getMessage());
-                return back()->with('error', 'BREVO_API_KEY belum dikonfigurasi di .env server.');
+                // Jangan tampilkan error teknis ke user — arahkan ke WhatsApp
+                return back()->with('info', 'Pengiriman email tidak tersedia saat ini. Silakan hubungi admin via WhatsApp untuk reset password.');
             }
         }
 
