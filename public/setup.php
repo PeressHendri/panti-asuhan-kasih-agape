@@ -33,15 +33,23 @@ define('BASE_PATH', dirname(__DIR__));
 
 // --- AUTO-DETECT PHP BINARY ---
 function getPhpBinary() {
-    // Coba berbagai lokasi umum
-    $candidates = [PHP_BINARY, 'php', 'php8.3', 'php8.2', 'php8.1', 'php8.0', '/usr/bin/php'];
+    // Daftar kandidat — php-fpm adalah process manager, BUKAN CLI, skip!
+    $candidates = [
+        '/usr/bin/php8.2', '/usr/bin/php8.3', '/usr/bin/php8.1',
+        '/usr/local/bin/php8.2', '/usr/local/bin/php8.3',
+        'php8.2', 'php8.3', 'php8.1', 'php',
+    ];
+    // Jangan pakai PHP_BINARY kalau itu php-fpm
+    if (defined('PHP_BINARY') && PHP_BINARY && strpos(PHP_BINARY, 'fpm') === false) {
+        array_unshift($candidates, PHP_BINARY);
+    }
     foreach ($candidates as $bin) {
-        $test = @shell_exec($bin . ' --version 2>&1');
-        if ($test && strpos($test, 'PHP') !== false) {
+        $test = @shell_exec($bin . ' -r "echo PHP_MAJOR_VERSION;" 2>&1');
+        if ($test && is_numeric(trim($test)) && (int)trim($test) >= 8) {
             return $bin;
         }
     }
-    return 'php'; // fallback
+    return 'php'; // last resort fallback
 }
 define('PHP_BIN', getPhpBinary());
 
@@ -206,6 +214,8 @@ if ($isAuthenticated) {
     } elseif ($action == 'deploy') {
         $output .= "🚀 CI/CD Deployment GitHub...\n" . str_repeat("─", 50) . "\n";
         $output .= "🏃 [1/5] git pull origin main...\n";
+        // Stash perubahan lokal VPS agar pull tidak abort karena konflik
+        $output .= runCmd("git stash") . "\n";
         $output .= runCmd("git pull origin main") . "\n";
         $output .= "🏃 [2/5] composer install...\n";
         $output .= runCmd("COMPOSER_ALLOW_SUPERUSER=1 composer install --no-interaction --no-ansi --no-dev --prefer-dist --optimize-autoloader") . "\n";
@@ -214,8 +224,8 @@ if ($isAuthenticated) {
         $output .= "🏃 [4/5] artisan migrate --force...\n";
         $output .= runCmd("{PHP} artisan migrate --force --no-ansi") . "\n";
         $output .= "🏃 [5/5] artisan storage:link...\n";
-        $output .= runCmd("{PHP} artisan storage:link --no-ansi") . "\n";
-        $output .= "\n✅ Deployment Selesai!\n";
+        $output .= runCmd("{PHP} artisan storage:link --no-ansi 2>&1 || true") . "\n";
+        $output .= "\n✅ Deployment Selesai! PHP binary: " . PHP_BIN . "\n";
     } elseif ($action == 'clear_cache') {
         $cmds = ['optimize:clear', 'cache:clear', 'config:clear', 'view:clear', 'route:clear'];
         foreach ($cmds as $cmd) {
