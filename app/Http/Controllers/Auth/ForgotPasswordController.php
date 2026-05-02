@@ -95,7 +95,7 @@ class ForgotPasswordController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Brevo API gagal: ' . $e->getMessage());
-            return back()->with('error', 'Gagal mengirim email: ' . $e->getMessage());
+            return back()->with('info', 'Pengiriman email sedang bermasalah. Silakan coba lagi beberapa saat, atau hubungi admin via WhatsApp di bawah.');
         }
     }
 
