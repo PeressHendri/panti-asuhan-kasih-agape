@@ -40,7 +40,7 @@
             color: var(--sidebar-text);
             overflow-x: hidden;
             overflow-y: auto;
-            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 1100;
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
             border-right: 1px solid var(--sidebar-border);
@@ -51,12 +51,18 @@
         }
 
         .sidebar .brand {
-            padding: 1.5rem;
+            padding: 0 1.5rem;
             display: flex;
             align-items: center;
             border-bottom: 1px solid var(--sidebar-border);
             height: var(--header-height);
             overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .sidebar.collapsed .brand {
+            padding: 0;
+            justify-content: center;
         }
 
         .sidebar .brand-icon {
@@ -64,6 +70,23 @@
             height: 40px;
             margin-right: 12px;
             flex-shrink: 0;
+        }
+
+        .sidebar.collapsed .brand-icon {
+            margin-right: 0;
+        }
+
+        .sidebar .brand-text {
+            line-height: 1.3;
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-weight: 800;
+            margin-bottom: 0;
+            white-space: normal;
+        }
+
+        .sidebar.collapsed .brand-text {
+            display: none;
         }
 
         .sidebar .nav-item {
@@ -86,6 +109,23 @@
             font-size: 1.1rem;
             margin-right: 12px;
             text-align: center;
+        }
+
+        .sidebar.collapsed .nav-link i {
+            margin-right: 0;
+        }
+
+        .sidebar.collapsed .nav-link span {
+            display: none;
+        }
+
+        .sidebar.collapsed .nav-link {
+            justify-content: center;
+            padding: 0.85rem 0;
+        }
+
+        .sidebar.collapsed .nav-item form button.nav-link {
+            text-align: center !important;
         }
 
         .sidebar .nav-link:hover {
@@ -187,9 +227,7 @@
     <div class="sidebar" id="sidebar">
         <div class="brand">
             <img src="{{ asset('favicon.ico') }}" alt="Logo Agape" class="brand-icon">
-            <h5
-                style="white-space: normal; line-height: 1.3; font-size: 1.1rem; flex: 1; color: var(--text-color); font-weight: 800;">
-                PANTI KASIH<br>AGAPE</h5>
+            <h5 class="brand-text">PANTI KASIH<br>AGAPE</h5>
         </div>
         <nav class="nav flex-column">
             @php 
