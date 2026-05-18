@@ -120,6 +120,8 @@ class FaceRecognitionController extends Controller
         // Gunakan Python 3.10 yang memiliki numpy + cv2.face (opencv-contrib) yang kompatibel
         // python3.10 = Homebrew Python 3.10 yang sudah terinstall opencv-contrib-python
         $candidates = [
+            base_path('venv/bin/python3'),
+            base_path('venv/bin/python'),
             '/usr/local/bin/python3.10',
             '/opt/homebrew/bin/python3.10',
             '/usr/bin/python3.10',
@@ -141,7 +143,38 @@ class FaceRecognitionController extends Controller
             }
         }
 
-        $command = $pythonBin . " " . escapeshellarg($pythonScriptPath) . " " . escapeshellarg($fullPath) . " 2>&1";
+        // Tambahkan PYTHONPATH secara dinamis agar pustaka terinstal (seperti cv2/deepface) terbaca di VPS CloudPanel & lokal
+        $sitePackagesPaths = [];
+        $homes = [
+            '/home/pantiasuhankasihagape',
+            getenv('HOME'),
+            $_SERVER['HOME'] ?? '',
+        ];
+        if (function_exists('posix_getpwuid') && function_exists('posix_geteuid')) {
+            $userInfo = posix_getpwuid(posix_geteuid());
+            if ($userInfo && !empty($userInfo['dir'])) {
+                $homes[] = $userInfo['dir'];
+            }
+        }
+        
+        foreach (array_unique(array_filter($homes)) as $home) {
+            if (is_dir($home . '/.local/lib')) {
+                $pythonDirs = glob($home . '/.local/lib/python3.*/site-packages');
+                if (!empty($pythonDirs)) {
+                    $sitePackagesPaths = array_merge($sitePackagesPaths, $pythonDirs);
+                }
+            }
+        }
+        
+        $sitePackagesPaths = array_unique($sitePackagesPaths);
+        
+        if (!empty($sitePackagesPaths)) {
+            $pythonPathEnv = "PYTHONPATH=" . implode(':', $sitePackagesPaths) . " ";
+        } else {
+            $pythonPathEnv = "";
+        }
+        
+        $command = $pythonPathEnv . escapeshellarg($pythonBin) . " " . escapeshellarg($pythonScriptPath) . " " . escapeshellarg($fullPath) . " 2>&1";
         $output = shell_exec($command);
 
         $result = json_decode($output, true);
