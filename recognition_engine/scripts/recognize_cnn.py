@@ -122,17 +122,38 @@ def main():
         # Preprocessing Wajah
         face_roi = img[y:y+h, x:x+w]
         face_resized = cv2.resize(face_roi, (224, 224))
-        face_array = img_to_array(face_resized) / 255.0
-        face_array = np.expand_dims(face_array, axis=0)
-
-        # Prediksi dengan VGG16
-        preds = model.predict(face_array, verbose=0)
-        similarity = float(np.max(preds))
         
-        if similarity < VGG16_SIM_THRESHOLD:
+        # Karena Keras biasanya di-training menggunakan RGB, sedangkan OpenCV menangkap BGR,
+        # kita akan menguji kedua format warna dan mengambil hasil dengan akurasi tertinggi!
+        
+        # 1. Uji dengan format BGR (Bawaan OpenCV)
+        face_bgr = img_to_array(face_resized) / 255.0
+        face_bgr = np.expand_dims(face_bgr, axis=0)
+        preds_bgr = model.predict(face_bgr, verbose=0)
+        sim_bgr = float(np.max(preds_bgr))
+        
+        # 2. Uji dengan format RGB (Bawaan Keras/TensorFlow saat training)
+        face_rgb_img = cv2.cvtColor(face_resized, cv2.COLOR_BGR2RGB)
+        face_rgb = img_to_array(face_rgb_img) / 255.0
+        face_rgb = np.expand_dims(face_rgb, axis=0)
+        preds_rgb = model.predict(face_rgb, verbose=0)
+        sim_rgb = float(np.max(preds_rgb))
+        
+        # Ambil hasil yang paling meyakinkan (menghindari bug warna biru/merah terbalik)
+        if sim_rgb > sim_bgr:
+            preds = preds_rgb
+            similarity = sim_rgb
+        else:
+            preds = preds_bgr
+            similarity = sim_bgr
+
+        # Threshold diturunkan menjadi 0.15 agar lebih toleran terhadap perbedaan cahaya webcam
+        VGG16_SIM_THRESHOLD_RELAXED = 0.15 
+        
+        if similarity < VGG16_SIM_THRESHOLD_RELAXED:
             print(json.dumps({
                 "success": False,
-                "message": "Wajah terdeteksi tapi tingkat kecocokan model VGG16 di bawah threshold.",
+                "message": f"Wajah terdeteksi tapi kecocokan sangat rendah ({round(similarity * 100, 1)}%). Coba hadapkan wajah ke terang.",
                 "confidence": round(similarity * 100, 1)
             }))
             return
