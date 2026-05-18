@@ -55,8 +55,40 @@ def main():
         return
 
     try:
-        # Muat Model VGG16 dan Encoder
-        model = load_model(VGG16_MODEL_PATH)
+        # Buat wrapper layer untuk mengabaikan 'quantization_config' (Kompatibilitas TF baru ke TF lama di VPS)
+        from tensorflow.keras.layers import Dense, Conv2D, MaxPooling2D, Flatten, Dropout, GlobalAveragePooling2D, BatchNormalization
+        
+        def pop_quant(kwargs):
+            kwargs.pop('quantization_config', None)
+            return kwargs
+            
+        class PDense(Dense):
+            def __init__(self, **kwargs): super().__init__(**pop_quant(kwargs))
+        class PConv2D(Conv2D):
+            def __init__(self, **kwargs): super().__init__(**pop_quant(kwargs))
+        class PMaxPooling2D(MaxPooling2D):
+            def __init__(self, **kwargs): super().__init__(**pop_quant(kwargs))
+        class PFlatten(Flatten):
+            def __init__(self, **kwargs): super().__init__(**pop_quant(kwargs))
+        class PDropout(Dropout):
+            def __init__(self, **kwargs): super().__init__(**pop_quant(kwargs))
+        class PGlobalAveragePooling2D(GlobalAveragePooling2D):
+            def __init__(self, **kwargs): super().__init__(**pop_quant(kwargs))
+        class PBatchNormalization(BatchNormalization):
+            def __init__(self, **kwargs): super().__init__(**pop_quant(kwargs))
+
+        custom_objs = {
+            'Dense': PDense,
+            'Conv2D': PConv2D,
+            'MaxPooling2D': PMaxPooling2D,
+            'Flatten': PFlatten,
+            'Dropout': PDropout,
+            'GlobalAveragePooling2D': PGlobalAveragePooling2D,
+            'BatchNormalization': PBatchNormalization
+        }
+        
+        # Muat Model VGG16 dan Encoder dengan custom wrapper
+        model = load_model(VGG16_MODEL_PATH, custom_objects=custom_objs, compile=False)
         with open(ENCODER_PATH, 'rb') as f:
             le = pickle.load(f)
     except Exception as e:
