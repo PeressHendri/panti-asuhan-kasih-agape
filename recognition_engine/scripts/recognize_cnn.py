@@ -119,51 +119,25 @@ def main():
     x, y, w, h = faces[0]
 
     try:
-        # Preprocessing Wajah dengan menambahkan Margin 15% agar seluruh kepala (rambut/dagu) masuk
-        # Ini sangat penting agar VGG16 mendapatkan konteks wajah yang sama seperti saat ditraining
-        img_h, img_w = img.shape[:2]
-        margin_x = int(w * 0.15)
-        margin_y = int(h * 0.15)
-        
-        x1 = max(0, x - margin_x)
-        y1 = max(0, y - margin_y)
-        x2 = min(img_w, x + w + margin_x)
-        y2 = min(img_h, y + h + margin_y)
-        
-        face_roi = img[y1:y2, x1:x2]
+        # Preprocessing Wajah (Dibuat 100% IDENTIK dengan main_recognition.py)
+        # Tanpa margin & murni menggunakan channel BGR OpenCV (dibagi 255.0)
+        face_roi = img[y:y+h, x:x+w]
         face_resized = cv2.resize(face_roi, (224, 224))
         
-        # Karena Keras biasanya di-training menggunakan RGB, sedangkan OpenCV menangkap BGR,
-        # kita akan menguji kedua format warna dan mengambil hasil dengan akurasi tertinggi!
+        face_array = img_to_array(face_resized) / 255.0
+        face_array = np.expand_dims(face_array, axis=0)
         
-        # 1. Uji dengan format BGR (Bawaan OpenCV)
-        face_bgr = img_to_array(face_resized) / 255.0
-        face_bgr = np.expand_dims(face_bgr, axis=0)
-        preds_bgr = model.predict(face_bgr, verbose=0)
-        sim_bgr = float(np.max(preds_bgr))
+        # Prediksi dengan VGG16 (Murni BGR seperti saat training & main_recognition)
+        preds = model.predict(face_array, verbose=0)
+        similarity = float(np.max(preds))
         
-        # 2. Uji dengan format RGB (Bawaan Keras/TensorFlow saat training)
-        face_rgb_img = cv2.cvtColor(face_resized, cv2.COLOR_BGR2RGB)
-        face_rgb = img_to_array(face_rgb_img) / 255.0
-        face_rgb = np.expand_dims(face_rgb, axis=0)
-        preds_rgb = model.predict(face_rgb, verbose=0)
-        sim_rgb = float(np.max(preds_rgb))
+        # Threshold dikembalikan ke standar namun dengan sedikit kelonggaran
+        VGG16_SIM_THRESHOLD = 0.20 
         
-        # Ambil hasil yang paling meyakinkan (menghindari bug warna biru/merah terbalik)
-        if sim_rgb > sim_bgr:
-            preds = preds_rgb
-            similarity = sim_rgb
-        else:
-            preds = preds_bgr
-            similarity = sim_bgr
-
-        # Threshold diturunkan menjadi 0.15 agar lebih toleran terhadap perbedaan cahaya webcam
-        VGG16_SIM_THRESHOLD_RELAXED = 0.15 
-        
-        if similarity < VGG16_SIM_THRESHOLD_RELAXED:
+        if similarity < VGG16_SIM_THRESHOLD:
             print(json.dumps({
                 "success": False,
-                "message": f"Wajah terdeteksi tapi kecocokan sangat rendah ({round(similarity * 100, 1)}%). Coba hadapkan wajah ke terang.",
+                "message": f"Wajah terdeteksi tapi kecocokan model VGG16 terlalu rendah ({round(similarity * 100, 1)}%).",
                 "confidence": round(similarity * 100, 1)
             }))
             return
