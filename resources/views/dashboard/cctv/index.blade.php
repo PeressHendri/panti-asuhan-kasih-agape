@@ -511,55 +511,7 @@
         </div>
 
         {{-- ─── Bottom Panels ────────────────────────────────────────────── --}}
-        <div class="nvr-bottom-panels">
-
-            {{-- ── Face Recognition Log ─────────────────────────────── --}}
-            <div class="panel-card">
-                <div class="panel-header">
-                    <span class="panel-title"><i class="fas fa-id-badge me-2 text-primary"></i>Deteksi Wajah</span>
-                    <span class="badge bg-primary rounded-pill" style="font-size:.65rem;">Real-time</span>
-                </div>
-                <div class="panel-body" id="face-log-container">
-                    @forelse($faceLogs as $flog)
-                    <div class="face-log-item {{ $flog->status === 'tidak_dikenal' ? 'bg-danger-subtle' : '' }}">
-                        @if($flog->foto_capture_path)
-                            <img src="{{ asset('storage/'.$flog->foto_capture_path) }}"
-                                 class="face-thumb glightbox-trigger"
-                                 data-src="{{ asset('storage/'.$flog->foto_capture_path) }}"
-                                 title="{{ $flog->child->nama ?? 'Wajah Asing' }}">
-                        @else
-                            <div class="face-thumb-empty">
-                                <i class="fas fa-user"></i>
-                            </div>
-                        @endif
-                        <div class="flex-grow-1 min-w-0">
-                            <div class="face-name {{ $flog->status === 'tidak_dikenal' ? 'unknown' : '' }}">
-                                {{ $flog->status === 'tidak_dikenal' ? '⚠ Wajah Asing' : ($flog->child->nama ?? 'Seseorang') }}
-                            </div>
-                            <div class="face-time">
-                                {{ $flog->waktu_deteksi->format('H:i:s') }} — Cam: {{ strtoupper($flog->kamera_id) }}
-                            </div>
-                        </div>
-                        <div>
-                            @if($flog->status === 'check_in')
-                                <span class="badge" style="background:#dcfce7;color:#15803d;font-size:.65rem;">C-IN</span>
-                            @elseif($flog->status === 'tidak_dikenal')
-                                <span class="badge bg-danger" style="font-size:.65rem;">ASING</span>
-                            @else
-                                <span class="badge bg-secondary" style="font-size:.65rem;">
-                                    {{ strtoupper(str_replace('_',' ',$flog->status)) }}
-                                </span>
-                            @endif
-                        </div>
-                    </div>
-                    @empty
-                    <div style="padding:40px;text-align:center;color:#94a3b8;">
-                        <i class="fas fa-robot fa-2x mb-2 d-block opacity-50"></i>
-                        <div style="font-size:.82rem;">Belum ada deteksi wajah</div>
-                    </div>
-                    @endforelse
-                </div>
-            </div>
+        <div class="nvr-bottom-panels" style="grid-template-columns: 1fr;">
 
             {{-- ── Activity Log ─────────────────────────────────────── --}}
             <div class="panel-card">

@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class FaceRecognitionLog extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuids;
 
     protected $fillable = [
         'child_id',
@@ -35,3 +36,4 @@ class FaceRecognitionLog extends Model
         return $this->child ? $this->child->nama : 'Tidak Dikenal';
     }
 }
+

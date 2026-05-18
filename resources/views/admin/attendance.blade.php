@@ -355,9 +355,6 @@
                 <button class="btn-pill active" data-target="tab-daftar">
                     <i class="fas fa-clipboard-list me-1"></i>Daftar Kehadiran
                 </button>
-                <button class="btn-pill" data-target="tab-kamera">
-                    <i class="fas fa-camera me-1"></i>Log Kamera AI
-                </button>
             </div>
 
             {{-- Quick Check-In (hanya jika manual diaktifkan) --}}
@@ -401,7 +398,6 @@
                             <th>Check-Out</th>
                             <th>Durasi</th>
                             <th>Status</th>
-                            <th>Sumber</th>
                             @if(\Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false))
                             <th>Aksi</th>
                             @endif
@@ -471,15 +467,7 @@
                                     {{ $lbl[$att->status] ?? $att->status }}
                                 </span>
                             </td>
-                            <td>
-                                @if($att->algoritma === 'manual')
-                                    <span class="badge bg-secondary rounded-pill" style="font-size:.7rem;">Manual</span>
-                                @else
-                                    <span class="badge rounded-pill" style="background:#ede9fe;color:#6d28d9;font-size:.7rem;">
-                                        <i class="fas fa-robot me-1"></i>{{ strtoupper($att->algoritma ?? 'AI') }}
-                                    </span>
-                                @endif
-                            </td>
+
                             @if(\Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false))
                             <td>
                                 <div class="d-flex gap-2">
@@ -509,86 +497,6 @@
                     </tbody>
                 </table>
             </div>
-        </div>
-
-        {{-- ── Tab: Log Kamera AI ─────────────────────────────────── --}}
-        <div id="tab-kamera" class="tab-content-pane" style="display:none;">
-            <div class="table-responsive">
-                <table class="att-table">
-                    <thead>
-                        <tr>
-                            <th style="padding-left:24px;">Tangkapan</th>
-                            <th>Siapa?</th>
-                            <th>Waktu</th>
-                            <th>Kamera</th>
-                            <th>Status AI</th>
-                            <th>Akurasi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($faceLogs as $log)
-                        <tr class="{{ $log->status === 'tidak_dikenal' ? 'row-unknown' : '' }}">
-                            <td style="padding-left:24px;">
-                                @if($log->foto_capture_path)
-                                    <img src="{{ asset('storage/'.$log->foto_capture_path) }}"
-                                         class="glightbox-trigger rounded-3 shadow-sm"
-                                         data-src="{{ asset('storage/'.$log->foto_capture_path) }}"
-                                         style="width:42px;height:42px;object-fit:cover;cursor:pointer;">
-                                @else
-                                    <div class="bg-light rounded-3" style="width:42px;height:42px;"></div>
-                                @endif
-                            </td>
-                            <td>
-                                <div class="fw-bold {{ $log->status === 'tidak_dikenal' ? 'text-danger' : '' }}">
-                                    {{ $log->status === 'tidak_dikenal' ? '⚠ Wajah Asing' : ($log->child->nama ?? 'Seseorang') }}
-                                </div>
-                            </td>
-                            <td>
-                                <div class="fw-semibold" style="font-size:.82rem;">{{ $log->waktu_deteksi->isoFormat('D MMM') }}</div>
-                                <div class="text-muted" style="font-size:.78rem;font-family:monospace;">{{ $log->waktu_deteksi->format('H:i:s') }}</div>
-                            </td>
-                            <td>
-                                <span class="badge bg-light text-dark border" style="font-size:.75rem;">
-                                    <i class="fas fa-camera me-1 text-primary"></i>{{ strtoupper($log->kamera_id) }}
-                                </span>
-                            </td>
-                            <td>
-                                @if($log->status === 'check_in')
-                                    <span class="status-pill badge-hadir">Check In</span>
-                                @elseif($log->status === 'tidak_dikenal')
-                                    <span class="status-pill badge-alpa">Asing</span>
-                                @else
-                                    <span class="status-pill" style="background:#f1f5f9;color:#64748b;">{{ str_replace('_',' ',ucfirst($log->status)) }}</span>
-                                @endif
-                            </td>
-                            <td>
-                                @php $conf = $log->confidence_score ?? 0; @endphp
-                                <div class="d-flex align-items-center gap-2">
-                                    <div style="width:60px;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;">
-                                        <div style="width:{{ min($conf,100) }}%;height:100%;background:{{ $conf>=75?'#22c55e':($conf>=50?'#f59e0b':'#ef4444') }};border-radius:3px;"></div>
-                                    </div>
-                                    <span style="font-size:.78rem;font-weight:700;">{{ number_format($conf,0) }}%</span>
-                                </div>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr><td colspan="6">
-                            <div class="empty-state">
-                                <i class="fas fa-robot d-block"></i>
-                                <div class="fw-bold" style="font-size:1.1rem;">Belum ada data AI</div>
-                                <div>Sistem face recognition belum mendeteksi aktivitas</div>
-                            </div>
-                        </td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            {{-- Pagination --}}
-            @if($faceLogs->hasPages())
-            <div class="p-3 border-top">
-                {{ $faceLogs->links() }}
-            </div>
-            @endif
         </div>
     </div>
 </div>

@@ -133,6 +133,9 @@ Route::group([], function () {
         Route::post('/dashboard/cctv/{id}/refresh', [CctvController::class, 'refresh'])->name('dashboard.cctv.refresh');
 
         Route::get('/dashboard/face-log', [FaceRecognitionController::class, 'dashboard'])->name('dashboard.face-log');
+        Route::get('/dashboard/face-recognition/web', [FaceRecognitionController::class, 'webFaceRecognitionPage'])->name('dashboard.face-recognition.web')->middleware('role:admin,pengasuh');
+        Route::post('/dashboard/face-recognition/web-scan', [FaceRecognitionController::class, 'webScan'])->name('dashboard.face-recognition.web-scan')->middleware('role:admin,pengasuh');
+        Route::get('/dashboard/face-recognition/recent-attendance', [FaceRecognitionController::class, 'recentAttendance'])->name('dashboard.face-recognition.recent-attendance')->middleware('role:admin,pengasuh');
     });
 
     Route::middleware(['auth', 'role:admin'])->group(function () {

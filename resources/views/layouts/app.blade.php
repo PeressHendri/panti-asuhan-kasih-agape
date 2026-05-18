@@ -268,6 +268,12 @@
                 </a>
             </div>
             <div class="nav-item">
+                <a class="nav-link {{ $currentRoute == 'dashboard.face-recognition.web' ? 'active' : '' }}" href="{{ route('dashboard.face-recognition.web') }}">
+                    <i class="fas fa-camera"></i>
+                    <span>Absen Wajah (Web)</span>
+                </a>
+            </div>
+            <div class="nav-item">
                 <a class="nav-link {{ str_contains($currentRoute ?? '', 'gallery') ? 'active' : '' }}" href="{{ route('admin.gallery.index') }}">
                     <i class="fas fa-images"></i>
                     <span>Galeri</span>
@@ -304,6 +310,12 @@
                 <a class="nav-link {{ $currentRoute == 'dashboard.cctv' ? 'active' : '' }}" href="{{ route('dashboard.cctv') }}">
                     <i class="fas fa-video"></i>
                     <span>Monitoring CCTV</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link {{ $currentRoute == 'dashboard.face-recognition.web' ? 'active' : '' }}" href="{{ route('dashboard.face-recognition.web') }}">
+                    <i class="fas fa-camera"></i>
+                    <span>Absen Wajah (Web)</span>
                 </a>
             </div>
             <div class="nav-item">

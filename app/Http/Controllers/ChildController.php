@@ -42,7 +42,10 @@ class ChildController extends Controller
             $validated['photo'] = $request->file('photo')->store('children-photos', 'public');
         }
 
-        Child::create($validated);
+        $child = Child::create($validated);
+        
+        // Sinkronisasi otomatis ke folder dataset CNN
+        $this->syncFaceRecognitionDataset($child);
 
         return redirect()->route('admin.profile.panti')->with('success', 'Data anak berhasil ditambahkan.');
     }
@@ -75,6 +78,9 @@ class ChildController extends Controller
         }
 
         $child->update($validated);
+        
+        // Sinkronisasi otomatis ke folder dataset CNN
+        $this->syncFaceRecognitionDataset($child);
         return redirect()->route('admin.profile.panti')->with('success', 'Data anak berhasil diperbarui.');
     }
 
@@ -87,6 +93,9 @@ class ChildController extends Controller
             Storage::disk('public')->delete($child->photo);
         }
 
+        // Hapus folder dataset CNN
+        $this->removeFaceRecognitionDataset($child);
+
         $child->delete();
         return redirect()->route('admin.profile.panti')->with('success', 'Data anak berhasil dihapus.');
     }
@@ -97,5 +106,63 @@ class ChildController extends Controller
             'success' => true,
             'data' => Child::select('id', 'nama', 'face_encoding_lbph', 'face_encoding_cnn')->get()
         ]);
+    }
+
+    /**
+     * Memindahkan foto yang diunggah ke folder dataset CNN
+     */
+    private function syncFaceRecognitionDataset(Child $child)
+    {
+        if (!$child->photo) return;
+
+        $sourcePath = storage_path('app/public/' . $child->photo);
+        if (!file_exists($sourcePath)) return;
+
+        // Bersihkan nama agar aman untuk nama folder
+        $safeName = preg_replace('/[^a-zA-Z0-9]/', '_', $child->nama);
+        $safeName = trim(preg_replace('/_+/', '_', $safeName), '_');
+        
+        $datasetDir = base_path("recognition_engine/dataset/{$child->id}_{$safeName}");
+
+        if (!file_exists($datasetDir)) {
+            mkdir($datasetDir, 0775, true);
+        }
+
+        // Simpan sebagai gambar referensi utama CNN
+        $destPath = $datasetDir . '/ref.jpg';
+        copy($sourcePath, $destPath);
+        
+        // Opsional: Jika ada file cache .pkl dari DeepFace, kita hapus agar di-generate ulang
+        $cacheFile = base_path("recognition_engine/dataset/representations_vgg_face.pkl");
+        if (file_exists($cacheFile)) {
+            unlink($cacheFile);
+        }
+    }
+
+    /**
+     * Menghapus folder dataset CNN jika anak dihapus
+     */
+    private function removeFaceRecognitionDataset(Child $child)
+    {
+        $safeName = preg_replace('/[^a-zA-Z0-9]/', '_', $child->nama);
+        $safeName = trim(preg_replace('/_+/', '_', $safeName), '_');
+        
+        $datasetDir = base_path("recognition_engine/dataset/{$child->id}_{$safeName}");
+
+        if (file_exists($datasetDir)) {
+            $files = glob($datasetDir . '/*');
+            foreach ($files as $file) {
+                if (is_file($file)) {
+                    unlink($file);
+                }
+            }
+            rmdir($datasetDir);
+        }
+        
+        // Hapus cache agar sinkron
+        $cacheFile = base_path("recognition_engine/dataset/representations_vgg_face.pkl");
+        if (file_exists($cacheFile)) {
+            unlink($cacheFile);
+        }
     }
 }
