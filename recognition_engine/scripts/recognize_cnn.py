@@ -119,8 +119,18 @@ def main():
     x, y, w, h = faces[0]
 
     try:
-        # Preprocessing Wajah
-        face_roi = img[y:y+h, x:x+w]
+        # Preprocessing Wajah dengan menambahkan Margin 15% agar seluruh kepala (rambut/dagu) masuk
+        # Ini sangat penting agar VGG16 mendapatkan konteks wajah yang sama seperti saat ditraining
+        img_h, img_w = img.shape[:2]
+        margin_x = int(w * 0.15)
+        margin_y = int(h * 0.15)
+        
+        x1 = max(0, x - margin_x)
+        y1 = max(0, y - margin_y)
+        x2 = min(img_w, x + w + margin_x)
+        y2 = min(img_h, y + h + margin_y)
+        
+        face_roi = img[y1:y2, x1:x2]
         face_resized = cv2.resize(face_roi, (224, 224))
         
         # Karena Keras biasanya di-training menggunakan RGB, sedangkan OpenCV menangkap BGR,
