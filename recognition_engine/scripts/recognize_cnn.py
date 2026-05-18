@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import logging
+import pickle
 
 # Perbaikan untuk VPS CloudPanel: Pastikan Python membaca package dari instalasi user lokal secara dinamis
 import glob
@@ -17,23 +18,27 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 try:
     import cv2
-    import pandas as pd
-    from deepface import DeepFace
+    import numpy as np
+    import tensorflow as tf
+    from tensorflow.keras.models import load_model
+    from tensorflow.keras.preprocessing.image import img_to_array
 except ImportError as e:
-    print(json.dumps({"success": False, "message": f"Library Error: {str(e)} (Pastikan install opencv-python-headless di VPS)"}))
+    print(json.dumps({"success": False, "message": f"Library Error: {str(e)} (Pastikan install tensorflow dan opencv di VPS)"}))
     sys.exit(1)
 
-# Matikan log DeepFace
-logging.getLogger("deepface").setLevel(logging.ERROR)
+# Matikan log Tensorflow
+tf.get_logger().setLevel('ERROR')
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# Dataset folder dimana foto anak disimpan per folder ID, cth: dataset/24/foto.jpg
-DATASET_PATH = os.path.join(BASE_DIR, "dataset")
+MODELS_DIR = os.path.join(BASE_DIR, "models", "vgg16")
 
-# Menggunakan model FaceNet karena akurasi tinggi dan lumayan cepat di CPU
-MODEL_NAME = "Facenet" 
-# Metric cosine sangat baik untuk perbandingan kemiripan wajah
-DISTANCE_METRIC = "cosine"
+# Pilih model VGG16 terbaik
+VGG16_MODEL_PATH = os.path.join(MODELS_DIR, "best_adam.h5")
+if not os.path.exists(VGG16_MODEL_PATH):
+    VGG16_MODEL_PATH = os.path.join(MODELS_DIR, "model_vgg16_adam.h5")
+
+ENCODER_PATH = os.path.join(MODELS_DIR, "label_encoder.pkl")
+VGG16_SIM_THRESHOLD = 0.40  # Threshold standar 40%
 
 def main():
     if len(sys.argv) < 2:
@@ -45,72 +50,84 @@ def main():
         print(json.dumps({"success": False, "message": f"File gambar tidak ditemukan: {img_path}"}))
         return
 
-    if not os.path.exists(DATASET_PATH):
-        print(json.dumps({"success": False, "message": "Folder dataset tidak ditemukan. Pastikan ada foto referensi anak."}))
+    if not os.path.exists(VGG16_MODEL_PATH) or not os.path.exists(ENCODER_PATH):
+        print(json.dumps({"success": False, "message": "Model VGG16 hasil training (.h5) atau Label Encoder (.pkl) tidak ditemukan di VPS."}))
         return
 
     try:
-        # DeepFace.find otomatis mengekstrak wajah, membandingkan dengan semua foto di db_path.
-        # Secara otomatis membuat file .pkl (cache) di folder dataset agar deteksi selanjutnya sangat cepat.
-        results = DeepFace.find(
-            img_path=img_path, 
-            db_path=DATASET_PATH, 
-            model_name=MODEL_NAME, 
-            distance_metric=DISTANCE_METRIC,
-            enforce_detection=True, # Harus ada wajah
-            silent=True
-        )
-
-        if len(results) > 0 and len(results[0]) > 0:
-            df = results[0]
-            # Ambil kecocokan terbaik (index 0)
-            best_match = df.iloc[0]
-            
-            # Format return dari DeepFace: path foto yang paling mirip, misal: .../dataset/24_Peres/ref1.jpg
-            matched_file_path = best_match['identity']
-            distance = best_match[f'{MODEL_NAME}_{DISTANCE_METRIC}'] # Semakin kecil semakin mirip
-
-            # Konversi distance ke persentase akurasi (Cosine: 0 = mirip banget, 1 = tidak mirip)
-            # Threshold wajar Cosine untuk Facenet adalah sekitar 0.40
-            threshold = 0.40
-            if distance > threshold:
-                print(json.dumps({
-                    "success": False, 
-                    "message": "Wajah terdeteksi tapi tidak ada kecocokan yang meyakinkan di database.",
-                    "distance": round(distance, 3)
-                }))
-                return
-
-            accuracy_pct = round((1.0 - (distance / threshold)) * 100, 1)
-            accuracy_pct = min(100.0, max(0.0, accuracy_pct))
-
-            # Ekstrak ID anak dari nama folder. 
-            # Contoh struktur folder: dataset/24/foto.jpg -> parent folder adalah '24'
-            parent_folder_name = os.path.basename(os.path.dirname(matched_file_path))
-            
-            try:
-                # Misal folder dinamai '24' atau '24_Peres', kita ambil angka di depannya
-                child_id = int(parent_folder_name.split('_')[0])
-            except ValueError:
-                child_id = parent_folder_name # Fallback jika string
-
-            print(json.dumps({
-                "success": True,
-                "child_id": child_id,
-                "nama": parent_folder_name.split('_', 1)[1] if '_' in parent_folder_name else f"ID {child_id}",
-                "confidence": accuracy_pct,
-                "distance": round(distance, 3),
-                "model": MODEL_NAME
-            }))
-
-        else:
-            print(json.dumps({"success": False, "message": "Wajah tidak dikenal (tidak ada kecocokan)."}))
-
-    except ValueError as e:
-        # Terjadi jika DeepFace tidak bisa mendeteksi wajah sama sekali di foto
-        print(json.dumps({"success": False, "message": "Wajah tidak terlihat jelas di kamera."}))
+        # Muat Model VGG16 dan Encoder
+        model = load_model(VGG16_MODEL_PATH)
+        with open(ENCODER_PATH, 'rb') as f:
+            le = pickle.load(f)
     except Exception as e:
-        print(json.dumps({"success": False, "message": f"Error mesin CNN: {str(e)}"}))
+        print(json.dumps({"success": False, "message": f"Gagal memuat model VGG16: {str(e)}"}))
+        return
+
+    # Baca Gambar
+    img = cv2.imread(img_path)
+    if img is None:
+        print(json.dumps({"success": False, "message": "Gagal membaca file gambar dari storage."}))
+        return
+
+    # Deteksi Wajah
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    cascade_default = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    cascade_alt = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_alt2.xml')
+
+    faces = cascade_default.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=4, minSize=(50, 50))
+    if len(faces) == 0:
+        faces = cascade_alt.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=3, minSize=(50, 50))
+
+    if len(faces) == 0:
+        print(json.dumps({"success": False, "message": "Wajah tidak terdeteksi oleh kamera. Posisikan wajah lebih jelas."}))
+        return
+
+    # Ambil wajah terbesar
+    faces = sorted(faces, key=lambda f: f[2] * f[3], reverse=True)
+    x, y, w, h = faces[0]
+
+    try:
+        # Preprocessing Wajah
+        face_roi = img[y:y+h, x:x+w]
+        face_resized = cv2.resize(face_roi, (224, 224))
+        face_array = img_to_array(face_resized) / 255.0
+        face_array = np.expand_dims(face_array, axis=0)
+
+        # Prediksi dengan VGG16
+        preds = model.predict(face_array, verbose=0)
+        similarity = float(np.max(preds))
+        
+        if similarity < VGG16_SIM_THRESHOLD:
+            print(json.dumps({
+                "success": False,
+                "message": "Wajah terdeteksi tapi tingkat kecocokan model VGG16 di bawah threshold.",
+                "confidence": round(similarity * 100, 1)
+            }))
+            return
+
+        # Ambil Label Hasil Prediksi
+        label_idx = int(np.argmax(preds))
+        raw_label = le.inverse_transform([label_idx])[0]
+
+        try:
+            # Parse label: format "Nama_Lengkap_ID"
+            child_id = int(raw_label.split("_")[-1])
+            nama = raw_label.rsplit('_', 1)[0].replace('_', ' ')
+        except Exception:
+            child_id = None
+            nama = raw_label
+
+        print(json.dumps({
+            "success": True,
+            "child_id": child_id,
+            "nama": nama,
+            "confidence": round(similarity * 100, 1),
+            "distance": round(1.0 - similarity, 3),
+            "model": "VGG16 Custom"
+        }))
+
+    except Exception as e:
+        print(json.dumps({"success": False, "message": f"Error selama inferensi VGG16: {str(e)}"}))
 
 if __name__ == "__main__":
     main()
