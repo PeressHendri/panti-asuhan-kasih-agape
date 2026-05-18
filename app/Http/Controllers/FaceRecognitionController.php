@@ -177,7 +177,15 @@ class FaceRecognitionController extends Controller
         $command = $pythonPathEnv . escapeshellarg($pythonBin) . " " . escapeshellarg($pythonScriptPath) . " " . escapeshellarg($fullPath) . " 2>&1";
         $output = shell_exec($command);
 
-        $result = json_decode($output, true);
+        // Cari string JSON di dalam output (menghilangkan log/warning TensorFlow dari STDERR)
+        $jsonStart = strpos($output, '{');
+        $jsonEnd = strrpos($output, '}');
+        
+        $result = null;
+        if ($jsonStart !== false && $jsonEnd !== false) {
+            $jsonString = substr($output, $jsonStart, $jsonEnd - $jsonStart + 1);
+            $result = json_decode($jsonString, true);
+        }
 
         if (!$result) {
             // Hapus file sementara jika gagal scan/error script
