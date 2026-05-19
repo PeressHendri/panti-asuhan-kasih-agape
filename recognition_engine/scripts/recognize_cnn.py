@@ -119,8 +119,7 @@ def main():
     x, y, w, h = faces[0]
 
     try:
-        # Preprocessing Wajah dengan Margin 15%
-        # Ini memberikan sedikit ruang di sekitar dahi dan dagu agar VGG16 bisa melihat bentuk utuh wajah.
+        # Preprocessing Wajah dengan Margin 15% untuk VGG16
         img_h, img_w = img.shape[:2]
         margin_x = int(w * 0.15)
         margin_y = int(h * 0.15)
@@ -133,52 +132,105 @@ def main():
         face_roi = img[y1:y2, x1:x2]
         face_resized = cv2.resize(face_roi, (224, 224))
         
-        # SANGAT PENTING: Keras ImageDataGenerator (Colab) melatih data dalam format RGB!
-        # Sedangkan OpenCV membaca gambar web dalam format BGR.
-        # Kita WAJIB membaliknya agar warna kulit manusia tidak terlihat 'biru/abu-abu' di mata AI.
         face_rgb = cv2.cvtColor(face_resized, cv2.COLOR_BGR2RGB)
-        
         face_array = img_to_array(face_rgb) / 255.0
         face_array = np.expand_dims(face_array, axis=0)
         
-        # Prediksi dengan VGG16
+        # 1. Prediksi dengan VGG16
         preds = model.predict(face_array, verbose=0)
-        similarity = float(np.max(preds))
+        vgg16_similarity = float(np.max(preds))
+        vgg16_label_idx = int(np.argmax(preds))
+        raw_label = le.inverse_transform([vgg16_label_idx])[0]
+
+        try:
+            vgg16_child_id = int(raw_label.split("_")[-1])
+            vgg16_nama = raw_label.rsplit('_', 1)[0].replace('_', ' ')
+        except Exception:
+            vgg16_child_id = None
+            vgg16_nama = raw_label
+            
+        vgg16_confidence = round(vgg16_similarity * 100, 1)
+
+        # 2. Prediksi dengan LBPH (Ensemble Learning)
+        lbph_child_id = None
+        lbph_nama = None
+        lbph_confidence = 0.0
         
-        # Threshold dikembalikan ke standar namun dengan sedikit kelonggaran
-        VGG16_SIM_THRESHOLD = 0.20 
+        LBPH_MODEL_PATH = os.path.join(BASE_DIR, "models", "lbph", "trainer.yml")
+        LBPH_MAP_PATH = os.path.join(BASE_DIR, "models", "lbph", "label_map.pkl")
         
-        if similarity < VGG16_SIM_THRESHOLD:
+        if os.path.exists(LBPH_MODEL_PATH) and os.path.exists(LBPH_MAP_PATH):
+            try:
+                lbph_recognizer = cv2.face.LBPHFaceRecognizer_create()
+                lbph_recognizer.read(LBPH_MODEL_PATH)
+                with open(LBPH_MAP_PATH, "rb") as f:
+                    lbph_map = pickle.load(f)
+                
+                # Preprocess LBPH (CLAHE + crop)
+                l_margin_x = int(w * 0.10)
+                l_margin_y = int(h * 0.10)
+                lx1 = max(0, x - l_margin_x)
+                ly1 = max(0, y - l_margin_y)
+                lx2 = min(img_w, x + w + l_margin_x)
+                ly2 = min(img_h, y + h + l_margin_y)
+                
+                gray_face = gray[ly1:ly2, lx1:lx2]
+                gray_face = cv2.resize(gray_face, (200, 200), interpolation=cv2.INTER_LANCZOS4)
+                clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+                gray_face = clahe.apply(gray_face)
+                gray_face = cv2.GaussianBlur(gray_face, (3, 3), 0)
+                
+                id_pred, conf = lbph_recognizer.predict(gray_face)
+                
+                # Konversi Distance LBPH ke Persentase (Distance 0 = 100%, 100 = 0%)
+                lbph_confidence = round(max(0.0, 100.0 - conf), 1)
+                
+                entry = lbph_map.get(id_pred) or lbph_map.get(str(id_pred))
+                if entry:
+                    if isinstance(entry, dict):
+                        lbph_child_id = entry.get('id', id_pred)
+                        lbph_nama = entry.get('nama', f"ID_{id_pred}")
+                    elif isinstance(entry, str):
+                        parts = entry.rsplit('_', 1)
+                        lbph_child_id = int(parts[-1]) if len(parts) > 1 and parts[-1].isdigit() else id_pred
+                        lbph_nama = parts[0] if len(parts) > 1 else entry
+                    lbph_nama = lbph_nama.replace('_', ' ').strip()
+            except Exception as e:
+                pass # Abaikan jika LBPH gagal, tetap lanjut pakai VGG16
+
+        # 3. ENSEMBLE DECISION (Pemilihan Pemenang)
+        # Jika kedua model berhasil mendeteksi, bandingkan persentase akurasinya!
+        if lbph_confidence > vgg16_confidence and lbph_child_id is not None:
+            final_id = lbph_child_id
+            final_nama = lbph_nama
+            final_conf = lbph_confidence
+            final_model = "LBPH (Ensemble Winner)"
+        else:
+            final_id = vgg16_child_id
+            final_nama = vgg16_nama
+            final_conf = vgg16_confidence
+            final_model = "VGG16 (Ensemble Winner)"
+
+        # Threshold gabungan minimum
+        if final_conf < 20.0:
             print(json.dumps({
                 "success": False,
-                "message": f"Wajah terdeteksi tapi kecocokan model VGG16 terlalu rendah ({round(similarity * 100, 1)}%).",
-                "confidence": round(similarity * 100, 1)
+                "message": f"Wajah terdeteksi tapi kecocokan terlalu rendah ({final_conf}%).",
+                "confidence": final_conf
             }))
             return
 
-        # Ambil Label Hasil Prediksi
-        label_idx = int(np.argmax(preds))
-        raw_label = le.inverse_transform([label_idx])[0]
-
-        try:
-            # Parse label: format "Nama_Lengkap_ID"
-            child_id = int(raw_label.split("_")[-1])
-            nama = raw_label.rsplit('_', 1)[0].replace('_', ' ')
-        except Exception:
-            child_id = None
-            nama = raw_label
-
         print(json.dumps({
             "success": True,
-            "child_id": child_id,
-            "nama": nama,
-            "confidence": round(similarity * 100, 1),
-            "distance": round(1.0 - similarity, 3),
-            "model": "VGG16 Custom"
+            "child_id": final_id,
+            "nama": final_nama,
+            "confidence": final_conf,
+            "distance": round(1.0 - (final_conf/100.0), 3),
+            "model": final_model
         }))
 
     except Exception as e:
-        print(json.dumps({"success": False, "message": f"Error selama inferensi VGG16: {str(e)}"}))
+        print(json.dumps({"success": False, "message": f"Error selama inferensi Ensemble: {str(e)}"}))
 
 if __name__ == "__main__":
     main()
