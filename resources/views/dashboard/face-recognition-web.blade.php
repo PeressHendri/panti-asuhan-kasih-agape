@@ -205,14 +205,14 @@
                 <i class="fas fa-eye" id="eye-icon"></i>
                 <span id="status-text">Memulai kamera...</span>
             </span>
-            <div class="mode-toggle">
-                <button class="mode-btn checkin active" id="btn-checkin" onclick="setMode('check_in')">
-                    <i class="fas fa-sign-in-alt me-1"></i>Check In
-                </button>
-                <button class="mode-btn checkout" id="btn-checkout" onclick="setMode('check_out')">
-                    <i class="fas fa-sign-out-alt me-1"></i>Check Out
-                </button>
-            </div>
+            {{-- Mode otomatis: tidak perlu tombol --}}
+            <span id="auto-mode-badge" style="
+                display:inline-flex;align-items:center;gap:6px;
+                background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);
+                color:#3b82f6;padding:5px 14px;border-radius:50px;font-size:.78rem;font-weight:700;
+            ">
+                <i class="fas fa-magic me-1"></i> Mode Otomatis
+            </span>
         </div>
     </div>
 
@@ -271,21 +271,20 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ─── State ──────────────────────────────────────────────────────
-    const SCAN_INTERVAL   = 4000;  // ms antar scan otomatis
-    const COOLDOWN_MS     = 8000;  // ms cooldown setelah berhasil dikenali
-    const SCAN_URL        = '{{ route("dashboard.face-recognition.web-scan") }}';
-    const ATT_URL         = '{{ route("dashboard.face-recognition.recent-attendance") }}';
-    const CSRF            = '{{ csrf_token() }}';
+    // ─── Konfigurasi ─────────────────────────────────────────────────
+    const SCAN_INTERVAL = 4000;   // ms antar scan otomatis
+    const COOLDOWN_MS   = 8000;   // ms cooldown setelah scan berhasil
+    const SCAN_URL      = '{{ route("dashboard.face-recognition.web-scan") }}';
+    const ATT_URL       = '{{ route("dashboard.face-recognition.recent-attendance") }}';
+    const CSRF          = '{{ csrf_token() }}';
 
-    let mode        = 'check_in';
     let scanning    = false;
     let inCooldown  = false;
     let cameraReady = false;
     let scanTimer   = null;
     let cooldownTimer = null;
 
-    // ─── DOM ────────────────────────────────────────────────────────
+    // ─── DOM ──────────────────────────────────────────────────────────
     const video       = document.getElementById('webcam');
     const overlay     = document.getElementById('cam-overlay');
     const retryBtn    = document.getElementById('btn-retry');
@@ -302,14 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const canvas      = document.getElementById('snap');
     const ctx         = canvas.getContext('2d');
 
-    // ─── Mode toggle ────────────────────────────────────────────────
-    window.setMode = function(m) {
-        mode = m;
-        document.getElementById('btn-checkin').classList.toggle('active', m === 'check_in');
-        document.getElementById('btn-checkout').classList.toggle('active', m === 'check_out');
-    };
-
-    // ─── Camera init ────────────────────────────────────────────────
+    // ─── Camera init ──────────────────────────────────────────────────
     function initCamera() {
         navigator.mediaDevices.getUserMedia({ video: { width:640, height:480, facingMode:'user' } })
         .then(stream => {
@@ -318,13 +310,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 video.play();
                 overlay.style.display = 'none';
                 cameraReady = true;
-                setStatus('idle', 'Siap — Mendeteksi wajah...');
+                setStatus('idle', 'Siap — Deteksi otomatis aktif...');
                 startAutoScan();
             };
         })
         .catch(() => {
             overlay.querySelector('h5').innerText = 'Akses Kamera Ditolak';
-            overlay.querySelector('p').innerText = 'Periksa izin kamera di browser.';
+            overlay.querySelector('p').innerText  = 'Periksa izin kamera di browser.';
             overlay.querySelector('.spinner-border').classList.add('d-none');
             retryBtn.classList.remove('d-none');
         });
@@ -337,16 +329,19 @@ document.addEventListener('DOMContentLoaded', () => {
         initCamera();
     });
 
-    // ─── Status helper ──────────────────────────────────────────────
+    // ─── Status helper ────────────────────────────────────────────────
     function setStatus(type, text) {
         statusBadge.className = `status-badge ${type}`;
-        statusText.innerText = text;
+        statusText.innerText  = text;
         spinIcon.classList.toggle('d-none', type !== 'scanning');
-        eyeIcon.classList.toggle('d-none', type === 'scanning');
-        faceGuide.className = `face-guide ${type === 'scanning' ? 'detecting' : type === 'success' ? 'success' : type === 'error' ? 'error' : ''}`;
+        eyeIcon.classList.toggle('d-none',  type === 'scanning');
+        faceGuide.className   = `face-guide ${
+            type === 'scanning' ? 'detecting' :
+            type === 'success'  ? 'success'   :
+            type === 'error'    ? 'error'      : ''}`;
     }
 
-    // ─── Auto scan loop ─────────────────────────────────────────────
+    // ─── Auto scan loop ───────────────────────────────────────────────
     function startAutoScan() {
         if (scanTimer) clearInterval(scanTimer);
         scanTimer = setInterval(() => {
@@ -355,17 +350,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }, SCAN_INTERVAL);
     }
 
-    // ─── Take snapshot ──────────────────────────────────────────────
+    // ─── Take snapshot ────────────────────────────────────────────────
     function captureFrame() {
         ctx.save();
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         ctx.restore();
-        return canvas.toDataURL('image/jpeg', 0.85);
+        return canvas.toDataURL('image/jpeg', 0.9);
     }
 
-    // ─── Speech ─────────────────────────────────────────────────────
+    // ─── Speech ───────────────────────────────────────────────────────
     function speak(text) {
         if (!('speechSynthesis' in window)) return;
         window.speechSynthesis.cancel();
@@ -374,38 +369,53 @@ document.addEventListener('DOMContentLoaded', () => {
         window.speechSynthesis.speak(u);
     }
 
-    // ─── Show last result ───────────────────────────────────────────
+    // ─── Show last result ─────────────────────────────────────────────
     function showResult(ok, data, msg) {
         if (ok) {
+            const isIn  = data.status && data.status.toLowerCase().includes('masuk');
+            const color = isIn ? '#10b981' : '#f59e0b';
+            const icon  = isIn ? 'sign-in-alt' : 'sign-out-alt';
             lastResult.innerHTML = `
-                <img src="${data.foto}" class="result-avatar" onerror="this.style.display='none'">
+                <img src="${data.foto}" class="result-avatar"
+                     style="border-color:${color};box-shadow:0 8px 25px ${color}40;"
+                     onerror="this.style.display='none'">
                 <div class="result-name">${data.nama}</div>
                 <div class="result-meta">Akurasi: <strong style="color:#22c55e;">${parseFloat(data.confidence).toFixed(1)}%</strong> · ${data.waktu}</div>
-                <span class="result-badge ok">${data.status}</span>`;
+                <span class="result-badge ok" style="background:${color}20;color:${color};border-color:${color}50;">
+                    <i class="fas fa-${icon} me-1"></i>${data.status}
+                </span>`;
         } else {
+            const isDone = msg && msg.includes('sudah menyelesaikan');
             lastResult.innerHTML = `
-                <div style="width:70px;height:70px;border-radius:50%;background:rgba(239,68,68,.1);border:2px solid rgba(239,68,68,.3);display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
-                    <i class="fas fa-user-times fa-2x" style="color:#ef4444;"></i>
+                <div style="width:70px;height:70px;border-radius:50%;
+                     background:${isDone ? 'rgba(59,130,246,.1)' : 'rgba(239,68,68,.1)'};
+                     border:2px solid ${isDone ? 'rgba(59,130,246,.3)' : 'rgba(239,68,68,.3)'};
+                     display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
+                    <i class="fas fa-${isDone ? 'check-double' : 'user-times'} fa-2x"
+                       style="color:${isDone ? '#3b82f6' : '#ef4444'};"></i>
                 </div>
-                <span class="result-badge err">TIDAK DIKENAL</span>
+                <span class="result-badge ${isDone ? '' : 'err'}"
+                      style="${isDone ? 'background:rgba(59,130,246,.1);color:#2563eb;border:1px solid rgba(59,130,246,.3);' : ''}">
+                    ${isDone ? '✓ SELESAI HARI INI' : 'TIDAK DIKENAL'}
+                </span>
                 <p class="text-muted small mt-2 mb-0">${msg}</p>`;
         }
     }
 
-    // ─── Cooldown bar ───────────────────────────────────────────────
+    // ─── Cooldown bar ─────────────────────────────────────────────────
     function startCooldown() {
         inCooldown = true;
         const start = Date.now();
-        const tick = () => {
+        const tick  = () => {
             const pct = Math.min(100, ((Date.now() - start) / COOLDOWN_MS) * 100);
             cooldownFill.style.width = pct + '%';
             if (pct < 100) { cooldownTimer = requestAnimationFrame(tick); }
-            else { inCooldown = false; cooldownFill.style.width = '0%'; setStatus('idle','Siap — Mendeteksi wajah...'); }
+            else { inCooldown = false; cooldownFill.style.width = '0%'; setStatus('idle', 'Siap — Deteksi otomatis aktif...'); }
         };
         cooldownTimer = requestAnimationFrame(tick);
     }
 
-    // ─── Main scan function ─────────────────────────────────────────
+    // ─── Main scan function ───────────────────────────────────────────
     function doScan() {
         scanning = true;
         scanLine.style.display = 'block';
@@ -413,28 +423,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const foto = captureFrame();
 
+        // Kirim HANYA foto — status (check_in/check_out) ditentukan otomatis server
         fetch(SCAN_URL, {
-            method: 'POST',
+            method:  'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
-            body: JSON.stringify({ foto_base64: foto, status: mode })
+            body:    JSON.stringify({ foto_base64: foto })
         })
-        .then(r => r.json())
+        .then(r  => r.json())
         .then(res => {
             scanLine.style.display = 'none';
             scanning = false;
 
             if (res.success) {
-                setStatus('success', `✓ ${res.data.nama}`);
+                const isIn = res.data.status && res.data.status.toLowerCase().includes('masuk');
+                setStatus('success', `✓ ${res.data.nama} — ${isIn ? 'Check In' : 'Check Out'}`);
                 showResult(true, res.data, '');
-                speak(`Halo ${res.data.nama}, ${mode === 'check_in' ? 'selamat datang, kamu sudah masuk' : 'kamu sudah keluar'}.`);
+                speak(isIn
+                    ? `Selamat datang ${res.data.nama}, Check In berhasil.`
+                    : `${res.data.nama}, Check Out berhasil. Sampai jumpa.`);
                 startCooldown();
                 refreshAttendance();
             } else {
                 const notFace = res.message && res.message.includes('tidak terdeteksi');
+                const isDone  = res.message && res.message.includes('sudah menyelesaikan');
                 if (!notFace) {
-                    setStatus('error', 'Wajah tidak dikenal');
+                    if (isDone) {
+                        setStatus('idle', 'Absensi hari ini sudah selesai ✓');
+                    } else {
+                        setStatus('error', 'Wajah tidak dikenal');
+                        speak('Maaf, wajah tidak dikenal.');
+                    }
                     showResult(false, null, res.message);
-                    speak('Maaf, wajah tidak terdaftar.');
                     startCooldown();
                 } else {
                     setStatus('idle', 'Posisikan wajah ke kamera...');
@@ -450,15 +469,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ─── Refresh attendance list ────────────────────────────────────
+    // ─── Refresh attendance list ──────────────────────────────────────
     function refreshAttendance() {
         fetch(ATT_URL, { headers: { 'Accept': 'application/json' } })
-        .then(r => r.json())
+        .then(r  => r.json())
         .then(res => {
             const list = res.data || [];
             attCount.textContent = list.length + ' hadir';
             if (list.length === 0) {
-                attList.innerHTML = `<div style="padding:30px;text-align:center;color:#475569;"><i class="fas fa-calendar-day fa-2x mb-2 d-block opacity-50"></i><div style="font-size:.82rem;">Belum ada kehadiran hari ini</div></div>`;
+                attList.innerHTML = `<div style="padding:30px;text-align:center;color:#475569;">
+                    <i class="fas fa-calendar-day fa-2x mb-2 d-block opacity-50"></i>
+                    <div style="font-size:.82rem;">Belum ada kehadiran hari ini</div></div>`;
                 return;
             }
             attList.innerHTML = list.map(a => `
@@ -467,8 +488,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div>
                         <div class="att-name">${a.nama}</div>
                         <div class="att-time">
-                            ${a.check_in ? 'IN ' + a.check_in : ''}
-                            ${a.check_out ? ' · OUT ' + a.check_out : ''}
+                            ${a.check_in  ? '<i class="fas fa-sign-in-alt" style="color:#10b981;font-size:.65rem;"></i> IN '  + a.check_in  : ''}
+                            ${a.check_out ? ' · <i class="fas fa-sign-out-alt" style="color:#f59e0b;font-size:.65rem;"></i> OUT ' + a.check_out : ''}
                         </div>
                     </div>
                     <span class="att-chip ${a.check_out ? 'out' : 'in'}">${a.check_out ? 'KELUAR' : 'HADIR'}</span>
@@ -477,10 +498,10 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(() => {});
     }
 
-    // ─── Init ───────────────────────────────────────────────────────
+    // ─── Init ─────────────────────────────────────────────────────────
     initCamera();
     refreshAttendance();
-    setInterval(refreshAttendance, 15000); // refresh tiap 15 detik
+    setInterval(refreshAttendance, 15000);
     attCount.textContent = '{{ $todayAttendances->count() }} hadir';
 });
 </script>

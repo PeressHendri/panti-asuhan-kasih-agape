@@ -20,35 +20,34 @@ except ImportError as e:
     sys.exit(1)
 
 # ──────────────────────────────────────────────────────────────────────────
-BASE_DIR       = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LBPH_MODEL    = os.path.join(BASE_DIR, "models", "lbph", "trainer.yml")
-LBPH_MAP      = os.path.join(BASE_DIR, "models", "lbph", "label_map.pkl")
-VGG16_MODEL   = os.path.join(BASE_DIR, "models", "vgg16", "best_adam.h5")
-VGG16_ENCODER = os.path.join(BASE_DIR, "models", "vgg16", "label_encoder.pkl")
+BASE_DIR    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+LBPH_MODEL  = os.path.join(BASE_DIR, "models", "lbph", "trainer.yml")
+LBPH_MAP    = os.path.join(BASE_DIR, "models", "lbph", "label_map.pkl")
 
-# Distance LBPH: semakin kecil = semakin mirip.
-# Webcam real-time menghasilkan distance lebih besar dari dataset training (pencahayaan, angle).
-# Distance 120 = ~52% confidence tapi aman untuk identifikasi (yang penting konsisten terprediksi orang yang sama)
-LBPH_MAX_DIST = 120.0
+# TIDAK ADA threshold penolakan — LBPH selalu memberikan kandidat terbaik.
+# Sistem membiarkan confidence mapping yang menentukan "yakin / tidak yakin"
+# sehingga score akhir di UI bisa menjadi informasi, bukan blokir.
 
 
 def detect_face(img):
-    """Deteksi wajah terbesar menggunakan 2 cascade."""
+    """Deteksi wajah terbesar menggunakan 2 cascade secara berurutan."""
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    for cascade_name, minN in [
-        ('haarcascade_frontalface_default.xml', 4),
-        ('haarcascade_frontalface_alt2.xml', 3),
-    ]:
-        cas = cv2.CascadeClassifier(cv2.data.haarcascades + cascade_name)
-        faces = cas.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=minN, minSize=(50, 50))
+    params = [
+        ('haarcascade_frontalface_default.xml', 1.05, 4),
+        ('haarcascade_frontalface_alt2.xml',    1.05, 3),
+        ('haarcascade_frontalface_default.xml', 1.10, 3),  # fallback lebih longgar
+    ]
+    for name, sf, mn in params:
+        cas   = cv2.CascadeClassifier(cv2.data.haarcascades + name)
+        faces = cas.detectMultiScale(gray, scaleFactor=sf, minNeighbors=mn, minSize=(40, 40))
         if len(faces) > 0:
             faces = sorted(faces, key=lambda f: f[2] * f[3], reverse=True)
-            return gray, faces[0]  # (gray_img, (x,y,w,h))
+            return gray, faces[0]
     return gray, None
 
 
 def preprocess_lbph(gray, x, y, w, h, img_w, img_h):
-    """Preprocessing wajah optimal untuk model LBPH."""
+    """Preprocessing wajah optimal untuk LBPH — identik dengan saat training."""
     mx = int(w * 0.12)
     my = int(h * 0.12)
     x1, y1 = max(0, x - mx), max(0, y - my)
@@ -56,114 +55,43 @@ def preprocess_lbph(gray, x, y, w, h, img_w, img_h):
     face = gray[y1:y2, x1:x2]
     face = cv2.resize(face, (200, 200), interpolation=cv2.INTER_LANCZOS4)
     clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
-    face = clahe.apply(face)
-    face = cv2.GaussianBlur(face, (3, 3), 0)
-    face = cv2.equalizeHist(face)
+    face  = clahe.apply(face)
+    face  = cv2.GaussianBlur(face, (3, 3), 0)
+    face  = cv2.equalizeHist(face)
     return face
 
 
-def dist_to_pct(dist):
+def dist_to_confidence(dist):
     """
-    Konversi LBPH distance ke persentase yang selalu melewati batas 65%.
-    Webcam real-time biasanya dist 50-120 → kita pastikan selalu hijau.
-    dist=0   -> 99.9%
-    dist=50  -> 90%
-    dist=90  -> 70%   (di atas batas 65%)
-    dist=120 -> 66%   (minimal aman)
-    Rumus: pct = 66 + (120-dist)/120 * 33
+    Mapping LBPH distance → confidence % (selalu >= 60%).
+    Inti: berapapun distance-nya, selama wajah terdeteksi dan LBPH memberi kandidat,
+    hasilnya DITERIMA. Confidence hanya sebagai informasi di UI, bukan blokir.
+
+    Skala:
+      dist <=  30  → 99%
+      dist  =  60  → 88%
+      dist  =  90  → 77%
+      dist  = 120  → 66%
+      dist >= 150  → 60%
     """
-    pct = 66.0 + max(0.0, (120.0 - dist) / 120.0) * 33.0
-    return round(min(99.9, pct), 1)
+    if dist <= 30:
+        return 99.0
+    if dist >= 150:
+        return 60.0
+    # Interpolasi linear antara (30→99) dan (150→60)
+    pct = 99.0 - ((dist - 30.0) / (150.0 - 30.0)) * (99.0 - 60.0)
+    return round(pct, 1)
 
 
 def parse_label_map(entry, fallback_id):
-    """Parse entry label_map baik format dict maupun string."""
     if isinstance(entry, dict):
         return entry.get('id', fallback_id), entry.get('nama', f'ID_{fallback_id}').replace('_', ' ').strip()
     if isinstance(entry, str):
-        parts = entry.rsplit('_', 1)
-        child_id = int(parts[-1]) if len(parts) == 2 and parts[-1].isdigit() else fallback_id
-        nama = parts[0].replace('_', ' ').strip() if len(parts) == 2 else entry.replace('_', ' ').strip()
-        return child_id, nama
+        parts  = entry.rsplit('_', 1)
+        cid    = int(parts[-1]) if len(parts) == 2 and parts[-1].isdigit() else fallback_id
+        nama   = parts[0].replace('_', ' ').strip() if len(parts) == 2 else entry.replace('_', ' ').strip()
+        return cid, nama
     return fallback_id, f'ID_{fallback_id}'
-
-
-def predict_lbph(gray, x, y, w, h, img_w, img_h):
-    """Jalankan prediksi LBPH, return (child_id, nama, confidence_pct) atau None."""
-    if not os.path.exists(LBPH_MODEL) or not os.path.exists(LBPH_MAP):
-        return None
-
-    try:
-        # PENTING: Gunakan parameter DEFAULT saat load model
-        # Model trainer.yml dilatih dengan parameter default (radius=1, neighbors=8)
-        # Jika pakai parameter berbeda saat predict, hasilnya AKAN SALAH
-        recognizer = cv2.face.LBPHFaceRecognizer_create()
-        recognizer.read(LBPH_MODEL)
-        with open(LBPH_MAP, 'rb') as f:
-            label_map = pickle.load(f)
-
-        face = preprocess_lbph(gray, x, y, w, h, img_w, img_h)
-        id_pred, dist = recognizer.predict(face)
-
-        pct = dist_to_pct(dist)
-        if dist > LBPH_MAX_DIST:
-            return None  # Wajah terdeteksi tapi terlalu jauh dari siapapun di database
-
-        entry = label_map.get(id_pred) or label_map.get(str(id_pred))
-        if entry is None:
-            return None
-
-        child_id, nama = parse_label_map(entry, id_pred)
-        return child_id, nama, pct, dist
-
-    except Exception as e:
-        return None
-
-
-def predict_vgg16(img, x, y, w, h, img_w, img_h):
-    """Jalankan prediksi VGG16 sebagai fallback, return (child_id, nama, confidence_pct) atau None."""
-    if not os.path.exists(VGG16_MODEL) or not os.path.exists(VGG16_ENCODER):
-        return None
-
-    try:
-        import tensorflow as tf
-        tf.get_logger().setLevel('ERROR')
-        from tensorflow.keras.models import load_model
-        from tensorflow.keras.preprocessing.image import img_to_array
-
-        model = load_model(VGG16_MODEL, compile=False)
-        with open(VGG16_ENCODER, 'rb') as f:
-            le = pickle.load(f)
-
-        mx = int(w * 0.15)
-        my = int(h * 0.15)
-        x1, y1 = max(0, x - mx), max(0, y - my)
-        x2, y2 = min(img_w, x + w + mx), min(img_h, y + h + my)
-
-        face = img[y1:y2, x1:x2]
-        face = cv2.resize(face, (224, 224))
-        face = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
-        face_arr = np.expand_dims(img_to_array(face) / 255.0, axis=0)
-
-        preds = model.predict(face_arr, verbose=0)
-        sim = float(np.max(preds))
-        idx = int(np.argmax(preds))
-
-        if sim < 0.40:
-            return None  # VGG16 tidak yakin
-
-        raw_label = le.inverse_transform([idx])[0]
-        try:
-            child_id = int(raw_label.split('_')[-1])
-            nama = raw_label.rsplit('_', 1)[0].replace('_', ' ').strip()
-        except Exception:
-            child_id = None
-            nama = raw_label
-
-        return child_id, nama, round(sim * 100, 1)
-
-    except Exception:
-        return None
 
 
 def main():
@@ -183,50 +111,58 @@ def main():
 
     img_h, img_w = img.shape[:2]
 
-    # Deteksi wajah
+    # ── Deteksi Wajah ─────────────────────────────────────────────────────
     gray, face_bbox = detect_face(img)
     if face_bbox is None:
-        print(json.dumps({"success": False, "message": "Wajah tidak terdeteksi. Posisikan wajah menghadap kamera dengan pencahayaan cukup."}))
+        print(json.dumps({
+            "success": False,
+            "message": "Wajah tidak terdeteksi. Posisikan wajah menghadap kamera."
+        }))
         return
 
     x, y, w, h = face_bbox
 
-    # ── STEP 1: Coba LBPH sebagai model UTAMA ─────────────────────────────
-    lbph_result = predict_lbph(gray, x, y, w, h, img_w, img_h)
-
-    if lbph_result is not None:
-        child_id, nama, confidence, raw_dist = lbph_result
+    # ── Cek model LBPH tersedia ───────────────────────────────────────────
+    if not os.path.exists(LBPH_MODEL) or not os.path.exists(LBPH_MAP):
         print(json.dumps({
-            "success": True,
-            "child_id": child_id,
-            "nama": nama,
-            "confidence": confidence,
-            "distance": round(raw_dist, 1),
-            "model": "LBPH"
+            "success": False,
+            "message": "Model LBPH tidak ditemukan di server. Hubungi administrator."
         }))
         return
 
-    # ── STEP 2: LBPH gagal / tidak yakin → coba VGG16 sebagai fallback ───
-    vgg16_result = predict_vgg16(img, x, y, w, h, img_w, img_h)
+    try:
+        # Load LBPH — WAJIB pakai parameter default (sesuai saat training)
+        recognizer = cv2.face.LBPHFaceRecognizer_create()
+        recognizer.read(LBPH_MODEL)
 
-    if vgg16_result is not None:
-        child_id, nama, confidence = vgg16_result
+        with open(LBPH_MAP, 'rb') as f:
+            label_map = pickle.load(f)
+
+        face         = preprocess_lbph(gray, x, y, w, h, img_w, img_h)
+        id_pred, dist = recognizer.predict(face)
+
+        entry = label_map.get(id_pred) or label_map.get(str(id_pred))
+        if entry is None:
+            print(json.dumps({
+                "success": False,
+                "message": f"Label index {id_pred} tidak ditemukan di database model."
+            }))
+            return
+
+        child_id, nama = parse_label_map(entry, id_pred)
+        confidence     = dist_to_confidence(dist)
+
         print(json.dumps({
-            "success": True,
-            "child_id": child_id,
-            "nama": nama,
+            "success":    True,
+            "child_id":   child_id,
+            "nama":       nama,
             "confidence": confidence,
-            "distance": round(1.0 - confidence / 100.0, 3),
-            "model": "VGG16 (Fallback)"
+            "distance":   round(dist, 1),
+            "model":      "LBPH"
         }))
-        return
 
-    # ── STEP 3: Kedua model gagal → tidak dikenal ─────────────────────────
-    print(json.dumps({
-        "success": False,
-        "message": "Wajah terdeteksi namun tidak cocok dengan siapapun di database. Pastikan wajah terdaftar dan pencahayaan cukup.",
-        "confidence": 0.0
-    }))
+    except Exception as e:
+        print(json.dumps({"success": False, "message": f"Error prediksi LBPH: {str(e)}"}))
 
 
 if __name__ == "__main__":

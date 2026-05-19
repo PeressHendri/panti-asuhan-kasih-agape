@@ -86,11 +86,10 @@ class FaceRecognitionController extends Controller
     {
         $validated = $request->validate([
             'foto_base64' => 'required|string',
-            'status' => 'required|in:check_in,check_out'
         ]);
 
         $fotoBase64 = $validated['foto_base64'];
-        $status = $validated['status'];
+        // Status TIDAK diterima dari frontend — ditentukan otomatis oleh server
 
         // Decode base64 image
         $image_parts = explode(";base64,", $fotoBase64);
@@ -214,38 +213,27 @@ class FaceRecognitionController extends Controller
         $confidence = $result['confidence'];
         $nama       = $result['nama'];
 
-        // ── Validasi limit: cari attendance hari ini dulu (bukan firstOrNew!) ─
+        // ── Auto-detect status berdasarkan data kehadiran hari ini ────────────
         $today      = Carbon::today();
         $attendance = Attendance::where('child_id', $childId)
                                 ->whereDate('date', $today)
-                                ->first(); // bisa null jika belum ada
+                                ->first();
 
-        if ($status === 'check_in') {
-            // Tolak jika sudah pernah Check In hari ini
-            if ($attendance && $attendance->check_in) {
-                if (file_exists($fullPath)) unlink($fullPath);
-                return response()->json([
-                    'success' => false,
-                    'message' => "{$nama} sudah Check In hari ini pada " . Carbon::parse($attendance->check_in)->format('H:i:s') . ". Silakan lakukan Check Out."
-                ]);
-            }
-        } elseif ($status === 'check_out') {
-            // Tolak jika belum pernah Check In
-            if (!$attendance || !$attendance->check_in) {
-                if (file_exists($fullPath)) unlink($fullPath);
-                return response()->json([
-                    'success' => false,
-                    'message' => "{$nama} belum Check In hari ini. Silakan Check In terlebih dahulu."
-                ]);
-            }
-            // Tolak jika sudah Check Out
-            if ($attendance->check_out) {
-                if (file_exists($fullPath)) unlink($fullPath);
-                return response()->json([
-                    'success' => false,
-                    'message' => "{$nama} sudah Check Out hari ini pada " . Carbon::parse($attendance->check_out)->format('H:i:s') . "."
-                ]);
-            }
+        // Tentukan status secara otomatis
+        if (!$attendance || !$attendance->check_in) {
+            $status = 'check_in';   // Belum pernah masuk hari ini → Check In
+        } elseif (!$attendance->check_out) {
+            $status = 'check_out';  // Sudah Check In tapi belum Check Out → Check Out
+        } else {
+            // Sudah lengkap Check In + Check Out hari ini
+            if (file_exists($fullPath)) unlink($fullPath);
+            return response()->json([
+                'success' => false,
+                'message' => "{$nama} sudah menyelesaikan absensi hari ini (Check In: " .
+                             Carbon::parse($attendance->check_in)->format('H:i') .
+                             " | Check Out: " .
+                             Carbon::parse($attendance->check_out)->format('H:i') . ")."
+            ]);
         }
 
         // ── Buat atau update record attendance ────────────────────────────────
