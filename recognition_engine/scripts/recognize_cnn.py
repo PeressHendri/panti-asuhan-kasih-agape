@@ -141,6 +141,16 @@ def main():
         face         = preprocess_lbph(gray, x, y, w, h, img_w, img_h)
         id_pred, dist = recognizer.predict(face)
 
+        # ── THRESHOLD PENOLAKAN ───────────────────────────────────────────
+        # JIKA model ragu (distance > 90), tolak! Ini mencegah 1 wajah 
+        # terdeteksi sebagai banyak anak (halusinasi model).
+        if dist > 90:
+            print(json.dumps({
+                "success": False,
+                "message": f"Wajah terdeteksi namun belum dikenali (distance {round(dist, 1)} > 90)."
+            }))
+            return
+
         entry = label_map.get(id_pred) or label_map.get(str(id_pred))
         if entry is None:
             print(json.dumps({
@@ -150,7 +160,10 @@ def main():
             return
 
         child_id, nama = parse_label_map(entry, id_pred)
-        confidence     = dist_to_confidence(dist)
+        
+        # Konversi dist ke % (hanya untuk tampilan visual di web)
+        confidence = 99.0 - ((dist - 30.0) / (90.0 - 30.0)) * (99.0 - 65.0)
+        confidence = round(max(65.0, min(99.0, confidence)), 1)
 
         print(json.dumps({
             "success":    True,
