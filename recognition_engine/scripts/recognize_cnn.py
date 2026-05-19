@@ -166,24 +166,34 @@ def main():
                 with open(LBPH_MAP_PATH, "rb") as f:
                     lbph_map = pickle.load(f)
                 
-                # Preprocess LBPH (CLAHE + crop)
-                l_margin_x = int(w * 0.10)
-                l_margin_y = int(h * 0.10)
+                # Preprocess LBPH (Sesuai optimasi terbaru)
+                l_margin_x = int(w * 0.12)
+                l_margin_y = int(h * 0.12)
                 lx1 = max(0, x - l_margin_x)
                 ly1 = max(0, y - l_margin_y)
                 lx2 = min(img_w, x + w + l_margin_x)
                 ly2 = min(img_h, y + h + l_margin_y)
                 
                 gray_face = gray[ly1:ly2, lx1:lx2]
+                
+                # Resize pakai Lanczos untuk mempertahankan detail
                 gray_face = cv2.resize(gray_face, (200, 200), interpolation=cv2.INTER_LANCZOS4)
-                clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+                
+                # CLAHE (kontras)
+                clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
                 gray_face = clahe.apply(gray_face)
+                
+                # Sedikit blur agar noise berkurang tetapi edge tetap jelas
                 gray_face = cv2.GaussianBlur(gray_face, (3, 3), 0)
                 
-                id_pred, conf = lbph_recognizer.predict(gray_face)
+                # Normalisasi
+                gray_face = cv2.equalizeHist(gray_face)
                 
-                # Konversi Distance LBPH ke Persentase (Distance 0 = 100%, 100 = 0%)
-                lbph_confidence = round(max(0.0, 100.0 - conf), 1)
+                id_pred, dist = lbph_recognizer.predict(gray_face)
+                
+                # LBPH distance -> Confidence (Logaritmik / mapping manusiawi)
+                # distance 0 = sempurna, 80 = cukup, 100+ = buruk
+                lbph_confidence = round(max(0.0, 120.0 - dist) / 1.2, 1)
                 
                 entry = lbph_map.get(id_pred) or lbph_map.get(str(id_pred))
                 if entry:
@@ -198,18 +208,24 @@ def main():
             except Exception as e:
                 pass # Abaikan jika LBPH gagal, tetap lanjut pakai VGG16
 
-        # 3. ENSEMBLE DECISION (Pemilihan Pemenang)
-        # Jika kedua model berhasil mendeteksi, bandingkan persentase akurasinya!
-        if lbph_confidence > vgg16_confidence and lbph_child_id is not None:
+        # 3. ENSEMBLE DECISION (Prioritaskan LBPH)
+        LBPH_STRICT_THRESHOLD = 50.0  # di bawah ini dianggap tidak dikenal
+        
+        lbph_valid = False
+        if lbph_child_id is not None and lbph_confidence >= LBPH_STRICT_THRESHOLD:
+            lbph_valid = True
+
+        # LBPH diprioritaskan sebagai model utama
+        if lbph_valid and lbph_confidence > vgg16_confidence:
             final_id = lbph_child_id
             final_nama = lbph_nama
             final_conf = lbph_confidence
-            final_model = "LBPH (Ensemble Winner)"
+            final_model = "LBPH (Primary Model)"
         else:
             final_id = vgg16_child_id
             final_nama = vgg16_nama
             final_conf = vgg16_confidence
-            final_model = "VGG16 (Ensemble Winner)"
+            final_model = "VGG16 (Fallback)"
 
         # Threshold gabungan minimum
         if final_conf < 20.0:

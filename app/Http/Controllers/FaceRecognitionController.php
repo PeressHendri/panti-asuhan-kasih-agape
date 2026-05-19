@@ -114,8 +114,8 @@ class FaceRecognitionController extends Controller
         
         file_put_contents($fullPath, $image_base64);
 
-        // Path script python untuk LBPH (Lebih akurat untuk tekstur wajah lokal)
-        $pythonScriptPath = base_path('recognition_engine/scripts/recognize_single.py');
+        // Path script python untuk Ensemble (LBPH Utama + VGG16 Fallback)
+        $pythonScriptPath = base_path('recognition_engine/scripts/recognize_cnn.py');
         
         // Gunakan Python 3.10 yang memiliki numpy + cv2.face (opencv-contrib) yang kompatibel
         // python3.10 = Homebrew Python 3.10 yang sudah terinstall opencv-contrib-python
