@@ -232,15 +232,32 @@ class FaceRecognitionController extends Controller
         ]);
 
         if ($status === 'check_in') {
-            if (!$attendance->check_in) {
-                $attendance->check_in = now();
+            if ($attendance->exists && $attendance->check_in) {
+                if (file_exists($fullPath)) unlink($fullPath);
+                return response()->json([
+                    'success' => false,
+                    'message' => "{$nama} sudah melakukan Check In hari ini."
+                ]);
             }
+            $attendance->check_in = now();
             $attendance->status = 'hadir';
         } else if ($status === 'check_out') {
-            $attendance->check_out = now();
-            if (!$attendance->status) {
-                $attendance->status = 'hadir';
+            if (!$attendance->exists || !$attendance->check_in) {
+                if (file_exists($fullPath)) unlink($fullPath);
+                return response()->json([
+                    'success' => false,
+                    'message' => "{$nama} belum Check In. Silakan Check In terlebih dahulu."
+                ]);
             }
+            if ($attendance->check_out) {
+                if (file_exists($fullPath)) unlink($fullPath);
+                return response()->json([
+                    'success' => false,
+                    'message' => "{$nama} sudah melakukan Check Out hari ini."
+                ]);
+            }
+            $attendance->check_out = now();
+            $attendance->status = 'hadir';
         }
 
         $attendance->kamera_id = 'website_webcam';
