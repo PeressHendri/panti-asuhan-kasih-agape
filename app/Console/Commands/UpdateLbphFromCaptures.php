@@ -62,22 +62,8 @@ class UpdateLbphFromCaptures extends Command
         file_put_contents($tmpJson, json_encode($mapping, JSON_PRETTY_PRINT));
         $this->line("  Mapping disimpan ke: $tmpJson");
 
-        // ── 4. Siapkan Python binary ───────────────────────────────────────
-        $candidates = [
-            base_path('venv/bin/python3'),
-            '/usr/local/bin/python3',
-            '/usr/bin/python3',
-            'python3',
-        ];
-        $pythonBin  = 'python3';
-        foreach ($candidates as $c) {
-            if (str_contains($c, '/') && file_exists($c)) {
-                $pythonBin = $c;
-                break;
-            }
-        }
-
-        // PYTHONPATH untuk site-packages lokal VPS
+        // ── 4. Siapkan Python binary yang PUNYA cv2.face ─────────────────
+        // Prioritaskan python yang bisa import cv2.face (opencv-contrib)
         $homes = ['/home/pantiasuhankasihagape', getenv('HOME') ?: ''];
         $paths = [];
         foreach (array_filter(array_unique($homes)) as $home) {
@@ -86,6 +72,36 @@ class UpdateLbphFromCaptures extends Command
             }
         }
         $env = !empty($paths) ? 'PYTHONPATH=' . implode(':', $paths) . ' ' : '';
+
+        // Cari Python yang PUNYA cv2.face
+        $candidates = [
+            base_path('venv/bin/python3'),
+            base_path('venv/bin/python'),
+            '/usr/local/bin/python3',
+            '/usr/bin/python3',
+            'python3',
+        ];
+        $pythonBin = null;
+        foreach ($candidates as $c) {
+            $exists = str_contains($c, '/') ? file_exists($c) : !empty(trim((string)shell_exec("which $c 2>/dev/null")));
+            if (!$exists) continue;
+            $bin = str_contains($c, '/') ? $c : trim((string)shell_exec("which $c 2>/dev/null"));
+            // Cek apakah python ini punya cv2.face
+            $test = shell_exec($env . escapeshellarg($bin) . " -c \"import cv2; cv2.face.LBPHFaceRecognizer_create(); print('ok')\" 2>/dev/null");
+            if (trim((string)$test) === 'ok') {
+                $pythonBin = $bin;
+                $this->line("  Python binary   : $pythonBin (cv2.face ✓)");
+                break;
+            }
+        }
+
+        if (!$pythonBin) {
+            $this->error('Tidak ada Python yang memiliki cv2.face (opencv-contrib-python).');
+            $this->warn('Jalankan perintah berikut untuk install:');
+            $this->line('  pip3 install --user opencv-contrib-python-headless');
+            $this->line('  atau: python3 -m pip install --user opencv-contrib-python-headless');
+            return self::FAILURE;
+        }
 
         // ── 5. Jalankan Python script ──────────────────────────────────────
         $scriptPath = base_path('recognition_engine/scripts/update_all_lbph.py');
