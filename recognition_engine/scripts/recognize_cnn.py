@@ -1,254 +1,229 @@
 import os
 import sys
 import json
-import logging
 import pickle
 
-# Perbaikan untuk VPS CloudPanel: Pastikan Python membaca package dari instalasi user lokal secara dinamis
+# ── Path bootstrap: baca site-packages user lokal di VPS ──────────────────
 import glob
-homes = ["/home/pantiasuhankasihagape", os.path.expanduser('~')]
-for home in set(homes):
-    if os.path.exists(home):
-        pattern = os.path.join(home, '.local/lib/python3.*/site-packages')
-        for site_path in glob.glob(pattern):
-            if os.path.exists(site_path) and site_path not in sys.path:
-                sys.path.insert(0, site_path)
+for _home in set(["/home/pantiasuhankasihagape", os.path.expanduser('~')]):
+    for _sp in glob.glob(os.path.join(_home, '.local/lib/python3.*/site-packages')):
+        if _sp not in sys.path:
+            sys.path.insert(0, _sp)
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 try:
     import cv2
     import numpy as np
-    import tensorflow as tf
-    from tensorflow.keras.models import load_model
-    from tensorflow.keras.preprocessing.image import img_to_array
 except ImportError as e:
-    print(json.dumps({"success": False, "message": f"Library Error: {str(e)} (Pastikan install tensorflow dan opencv di VPS)"}))
+    print(json.dumps({"success": False, "message": f"Library cv2/numpy tidak ditemukan: {str(e)}"}))
     sys.exit(1)
 
-# Matikan log Tensorflow
-tf.get_logger().setLevel('ERROR')
+# ──────────────────────────────────────────────────────────────────────────
+BASE_DIR       = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+LBPH_MODEL    = os.path.join(BASE_DIR, "models", "lbph", "trainer.yml")
+LBPH_MAP      = os.path.join(BASE_DIR, "models", "lbph", "label_map.pkl")
+VGG16_MODEL   = os.path.join(BASE_DIR, "models", "vgg16", "best_adam.h5")
+VGG16_ENCODER = os.path.join(BASE_DIR, "models", "vgg16", "label_encoder.pkl")
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODELS_DIR = os.path.join(BASE_DIR, "models", "vgg16")
+# Distance LBPH: semakin kecil semakin mirip.
+# Training dataset cropped & preprocessed – threshold 85 cukup toleran utk webcam.
+LBPH_MAX_DIST = 85.0   # Jika jarak > 85, dianggap tidak dikenal (bukan Peres / siapapun)
 
-# Pilih model VGG16 terbaik
-VGG16_MODEL_PATH = os.path.join(MODELS_DIR, "best_adam.h5")
-if not os.path.exists(VGG16_MODEL_PATH):
-    VGG16_MODEL_PATH = os.path.join(MODELS_DIR, "model_vgg16_adam.h5")
 
-ENCODER_PATH = os.path.join(MODELS_DIR, "label_encoder.pkl")
-VGG16_SIM_THRESHOLD = 0.40  # Threshold standar 40%
+def detect_face(img):
+    """Deteksi wajah terbesar menggunakan 2 cascade."""
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    for cascade_name, minN in [
+        ('haarcascade_frontalface_default.xml', 4),
+        ('haarcascade_frontalface_alt2.xml', 3),
+    ]:
+        cas = cv2.CascadeClassifier(cv2.data.haarcascades + cascade_name)
+        faces = cas.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=minN, minSize=(50, 50))
+        if len(faces) > 0:
+            faces = sorted(faces, key=lambda f: f[2] * f[3], reverse=True)
+            return gray, faces[0]  # (gray_img, (x,y,w,h))
+    return gray, None
+
+
+def preprocess_lbph(gray, x, y, w, h, img_w, img_h):
+    """Preprocessing wajah optimal untuk model LBPH."""
+    mx = int(w * 0.12)
+    my = int(h * 0.12)
+    x1, y1 = max(0, x - mx), max(0, y - my)
+    x2, y2 = min(img_w, x + w + mx), min(img_h, y + h + my)
+    face = gray[y1:y2, x1:x2]
+    face = cv2.resize(face, (200, 200), interpolation=cv2.INTER_LANCZOS4)
+    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+    face = clahe.apply(face)
+    face = cv2.GaussianBlur(face, (3, 3), 0)
+    face = cv2.equalizeHist(face)
+    return face
+
+
+def dist_to_pct(dist):
+    """
+    Konversi LBPH distance ke persentase confidence yang realistis.
+    dist=0   -> 100%
+    dist=50  -> ~83%
+    dist=85  -> 66%   (tepat di batas aman)
+    dist=100 -> 57%   (sudah terlalu jauh)
+    Rumus: pct = 100 - (dist * 0.4)
+    """
+    return round(max(0.0, min(99.9, 100.0 - dist * 0.4)), 1)
+
+
+def parse_label_map(entry, fallback_id):
+    """Parse entry label_map baik format dict maupun string."""
+    if isinstance(entry, dict):
+        return entry.get('id', fallback_id), entry.get('nama', f'ID_{fallback_id}').replace('_', ' ').strip()
+    if isinstance(entry, str):
+        parts = entry.rsplit('_', 1)
+        child_id = int(parts[-1]) if len(parts) == 2 and parts[-1].isdigit() else fallback_id
+        nama = parts[0].replace('_', ' ').strip() if len(parts) == 2 else entry.replace('_', ' ').strip()
+        return child_id, nama
+    return fallback_id, f'ID_{fallback_id}'
+
+
+def predict_lbph(gray, x, y, w, h, img_w, img_h):
+    """Jalankan prediksi LBPH, return (child_id, nama, confidence_pct) atau None."""
+    if not os.path.exists(LBPH_MODEL) or not os.path.exists(LBPH_MAP):
+        return None
+
+    try:
+        recognizer = cv2.face.LBPHFaceRecognizer_create(
+            radius=2, neighbors=16, grid_x=8, grid_y=8
+        )
+        recognizer.read(LBPH_MODEL)
+        with open(LBPH_MAP, 'rb') as f:
+            label_map = pickle.load(f)
+
+        face = preprocess_lbph(gray, x, y, w, h, img_w, img_h)
+        id_pred, dist = recognizer.predict(face)
+
+        pct = dist_to_pct(dist)
+        if dist > LBPH_MAX_DIST:
+            return None  # Wajah terdeteksi tapi terlalu jauh dari siapapun di database
+
+        entry = label_map.get(id_pred) or label_map.get(str(id_pred))
+        if entry is None:
+            return None
+
+        child_id, nama = parse_label_map(entry, id_pred)
+        return child_id, nama, pct, dist
+
+    except Exception as e:
+        return None
+
+
+def predict_vgg16(img, x, y, w, h, img_w, img_h):
+    """Jalankan prediksi VGG16 sebagai fallback, return (child_id, nama, confidence_pct) atau None."""
+    if not os.path.exists(VGG16_MODEL) or not os.path.exists(VGG16_ENCODER):
+        return None
+
+    try:
+        import tensorflow as tf
+        tf.get_logger().setLevel('ERROR')
+        from tensorflow.keras.models import load_model
+        from tensorflow.keras.preprocessing.image import img_to_array
+
+        model = load_model(VGG16_MODEL, compile=False)
+        with open(VGG16_ENCODER, 'rb') as f:
+            le = pickle.load(f)
+
+        mx = int(w * 0.15)
+        my = int(h * 0.15)
+        x1, y1 = max(0, x - mx), max(0, y - my)
+        x2, y2 = min(img_w, x + w + mx), min(img_h, y + h + my)
+
+        face = img[y1:y2, x1:x2]
+        face = cv2.resize(face, (224, 224))
+        face = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
+        face_arr = np.expand_dims(img_to_array(face) / 255.0, axis=0)
+
+        preds = model.predict(face_arr, verbose=0)
+        sim = float(np.max(preds))
+        idx = int(np.argmax(preds))
+
+        if sim < 0.40:
+            return None  # VGG16 tidak yakin
+
+        raw_label = le.inverse_transform([idx])[0]
+        try:
+            child_id = int(raw_label.split('_')[-1])
+            nama = raw_label.rsplit('_', 1)[0].replace('_', ' ').strip()
+        except Exception:
+            child_id = None
+            nama = raw_label
+
+        return child_id, nama, round(sim * 100, 1)
+
+    except Exception:
+        return None
+
 
 def main():
     if len(sys.argv) < 2:
-        print(json.dumps({"success": False, "message": "Parameter path gambar tidak diberikan"}))
+        print(json.dumps({"success": False, "message": "Path gambar tidak diberikan"}))
         return
 
     img_path = sys.argv[1]
     if not os.path.exists(img_path):
-        print(json.dumps({"success": False, "message": f"File gambar tidak ditemukan: {img_path}"}))
+        print(json.dumps({"success": False, "message": f"File tidak ditemukan: {img_path}"}))
         return
 
-    if not os.path.exists(VGG16_MODEL_PATH) or not os.path.exists(ENCODER_PATH):
-        print(json.dumps({"success": False, "message": "Model VGG16 hasil training (.h5) atau Label Encoder (.pkl) tidak ditemukan di VPS."}))
-        return
-
-    try:
-        # Buat wrapper layer untuk mengabaikan 'quantization_config' (Kompatibilitas TF baru ke TF lama di VPS)
-        from tensorflow.keras.layers import Dense, Conv2D, MaxPooling2D, Flatten, Dropout, GlobalAveragePooling2D, BatchNormalization
-        
-        def pop_quant(kwargs):
-            kwargs.pop('quantization_config', None)
-            return kwargs
-            
-        class PDense(Dense):
-            def __init__(self, **kwargs): super().__init__(**pop_quant(kwargs))
-        class PConv2D(Conv2D):
-            def __init__(self, **kwargs): super().__init__(**pop_quant(kwargs))
-        class PMaxPooling2D(MaxPooling2D):
-            def __init__(self, **kwargs): super().__init__(**pop_quant(kwargs))
-        class PFlatten(Flatten):
-            def __init__(self, **kwargs): super().__init__(**pop_quant(kwargs))
-        class PDropout(Dropout):
-            def __init__(self, **kwargs): super().__init__(**pop_quant(kwargs))
-        class PGlobalAveragePooling2D(GlobalAveragePooling2D):
-            def __init__(self, **kwargs): super().__init__(**pop_quant(kwargs))
-        class PBatchNormalization(BatchNormalization):
-            def __init__(self, **kwargs): super().__init__(**pop_quant(kwargs))
-
-        custom_objs = {
-            'Dense': PDense,
-            'Conv2D': PConv2D,
-            'MaxPooling2D': PMaxPooling2D,
-            'Flatten': PFlatten,
-            'Dropout': PDropout,
-            'GlobalAveragePooling2D': PGlobalAveragePooling2D,
-            'BatchNormalization': PBatchNormalization
-        }
-        
-        # Muat Model VGG16 dan Encoder dengan custom wrapper
-        model = load_model(VGG16_MODEL_PATH, custom_objects=custom_objs, compile=False)
-        with open(ENCODER_PATH, 'rb') as f:
-            le = pickle.load(f)
-    except Exception as e:
-        print(json.dumps({"success": False, "message": f"Gagal memuat model VGG16: {str(e)}"}))
-        return
-
-    # Baca Gambar
     img = cv2.imread(img_path)
     if img is None:
-        print(json.dumps({"success": False, "message": "Gagal membaca file gambar dari storage."}))
+        print(json.dumps({"success": False, "message": "Gagal membaca gambar"}))
         return
 
-    # Deteksi Wajah
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    cascade_default = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-    cascade_alt = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_alt2.xml')
+    img_h, img_w = img.shape[:2]
 
-    faces = cascade_default.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=4, minSize=(50, 50))
-    if len(faces) == 0:
-        faces = cascade_alt.detectMultiScale(gray, scaleFactor=1.05, minNeighbors=3, minSize=(50, 50))
-
-    if len(faces) == 0:
-        print(json.dumps({"success": False, "message": "Wajah tidak terdeteksi oleh kamera. Posisikan wajah lebih jelas."}))
+    # Deteksi wajah
+    gray, face_bbox = detect_face(img)
+    if face_bbox is None:
+        print(json.dumps({"success": False, "message": "Wajah tidak terdeteksi. Posisikan wajah menghadap kamera dengan pencahayaan cukup."}))
         return
 
-    # Ambil wajah terbesar
-    faces = sorted(faces, key=lambda f: f[2] * f[3], reverse=True)
-    x, y, w, h = faces[0]
+    x, y, w, h = face_bbox
 
-    try:
-        # Preprocessing Wajah dengan Margin 15% untuk VGG16
-        img_h, img_w = img.shape[:2]
-        margin_x = int(w * 0.15)
-        margin_y = int(h * 0.15)
-        
-        x1 = max(0, x - margin_x)
-        y1 = max(0, y - margin_y)
-        x2 = min(img_w, x + w + margin_x)
-        y2 = min(img_h, y + h + margin_y)
-        
-        face_roi = img[y1:y2, x1:x2]
-        face_resized = cv2.resize(face_roi, (224, 224))
-        
-        face_rgb = cv2.cvtColor(face_resized, cv2.COLOR_BGR2RGB)
-        face_array = img_to_array(face_rgb) / 255.0
-        face_array = np.expand_dims(face_array, axis=0)
-        
-        # 1. Prediksi dengan VGG16
-        preds = model.predict(face_array, verbose=0)
-        vgg16_similarity = float(np.max(preds))
-        vgg16_label_idx = int(np.argmax(preds))
-        raw_label = le.inverse_transform([vgg16_label_idx])[0]
+    # ── STEP 1: Coba LBPH sebagai model UTAMA ─────────────────────────────
+    lbph_result = predict_lbph(gray, x, y, w, h, img_w, img_h)
 
-        try:
-            vgg16_child_id = int(raw_label.split("_")[-1])
-            vgg16_nama = raw_label.rsplit('_', 1)[0].replace('_', ' ')
-        except Exception:
-            vgg16_child_id = None
-            vgg16_nama = raw_label
-            
-        vgg16_confidence = round(vgg16_similarity * 100, 1)
-
-        # 2. Prediksi dengan LBPH (Ensemble Learning)
-        lbph_child_id = None
-        lbph_nama = None
-        lbph_confidence = 0.0
-        
-        LBPH_MODEL_PATH = os.path.join(BASE_DIR, "models", "lbph", "trainer.yml")
-        LBPH_MAP_PATH = os.path.join(BASE_DIR, "models", "lbph", "label_map.pkl")
-        
-        if os.path.exists(LBPH_MODEL_PATH) and os.path.exists(LBPH_MAP_PATH):
-            try:
-                lbph_recognizer = cv2.face.LBPHFaceRecognizer_create()
-                lbph_recognizer.read(LBPH_MODEL_PATH)
-                with open(LBPH_MAP_PATH, "rb") as f:
-                    lbph_map = pickle.load(f)
-                
-                # Preprocess LBPH (Sesuai optimasi terbaru)
-                l_margin_x = int(w * 0.12)
-                l_margin_y = int(h * 0.12)
-                lx1 = max(0, x - l_margin_x)
-                ly1 = max(0, y - l_margin_y)
-                lx2 = min(img_w, x + w + l_margin_x)
-                ly2 = min(img_h, y + h + l_margin_y)
-                
-                gray_face = gray[ly1:ly2, lx1:lx2]
-                
-                # Resize pakai Lanczos untuk mempertahankan detail
-                gray_face = cv2.resize(gray_face, (200, 200), interpolation=cv2.INTER_LANCZOS4)
-                
-                # CLAHE (kontras)
-                clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
-                gray_face = clahe.apply(gray_face)
-                
-                # Sedikit blur agar noise berkurang tetapi edge tetap jelas
-                gray_face = cv2.GaussianBlur(gray_face, (3, 3), 0)
-                
-                # Normalisasi
-                gray_face = cv2.equalizeHist(gray_face)
-                
-                id_pred, dist = lbph_recognizer.predict(gray_face)
-                
-                # LBPH distance -> Confidence (Logaritmik / mapping manusiawi yang lebih longgar)
-                # Kamera web (webcam) seringkali menghasilkan gambar dengan noise/cahaya berbeda dari foto training.
-                # Distance 0-50 = 100%, 70 = 85%, 90 = 65% (Batas aman)
-                lbph_confidence = round(max(0.0, 155.0 - dist), 1)
-                lbph_confidence = min(99.9, lbph_confidence)
-                
-                entry = lbph_map.get(id_pred) or lbph_map.get(str(id_pred))
-                if entry:
-                    if isinstance(entry, dict):
-                        lbph_child_id = entry.get('id', id_pred)
-                        lbph_nama = entry.get('nama', f"ID_{id_pred}")
-                    elif isinstance(entry, str):
-                        parts = entry.rsplit('_', 1)
-                        lbph_child_id = int(parts[-1]) if len(parts) > 1 and parts[-1].isdigit() else id_pred
-                        lbph_nama = parts[0] if len(parts) > 1 else entry
-                    lbph_nama = lbph_nama.replace('_', ' ').strip()
-            except Exception as e:
-                pass # Abaikan jika LBPH gagal, tetap lanjut pakai VGG16
-
-        # 3. ENSEMBLE DECISION (Prioritaskan LBPH)
-        LBPH_STRICT_THRESHOLD = 50.0  # di bawah ini dianggap tidak dikenal
-        
-        lbph_valid = False
-        if lbph_child_id is not None and lbph_confidence >= LBPH_STRICT_THRESHOLD:
-            lbph_valid = True
-
-        # LBPH diprioritaskan sebagai model utama
-        if lbph_valid and lbph_confidence > vgg16_confidence:
-            final_id = lbph_child_id
-            final_nama = lbph_nama
-            final_conf = lbph_confidence
-            final_model = "LBPH (Primary Model)"
-        else:
-            final_id = vgg16_child_id
-            final_nama = vgg16_nama
-            final_conf = vgg16_confidence
-            final_model = "VGG16 (Fallback)"
-
-        # Threshold gabungan minimum
-        if final_conf < 20.0:
-            print(json.dumps({
-                "success": False,
-                "message": f"Wajah terdeteksi tapi kecocokan terlalu rendah ({final_conf}%).",
-                "confidence": final_conf
-            }))
-            return
-
+    if lbph_result is not None:
+        child_id, nama, confidence, raw_dist = lbph_result
         print(json.dumps({
             "success": True,
-            "child_id": final_id,
-            "nama": final_nama,
-            "confidence": final_conf,
-            "distance": round(1.0 - (final_conf/100.0), 3),
-            "model": final_model
+            "child_id": child_id,
+            "nama": nama,
+            "confidence": confidence,
+            "distance": round(raw_dist, 1),
+            "model": "LBPH"
         }))
+        return
 
-    except Exception as e:
-        print(json.dumps({"success": False, "message": f"Error selama inferensi Ensemble: {str(e)}"}))
+    # ── STEP 2: LBPH gagal / tidak yakin → coba VGG16 sebagai fallback ───
+    vgg16_result = predict_vgg16(img, x, y, w, h, img_w, img_h)
+
+    if vgg16_result is not None:
+        child_id, nama, confidence = vgg16_result
+        print(json.dumps({
+            "success": True,
+            "child_id": child_id,
+            "nama": nama,
+            "confidence": confidence,
+            "distance": round(1.0 - confidence / 100.0, 3),
+            "model": "VGG16 (Fallback)"
+        }))
+        return
+
+    # ── STEP 3: Kedua model gagal → tidak dikenal ─────────────────────────
+    print(json.dumps({
+        "success": False,
+        "message": "Wajah terdeteksi namun tidak cocok dengan siapapun di database. Pastikan wajah terdaftar dan pencahayaan cukup.",
+        "confidence": 0.0
+    }))
+
 
 if __name__ == "__main__":
     main()

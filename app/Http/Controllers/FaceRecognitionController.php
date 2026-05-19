@@ -210,83 +210,94 @@ class FaceRecognitionController extends Controller
             ]);
         }
 
-        $childId = $result['child_id'];
+        $childId    = $result['child_id'];
         $confidence = $result['confidence'];
-        $nama = $result['nama'];
+        $nama       = $result['nama'];
 
-        // Simpan Log Absensi Wajah (id UUID di-generate otomatis oleh HasUuids)
-        $log = FaceRecognitionLog::create([
-            'child_id' => $childId,
-            'confidence_score' => $confidence,
-            'algoritma' => 'cnn',
-            'status' => $status,
-            'kamera_id' => 'website_webcam',
-            'foto_capture_path' => $filename,
-        ]);
-
-        // Catat di tabel Attendance (Kehadiran Utama)
-        $today = Carbon::today();
-        $attendance = Attendance::firstOrNew([
-            'child_id' => $childId,
-            'date' => $today
-        ]);
+        // ── Validasi limit: cari attendance hari ini dulu (bukan firstOrNew!) ─
+        $today      = Carbon::today();
+        $attendance = Attendance::where('child_id', $childId)
+                                ->whereDate('date', $today)
+                                ->first(); // bisa null jika belum ada
 
         if ($status === 'check_in') {
-            if ($attendance->exists && $attendance->check_in) {
+            // Tolak jika sudah pernah Check In hari ini
+            if ($attendance && $attendance->check_in) {
                 if (file_exists($fullPath)) unlink($fullPath);
                 return response()->json([
                     'success' => false,
-                    'message' => "{$nama} sudah melakukan Check In hari ini."
+                    'message' => "{$nama} sudah Check In hari ini pada " . Carbon::parse($attendance->check_in)->format('H:i:s') . ". Silakan lakukan Check Out."
                 ]);
             }
-            $attendance->check_in = now();
-            $attendance->status = 'hadir';
-        } else if ($status === 'check_out') {
-            if (!$attendance->exists || !$attendance->check_in) {
+        } elseif ($status === 'check_out') {
+            // Tolak jika belum pernah Check In
+            if (!$attendance || !$attendance->check_in) {
                 if (file_exists($fullPath)) unlink($fullPath);
                 return response()->json([
                     'success' => false,
-                    'message' => "{$nama} belum Check In. Silakan Check In terlebih dahulu."
+                    'message' => "{$nama} belum Check In hari ini. Silakan Check In terlebih dahulu."
                 ]);
             }
+            // Tolak jika sudah Check Out
             if ($attendance->check_out) {
                 if (file_exists($fullPath)) unlink($fullPath);
                 return response()->json([
                     'success' => false,
-                    'message' => "{$nama} sudah melakukan Check Out hari ini."
+                    'message' => "{$nama} sudah Check Out hari ini pada " . Carbon::parse($attendance->check_out)->format('H:i:s') . "."
                 ]);
             }
-            $attendance->check_out = now();
-            $attendance->status = 'hadir';
         }
 
-        $attendance->kamera_id = 'website_webcam';
-        $attendance->confidence_score = $confidence;
-        $attendance->algoritma = 'cnn';
-        $attendance->foto_capture_path = $filename;
+        // ── Buat atau update record attendance ────────────────────────────────
+        if (!$attendance) {
+            $attendance = new Attendance([
+                'child_id' => $childId,
+                'date'     => $today,
+            ]);
+        }
+
+        if ($status === 'check_in') {
+            $attendance->check_in = now();
+            $attendance->status   = 'hadir';
+        } else {
+            $attendance->check_out = now();
+            $attendance->status    = 'hadir';
+        }
+
+        $attendance->kamera_id          = 'website_webcam';
+        $attendance->confidence_score   = $confidence;
+        $attendance->algoritma          = 'lbph';
+        $attendance->foto_capture_path  = $filename;
         $attendance->save();
 
-        // Kirim event notifikasi real-time jika ada WebSocket terpasang
+        // ── Log ───────────────────────────────────────────────────────────────
+        FaceRecognitionLog::create([
+            'child_id'          => $childId,
+            'confidence_score'  => $confidence,
+            'algoritma'         => 'lbph',
+            'status'            => $status,
+            'kamera_id'         => 'website_webcam',
+            'foto_capture_path' => $filename,
+        ]);
+
+        // Kirim event real-time (opsional)
         try {
             event(new \App\Events\CctvMotionDetected([
                 'lokasi' => 'website_webcam',
-                'status' => "Absen Wajah (Web): {$nama} ({$status})"
+                'status' => "Absen Wajah: {$nama} ({$status})"
             ]));
-        } catch (\Exception $e) {
-            // Abaikan jika event broadcast tidak dikonfigurasi
-        }
+        } catch (\Exception $e) { /* abaikan jika broadcast tidak aktif */ }
 
         return response()->json([
             'success' => true,
             'message' => "Berhasil mengenali {$nama}!",
-            'data' => [
-                'nama' => $nama,
+            'data'    => [
+                'nama'       => $nama,
                 'confidence' => $confidence,
-                'status' => $status === 'check_in' ? 'Check In (Masuk)' : 'Check Out (Keluar)',
-                'waktu' => now()->format('H:i:s'),
-                'foto' => asset('storage/' . $filename)
+                'status'     => $status === 'check_in' ? 'Check In (Masuk)' : 'Check Out (Keluar)',
+                'waktu'      => now()->format('H:i:s'),
+                'foto'       => asset('storage/' . $filename),
             ]
         ]);
     }
 }
-
