@@ -65,7 +65,7 @@ class SyncCsvData extends Command
             $child->nama = $nama;
             $child->asal_daerah = $asal;
             $child->tanggal_lahir = $tgl_lahir;
-            $child->jenis_kelamin = 'Laki-laki'; // Default
+            $child->jenis_kelamin = 'L'; // Harus L atau P sesuai ENUM database
             $child->sekolah = '-';
             $child->keterangan = 'Sinkronisasi VGG16';
             $child->save();
