@@ -191,9 +191,11 @@ def main():
                 
                 id_pred, dist = lbph_recognizer.predict(gray_face)
                 
-                # LBPH distance -> Confidence (Logaritmik / mapping manusiawi)
-                # distance 0 = sempurna, 80 = cukup, 100+ = buruk
-                lbph_confidence = round(max(0.0, 120.0 - dist) / 1.2, 1)
+                # LBPH distance -> Confidence (Logaritmik / mapping manusiawi yang lebih longgar)
+                # Kamera web (webcam) seringkali menghasilkan gambar dengan noise/cahaya berbeda dari foto training.
+                # Distance 0-50 = 100%, 70 = 85%, 90 = 65% (Batas aman)
+                lbph_confidence = round(max(0.0, 155.0 - dist), 1)
+                lbph_confidence = min(99.9, lbph_confidence)
                 
                 entry = lbph_map.get(id_pred) or lbph_map.get(str(id_pred))
                 if entry:

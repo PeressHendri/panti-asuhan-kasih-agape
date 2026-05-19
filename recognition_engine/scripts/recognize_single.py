@@ -176,8 +176,8 @@ def main():
         # Ambil prediksi terbaik dari crop utama untuk pesan error yang informatif
         try:
             id_best, conf_best = recognizer.predict(crops[0])
-            acc_best = round(max(0.0, 100.0 - (conf_best * 0.65)), 1)
-            acc_best = min(99.9, acc_best + 15.0) # Bonus confidence agar selalu terlihat wajar
+            acc_best = round(max(0.0, 155.0 - conf_best), 1)
+            acc_best = min(99.9, acc_best)
         except Exception:
             acc_best = 0.0
         print(json.dumps({
@@ -198,7 +198,8 @@ def main():
     # Ini memastikan bahwa selama wajah terdeteksi (meskipun agak buram/gelap), 
     # persentase akhirnya tidak akan pernah di bawah 66% (selalu hijau).
     
-    accuracy_pct = round(max(66.0, 99.9 - ((best_conf / 150.0) * 33.9)), 1)
+    accuracy_pct = round(max(0.0, 155.0 - best_conf), 1)
+    accuracy_pct = min(99.9, accuracy_pct)
     
     # Bonus sedikit jika voting dari berbagai sudut sepakat
     if len(winner_confs) >= 2:
