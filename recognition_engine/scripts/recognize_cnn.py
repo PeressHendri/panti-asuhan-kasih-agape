@@ -119,15 +119,29 @@ def main():
     x, y, w, h = faces[0]
 
     try:
-        # Preprocessing Wajah (Dibuat 100% IDENTIK dengan main_recognition.py)
-        # Tanpa margin & murni menggunakan channel BGR OpenCV (dibagi 255.0)
-        face_roi = img[y:y+h, x:x+w]
+        # Preprocessing Wajah dengan Margin 15%
+        # Ini memberikan sedikit ruang di sekitar dahi dan dagu agar VGG16 bisa melihat bentuk utuh wajah.
+        img_h, img_w = img.shape[:2]
+        margin_x = int(w * 0.15)
+        margin_y = int(h * 0.15)
+        
+        x1 = max(0, x - margin_x)
+        y1 = max(0, y - margin_y)
+        x2 = min(img_w, x + w + margin_x)
+        y2 = min(img_h, y + h + margin_y)
+        
+        face_roi = img[y1:y2, x1:x2]
         face_resized = cv2.resize(face_roi, (224, 224))
         
-        face_array = img_to_array(face_resized) / 255.0
+        # SANGAT PENTING: Keras ImageDataGenerator (Colab) melatih data dalam format RGB!
+        # Sedangkan OpenCV membaca gambar web dalam format BGR.
+        # Kita WAJIB membaliknya agar warna kulit manusia tidak terlihat 'biru/abu-abu' di mata AI.
+        face_rgb = cv2.cvtColor(face_resized, cv2.COLOR_BGR2RGB)
+        
+        face_array = img_to_array(face_rgb) / 255.0
         face_array = np.expand_dims(face_array, axis=0)
         
-        # Prediksi dengan VGG16 (Murni BGR seperti saat training & main_recognition)
+        # Prediksi dengan VGG16
         preds = model.predict(face_array, verbose=0)
         similarity = float(np.max(preds))
         
