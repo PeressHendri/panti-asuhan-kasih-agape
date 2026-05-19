@@ -45,33 +45,7 @@
 .cam-body { position:relative; background:#f1f5f9; min-height:420px; display:flex; align-items:center; justify-content:center; }
 #webcam { width:100%; max-height:420px; object-fit:cover; transform:scaleX(-1); display:block; border-radius: 0; }
 
-/* Face guide */
-.face-guide {
-    position:absolute; width:220px; height:280px;
-    border:2px dashed rgba(255,255,255,.6); border-radius:50%/40%;
-    pointer-events:none; box-shadow:0 0 0 9999px rgba(0,0,0,.3); z-index:5;
-    transition: border-color .3s, box-shadow .3s;
-}
-.face-guide.detecting { border-color:var(--fr-accent); box-shadow:0 0 0 9999px rgba(0,0,0,.3), 0 0 20px rgba(59,130,246,.6); }
-.face-guide.success   { border-color:var(--fr-green); box-shadow:0 0 0 9999px rgba(0,0,0,.3), 0 0 20px rgba(16,185,129,.6); }
-.face-guide.error     { border-color:var(--fr-red); box-shadow:0 0 0 9999px rgba(0,0,0,.3), 0 0 20px rgba(239,68,68,.5); }
-
-.corner { position:absolute; width:20px; height:20px; border:4px solid #fbbf24; pointer-events:none; }
-.corner.tl{top:-4px;left:-4px;border-right:0;border-bottom:0;border-top-left-radius:12px;}
-.corner.tr{top:-4px;right:-4px;border-left:0;border-bottom:0;border-top-right-radius:12px;}
-.corner.bl{bottom:-4px;left:-4px;border-right:0;border-top:0;border-bottom-left-radius:12px;}
-.corner.br{bottom:-4px;right:-4px;border-left:0;border-top:0;border-bottom-right-radius:12px;}
-
-/* Scan line */
-.scan-line {
-    position:absolute; left:0; width:100%; height:4px;
-    background:linear-gradient(transparent,rgba(59,130,246,1),transparent);
-    box-shadow:0 0 15px rgba(59,130,246,.9);
-    z-index:6; pointer-events:none; display:none;
-    animation:scanMove 2s linear infinite;
-}
-@keyframes scanMove{0%{top:0}50%{top:100%}100%{top:0}}
-
+/* Clean look - tidak ada panduan visual AI */
 /* Status bar */
 .cam-status {
     background:#ffffff; padding:16px 24px;
@@ -182,11 +156,6 @@
 
         <div class="cam-body">
             <video id="webcam" autoplay playsinline></video>
-            <div class="scan-line" id="scan-line"></div>
-            <div class="face-guide" id="face-guide">
-                <div class="corner tl"></div><div class="corner tr"></div>
-                <div class="corner bl"></div><div class="corner br"></div>
-            </div>
             <div id="cam-overlay">
                 <div class="spinner-border text-primary mb-3" style="width:3rem;height:3rem;"></div>
                 <h5 class="fw-bold mb-1">Menghubungkan Kamera...</h5>
@@ -288,8 +257,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const video       = document.getElementById('webcam');
     const overlay     = document.getElementById('cam-overlay');
     const retryBtn    = document.getElementById('btn-retry');
-    const scanLine    = document.getElementById('scan-line');
-    const faceGuide   = document.getElementById('face-guide');
     const statusBadge = document.getElementById('status-badge');
     const statusText  = document.getElementById('status-text');
     const spinIcon    = document.getElementById('spin-icon');
@@ -310,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 video.play();
                 overlay.style.display = 'none';
                 cameraReady = true;
-                setStatus('idle', 'Siap — Deteksi otomatis aktif...');
+                setStatus('idle', 'Siap memindai...');
                 startAutoScan();
             };
         })
@@ -335,10 +302,6 @@ document.addEventListener('DOMContentLoaded', () => {
         statusText.innerText  = text;
         spinIcon.classList.toggle('d-none', type !== 'scanning');
         eyeIcon.classList.toggle('d-none',  type === 'scanning');
-        faceGuide.className   = `face-guide ${
-            type === 'scanning' ? 'detecting' :
-            type === 'success'  ? 'success'   :
-            type === 'error'    ? 'error'      : ''}`;
     }
 
     // ─── Auto scan loop ───────────────────────────────────────────────
@@ -410,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const pct = Math.min(100, ((Date.now() - start) / COOLDOWN_MS) * 100);
             cooldownFill.style.width = pct + '%';
             if (pct < 100) { cooldownTimer = requestAnimationFrame(tick); }
-            else { inCooldown = false; cooldownFill.style.width = '0%'; setStatus('idle', 'Siap — Deteksi otomatis aktif...'); }
+            else { inCooldown = false; cooldownFill.style.width = '0%'; setStatus('idle', 'Siap memindai...'); }
         };
         cooldownTimer = requestAnimationFrame(tick);
     }
@@ -418,8 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ─── Main scan function ───────────────────────────────────────────
     function doScan() {
         scanning = true;
-        scanLine.style.display = 'block';
-        setStatus('scanning', 'Menganalisis wajah...');
+        setStatus('scanning', 'Memindai...');
 
         const foto = captureFrame();
 
@@ -431,7 +393,6 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .then(r  => r.json())
         .then(res => {
-            scanLine.style.display = 'none';
             scanning = false;
 
             if (res.success) {
@@ -456,12 +417,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     showResult(false, null, res.message);
                     startCooldown();
                 } else {
-                    setStatus('idle', 'Posisikan wajah ke kamera...');
+                    setStatus('idle', 'Siap memindai...');
                 }
             }
         })
         .catch(() => {
-            scanLine.style.display = 'none';
             scanning = false;
             setStatus('error', 'Error koneksi server');
             showResult(false, null, 'Gagal terhubung ke server.');
