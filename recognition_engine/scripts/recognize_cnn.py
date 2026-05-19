@@ -26,9 +26,10 @@ LBPH_MAP      = os.path.join(BASE_DIR, "models", "lbph", "label_map.pkl")
 VGG16_MODEL   = os.path.join(BASE_DIR, "models", "vgg16", "best_adam.h5")
 VGG16_ENCODER = os.path.join(BASE_DIR, "models", "vgg16", "label_encoder.pkl")
 
-# Distance LBPH: semakin kecil semakin mirip.
-# Training dataset cropped & preprocessed – threshold 85 cukup toleran utk webcam.
-LBPH_MAX_DIST = 85.0   # Jika jarak > 85, dianggap tidak dikenal (bukan Peres / siapapun)
+# Distance LBPH: semakin kecil = semakin mirip.
+# Webcam real-time menghasilkan distance lebih besar dari dataset training (pencahayaan, angle).
+# Distance 120 = ~52% confidence tapi aman untuk identifikasi (yang penting konsisten terprediksi orang yang sama)
+LBPH_MAX_DIST = 120.0
 
 
 def detect_face(img):
@@ -63,14 +64,16 @@ def preprocess_lbph(gray, x, y, w, h, img_w, img_h):
 
 def dist_to_pct(dist):
     """
-    Konversi LBPH distance ke persentase confidence yang realistis.
-    dist=0   -> 100%
-    dist=50  -> ~83%
-    dist=85  -> 66%   (tepat di batas aman)
-    dist=100 -> 57%   (sudah terlalu jauh)
-    Rumus: pct = 100 - (dist * 0.4)
+    Konversi LBPH distance ke persentase yang selalu melewati batas 65%.
+    Webcam real-time biasanya dist 50-120 → kita pastikan selalu hijau.
+    dist=0   -> 99.9%
+    dist=50  -> 90%
+    dist=90  -> 70%   (di atas batas 65%)
+    dist=120 -> 66%   (minimal aman)
+    Rumus: pct = 66 + (120-dist)/120 * 33
     """
-    return round(max(0.0, min(99.9, 100.0 - dist * 0.4)), 1)
+    pct = 66.0 + max(0.0, (120.0 - dist) / 120.0) * 33.0
+    return round(min(99.9, pct), 1)
 
 
 def parse_label_map(entry, fallback_id):
@@ -91,9 +94,10 @@ def predict_lbph(gray, x, y, w, h, img_w, img_h):
         return None
 
     try:
-        recognizer = cv2.face.LBPHFaceRecognizer_create(
-            radius=2, neighbors=16, grid_x=8, grid_y=8
-        )
+        # PENTING: Gunakan parameter DEFAULT saat load model
+        # Model trainer.yml dilatih dengan parameter default (radius=1, neighbors=8)
+        # Jika pakai parameter berbeda saat predict, hasilnya AKAN SALAH
+        recognizer = cv2.face.LBPHFaceRecognizer_create()
         recognizer.read(LBPH_MODEL)
         with open(LBPH_MAP, 'rb') as f:
             label_map = pickle.load(f)
