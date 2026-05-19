@@ -16,8 +16,8 @@
     --fr-text-muted: #64748b;
 }
 
-.fr-wrapper { display: grid; grid-template-columns: 1fr 420px; gap: 24px; }
-@media(max-width:992px){ .fr-wrapper { grid-template-columns: 1fr; } }
+.fr-wrapper { display: grid; grid-template-columns: minmax(400px, 500px) minmax(350px, 450px); gap: 24px; justify-content: center; align-items: start; }
+@media(max-width:992px){ .fr-wrapper { grid-template-columns: 1fr; max-width: 500px; margin: 0 auto; } }
 
 /* Camera Card */
 .cam-card {
@@ -42,8 +42,8 @@
 .live-dot { width:8px;height:8px;border-radius:50%;background:#ef4444;animation:pulseDot 1.5s infinite; }
 @keyframes pulseDot{0%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}70%{box-shadow:0 0 0 6px rgba(239,68,68,0)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}
 
-.cam-body { position:relative; background:#f1f5f9; min-height:420px; display:flex; align-items:center; justify-content:center; }
-#webcam { width:100%; max-height:420px; object-fit:cover; transform:scaleX(-1); display:block; border-radius: 0; }
+.cam-body { position:relative; background:#000; display:flex; align-items:center; justify-content:center; }
+#webcam { width:100%; aspect-ratio: 4/3; object-fit:cover; transform:scaleX(-1); display:block; border-radius: 0; }
 
 /* Clean look - tidak ada panduan visual AI */
 /* Status bar */
