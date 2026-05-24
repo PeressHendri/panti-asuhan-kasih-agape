@@ -14,6 +14,7 @@ sys.path.append(os.path.join(BASE_DIR, "utils"))
 from send_api import send_to_laravel
 from face_detector import detect_faces_dnn
 from predict_hybrid import predict_fusion
+from liveness import check_liveness
 
 # ============================================================
 # CONFIG GPIO
@@ -185,6 +186,7 @@ def process_main_camera(camera_id, rtsp_url, model_vgg16, le_vgg16):
 
     fgbg           = cv2.createBackgroundSubtractorMOG2(history=300, varThreshold=50, detectShadows=False)
     last_post_time = 0
+    liveness_status = {} # Menyimpan status kedip & senyum per anak
 
     print(f"[MAIN CAM] Thread berjalan → {camera_id} | Algo: {RECOGNITION_ALGO_MAIN.upper()}")
 
@@ -223,6 +225,7 @@ def process_main_camera(camera_id, rtsp_url, model_vgg16, le_vgg16):
         display_frame = frame.copy()
 
         if screen_state["on"] and motion_detected:
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             faces = detect_faces_dnn(frame)
 
             for (x, y, w, h) in faces:
@@ -230,20 +233,57 @@ def process_main_camera(camera_id, rtsp_url, model_vgg16, le_vgg16):
                     frame, x, y, w, h, model_vgg16, le_vgg16, None, None
                 )
 
-                label = f"{nama} ({accuracy_pct:.0f}%) [{model_used}]" if is_recognized else "Orang Asing"
-                color = (0, 255, 0) if is_recognized else (0, 0, 255)
+                liveness_passed = False
+                color = (0, 0, 255)
+                label = "Orang Asing"
+                liveness_text = ""
 
-                if is_recognized and now - last_post_time > 5:
+                if is_recognized:
+                    has_models, is_blinking, is_smiling = check_liveness(gray, (x, y, w, h))
+                    
+                    if child_id not in liveness_status:
+                        liveness_status[child_id] = {"blink": False, "smile": False, "time": now}
+                    
+                    # Update status
+                    if is_blinking: liveness_status[child_id]["blink"] = True
+                    if is_smiling: liveness_status[child_id]["smile"] = True
+                    liveness_status[child_id]["time"] = now # refresh expiry
+                    
+                    if not has_models:
+                        liveness_passed = True # Bypass jika model dlib 99MB blm diinstall
+                    else:
+                        liveness_passed = liveness_status[child_id]["blink"] and liveness_status[child_id]["smile"]
+                    
+                    if liveness_passed:
+                        label = f"{nama} ({accuracy_pct:.0f}%) [{model_used}]"
+                        color = (0, 255, 0)
+                        liveness_text = "LIVENESS PASSED!"
+                    else:
+                        label = f"{nama} - MENUNGGU LIVENESS"
+                        color = (0, 255, 255) # Yellow
+                        b_txt = "BERHASIL" if liveness_status[child_id]["blink"] else "TIDAK"
+                        s_txt = "BERHASIL" if liveness_status[child_id]["smile"] else "TIDAK"
+                        liveness_text = f"Kedip: {b_txt} | Senyum: {s_txt}"
+
+                if is_recognized and liveness_passed and (now - last_post_time > 5):
                     last_post_time = now
                     play_audio('success', nama)
                     send_to_laravel(child_id=child_id, confidence_score=round(accuracy_pct, 2),
                                     status="check_in", kamera_id=camera_id, algoritma=RECOGNITION_ALGO_MAIN)
+                    # Reset liveness setelah berhasil absen
+                    liveness_status[child_id] = {"blink": False, "smile": False, "time": now}
+                
                 elif not is_recognized and now - last_post_time > 5:
                     last_post_time = now
                     play_audio('warning')
 
                 cv2.rectangle(display_frame, (x, y), (x+w, y+h), color, 3)
-                cv2.putText(display_frame, label, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
+                cv2.putText(display_frame, label, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+                if liveness_text:
+                    cv2.putText(display_frame, liveness_text, (x, y+h+20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+
+            # Cleanup memory (hapus status liveness anak yg sudah pergi > 10 detik)
+            liveness_status = {k: v for k, v in liveness_status.items() if now - v["time"] < 10}
 
         elif not screen_state["on"]:
             display_frame = np.zeros((480, 640, 3), dtype=np.uint8)
