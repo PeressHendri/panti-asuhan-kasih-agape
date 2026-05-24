@@ -40,6 +40,14 @@ class ChildController extends Controller
 
         if ($request->hasFile('photo')) {
             $validated['photo'] = $request->file('photo')->store('children-photos', 'public');
+        } elseif ($request->filled('photo_base64')) {
+            $image_parts = explode(";base64,", $request->photo_base64);
+            if (count($image_parts) == 2) {
+                $image_base64 = base64_decode($image_parts[1]);
+                $fileName = 'children-photos/' . uniqid() . '.jpg';
+                Storage::disk('public')->put($fileName, $image_base64);
+                $validated['photo'] = $fileName;
+            }
         }
 
         $child = Child::create($validated);
@@ -70,11 +78,21 @@ class ChildController extends Controller
         ]);
 
         if ($request->hasFile('photo')) {
-            // Delete old photo if exists
             if ($child->photo) {
                 Storage::disk('public')->delete($child->photo);
             }
             $validated['photo'] = $request->file('photo')->store('children-photos', 'public');
+        } elseif ($request->filled('photo_base64')) {
+            if ($child->photo) {
+                Storage::disk('public')->delete($child->photo);
+            }
+            $image_parts = explode(";base64,", $request->photo_base64);
+            if (count($image_parts) == 2) {
+                $image_base64 = base64_decode($image_parts[1]);
+                $fileName = 'children-photos/' . uniqid() . '.jpg';
+                Storage::disk('public')->put($fileName, $image_base64);
+                $validated['photo'] = $fileName;
+            }
         }
 
         $child->update($validated);

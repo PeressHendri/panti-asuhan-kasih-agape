@@ -50,9 +50,31 @@
                 {{-- Kolom Kanan --}}
                 <div class="col-md-4">
                     <div class="mb-3">
-                        <label for="photo" class="form-label">Foto</label>
-                        <img id="photo-preview" src="{{ asset('images/default-avatar.png') }}" alt="preview" class="img-thumbnail mb-2" style="width:100%; object-fit: cover;">
+                        <label class="form-label">Foto / Pindai Wajah (Untuk Dataset) <span class="text-danger">*</span></label>
+                        
+                        <!-- Area Video / Preview -->
+                        <div class="position-relative mb-2">
+                            <video id="webcam" autoplay playsinline style="width: 100%; object-fit: cover; border-radius: 8px; display: none;"></video>
+                            <img id="photo-preview" src="{{ asset('images/default-avatar.png') }}" alt="preview" class="img-thumbnail" style="width:100%; object-fit: cover; border-radius: 8px;">
+                            <canvas id="canvas" style="display: none;"></canvas>
+                        </div>
+                        
+                        <!-- Tombol Kontrol Kamera -->
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="button" class="btn btn-outline-primary" id="btn-start-camera">
+                                Buka Kamera Web
+                            </button>
+                            <button type="button" class="btn btn-success" id="btn-capture" style="display: none;">
+                                Ambil Foto Wajah
+                            </button>
+                            <button type="button" class="btn btn-danger" id="btn-stop-camera" style="display: none;">
+                                Tutup Kamera
+                            </button>
+                        </div>
+
+                        <div class="text-center mb-2">atau upload foto secara manual:</div>
                         <input class="form-control @error('photo') is-invalid @enderror" type="file" id="photo" name="photo" accept="image/*">
+                        <input type="hidden" name="photo_base64" id="photo_base64">
                         @error('photo')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                 </div>
@@ -69,12 +91,76 @@
 
 @push('scripts')
 <script>
-// Skrip untuk preview foto saat file dipilih
+// Logika Upload File Biasa
 document.getElementById('photo').addEventListener('change', function(event) {
     const [file] = event.target.files;
     if (file) {
         document.getElementById('photo-preview').src = URL.createObjectURL(file);
+        document.getElementById('photo-preview').style.display = 'block';
+        document.getElementById('webcam').style.display = 'none';
+        document.getElementById('photo_base64').value = ''; // Hapus base64 jika pilih file manual
     }
+});
+
+// Logika Kamera (Webcam)
+const webcamElement = document.getElementById('webcam');
+const canvasElement = document.getElementById('canvas');
+const btnStart = document.getElementById('btn-start-camera');
+const btnCapture = document.getElementById('btn-capture');
+const btnStop = document.getElementById('btn-stop-camera');
+const photoPreview = document.getElementById('photo-preview');
+const base64Input = document.getElementById('photo_base64');
+let stream = null;
+
+btnStart.addEventListener('click', async () => {
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        webcamElement.srcObject = stream;
+        
+        webcamElement.style.display = 'block';
+        photoPreview.style.display = 'none';
+        
+        btnStart.style.display = 'none';
+        btnCapture.style.display = 'block';
+        btnStop.style.display = 'block';
+    } catch (err) {
+        alert("Gagal mengakses kamera: " + err);
+    }
+});
+
+btnStop.addEventListener('click', () => {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+    webcamElement.style.display = 'none';
+    photoPreview.style.display = 'block';
+    
+    btnStart.style.display = 'block';
+    btnCapture.style.display = 'none';
+    btnStop.style.display = 'none';
+});
+
+btnCapture.addEventListener('click', () => {
+    // Sesuaikan ukuran canvas dengan resolusi video
+    canvasElement.width = webcamElement.videoWidth;
+    canvasElement.height = webcamElement.videoHeight;
+    
+    // Capture frame
+    const context = canvasElement.getContext('2d');
+    context.drawImage(webcamElement, 0, 0, canvasElement.width, canvasElement.height);
+    
+    // Convert ke format base64
+    const dataUrl = canvasElement.toDataURL('image/jpeg', 0.9);
+    
+    // Tampilkan ke user
+    photoPreview.src = dataUrl;
+    base64Input.value = dataUrl;
+    
+    // Hapus input tipe file jika user memilih kamera
+    document.getElementById('photo').value = '';
+    
+    // Tutup kamera otomatis
+    btnStop.click();
 });
 </script>
 @endpush
