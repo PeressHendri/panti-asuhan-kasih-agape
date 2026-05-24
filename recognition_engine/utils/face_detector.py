@@ -15,16 +15,24 @@ _net = None
 
 import sys
 
+import sys
+import requests
+
 def _download_models():
     os.makedirs(MODEL_DIR, exist_ok=True)
-    if not os.path.exists(PROTOTXT_PATH):
-        print("[FaceDetector] Downloading prototxt...", file=sys.stderr)
-        try: urllib.request.urlretrieve(PROTOTXT_URL, PROTOTXT_PATH)
-        except Exception: pass
-    if not os.path.exists(MODEL_PATH):
-        print("[FaceDetector] Downloading caffemodel...", file=sys.stderr)
-        try: urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
-        except Exception: pass
+    try:
+        if not os.path.exists(PROTOTXT_PATH):
+            print("[FaceDetector] Downloading prototxt...", file=sys.stderr)
+            res = requests.get(PROTOTXT_URL, timeout=3)
+            with open(PROTOTXT_PATH, 'wb') as f: f.write(res.content)
+            
+        if not os.path.exists(MODEL_PATH):
+            print("[FaceDetector] Downloading caffemodel...", file=sys.stderr)
+            res = requests.get(MODEL_URL, timeout=5)
+            with open(MODEL_PATH, 'wb') as f: f.write(res.content)
+    except Exception as e:
+        print(f"[FaceDetector] Download failed, falling back to DLIB: {e}", file=sys.stderr)
+        pass
 
 def _load_net():
     global _net
