@@ -136,11 +136,18 @@ def load_lbph_model():
 def load_vgg16_model():
     try:
         from tensorflow.keras.models import load_model
+        from tensorflow.keras.layers import Dense
         import pickle
+        
+        class SafeDense(Dense):
+            def __init__(self, **kwargs):
+                kwargs.pop('quantization_config', None)
+                super().__init__(**kwargs)
+                
         VGG16_MODEL_PATH = os.path.join(BASE_DIR, "models", "vgg16", "model_vgg16_adam.h5")
         ENCODER_PATH     = os.path.join(BASE_DIR, "models", "vgg16", "label_encoder.pkl")
         if os.path.exists(VGG16_MODEL_PATH) and os.path.exists(ENCODER_PATH):
-            model = load_model(VGG16_MODEL_PATH)
+            model = load_model(VGG16_MODEL_PATH, custom_objects={'Dense': SafeDense})
             with open(ENCODER_PATH, 'rb') as f:
                 le = pickle.load(f)
             print("[INFO] Model VGG16 berhasil dimuat.")

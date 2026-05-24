@@ -71,8 +71,14 @@ def main():
 
     try:
         from tensorflow.keras.models import load_model
+        from tensorflow.keras.layers import Dense
+        class SafeDense(Dense):
+            def __init__(self, **kwargs):
+                kwargs.pop('quantization_config', None)
+                super().__init__(**kwargs)
+                
         if os.path.exists(VGG16_MODEL) and os.path.exists(VGG16_ENC):
-            model_vgg = load_model(VGG16_MODEL)
+            model_vgg = load_model(VGG16_MODEL, custom_objects={'Dense': SafeDense})
             with open(VGG16_ENC, 'rb') as f:
                 le_vgg = pickle.load(f)
     except Exception:
