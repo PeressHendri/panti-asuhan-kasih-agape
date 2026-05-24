@@ -97,10 +97,8 @@
                         style="background: rgba(0, 119, 182, 0.1); padding: 2rem; border-radius: 1rem; margin-bottom: 2rem; border: 1px dashed var(--main-color);">
                         <h3 style="font-size: 1.8rem; color: var(--main-color); margin-bottom: 1rem;"><i
                                 class="fa-solid fa-credit-card"></i> Rekening Tujuan Panti</h3>
-                        <p style="font-size: 1.5rem; margin-bottom: 0.5rem;"><strong>Bank BCA:</strong> GANTI_NOREK_BCA a/n
-                            Panti Asuhan Kasih Agape</p>
-                        <p style="font-size: 1.5rem; margin-bottom: 0.5rem;"><strong>Bank Mandiri:</strong> GANTI_NOREK_MANDIRI
-                            a/n Panti Asuhan Kasih Agape</p>
+                        <p style="font-size: 1.5rem; margin-bottom: 0.5rem;"><strong>Bank BRI:</strong> 0974-01-008034-53-7 a/n PANTI ASUHAN KASIH AGAPE</p>
+                        <p style="font-size: 1.5rem; margin-bottom: 0.5rem;"><strong>Bank BCA:</strong> 2581727374 a/n Mariana Muskita</p>
                         <hr style="margin: 1.5rem 0; border: 0; border-top: 1px dashed var(--main-color);">
                         <p style="font-size: 1.3rem; color: #555;">Bagi donatur yang menitipkan barang melalui kurir,
                             Anda dapat melampirkan foto resi di kolom bukti atau via WA Panti.</p>
