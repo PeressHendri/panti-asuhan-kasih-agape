@@ -4,16 +4,16 @@ import time
 import threading
 import numpy as np
 import subprocess
-import requests
 import sys
+import requests
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-if BASE_DIR not in sys.path:
-    sys.path.insert(0, BASE_DIR)
+sys.path.append(os.path.join(BASE_DIR, "scripts"))
+sys.path.append(os.path.join(BASE_DIR, "utils"))
 
-from scripts.send_api import send_to_laravel
-from utils.face_detector import detect_faces_dnn
-from scripts.predict_hybrid import predict_fusion
+from send_api import send_to_laravel
+from face_detector import detect_faces_dnn
+from predict_hybrid import predict_fusion
 
 # ============================================================
 # CONFIG GPIO

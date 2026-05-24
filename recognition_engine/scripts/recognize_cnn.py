@@ -21,11 +21,11 @@ except ImportError as e:
 
 # ──────────────────────────────────────────────────────────────────────────
 BASE_DIR    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if BASE_DIR not in sys.path:
-    sys.path.insert(0, BASE_DIR)
+sys.path.append(os.path.join(BASE_DIR, "utils"))
+sys.path.append(os.path.join(BASE_DIR, "scripts"))
 
-from utils.face_detector import detect_faces_dnn
-from scripts.predict_hybrid import predict_fusion
+from face_detector import detect_faces_dnn
+from predict_hybrid import predict_fusion
 
 LBPH_MODEL  = os.path.join(BASE_DIR, "models", "lbph", "trainer.yml")
 LBPH_MAP    = os.path.join(BASE_DIR, "models", "lbph", "label_map.pkl")
