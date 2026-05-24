@@ -13,14 +13,16 @@ MODEL_PATH = os.path.join(MODEL_DIR, "res10_300x300_ssd_iter_140000_fp16.caffemo
 
 _net = None
 
+import sys
+
 def _download_models():
     os.makedirs(MODEL_DIR, exist_ok=True)
     if not os.path.exists(PROTOTXT_PATH):
-        print("[FaceDetector] Downloading prototxt...")
+        print("[FaceDetector] Downloading prototxt...", file=sys.stderr)
         try: urllib.request.urlretrieve(PROTOTXT_URL, PROTOTXT_PATH)
         except Exception: pass
     if not os.path.exists(MODEL_PATH):
-        print("[FaceDetector] Downloading caffemodel...")
+        print("[FaceDetector] Downloading caffemodel...", file=sys.stderr)
         try: urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
         except Exception: pass
 

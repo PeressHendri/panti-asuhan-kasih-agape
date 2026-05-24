@@ -99,10 +99,10 @@ def main():
             img, x, y, w, h, model_vgg, le_vgg, recognizer, label_map, confidence_threshold=75
         )
 
-        if not is_recognized and conf < 50:
+        if not is_recognized:
              print(json.dumps({
                  "success": False,
-                 "message": f"Wajah terdeteksi namun belum dikenali."
+                 "message": "Wajah terdeteksi namun belum dikenali."
              }))
              return
 

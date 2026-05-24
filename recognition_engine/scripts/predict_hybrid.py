@@ -16,6 +16,8 @@ def preprocess_lbph(gray, x, y, w, h, img_w, img_h):
     face_roi = cv2.equalizeHist(face_roi)
     return face_roi
 
+import sys
+
 def preprocess_vgg16(frame, x, y, w, h):
     try:
         from tensorflow.keras.applications.vgg16 import preprocess_input
@@ -35,7 +37,7 @@ def preprocess_vgg16(frame, x, y, w, h):
         # Menggunakan prepocess_input bawaan Keras (std mean subtraction)
         return preprocess_input(face_array)
     except Exception as e:
-        print("[VGG Preprocess Error]", e)
+        print(f"[VGG Preprocess Error] {e}", file=sys.stderr)
         return None
 
 def predict_fusion(frame, x, y, w, h, model_vgg16, le_vgg16, recognizer_lbph, label_map, confidence_threshold=75):
