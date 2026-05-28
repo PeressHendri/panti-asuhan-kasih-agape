@@ -21,12 +21,12 @@ from liveness import check_liveness
 # ============================================================
 try:
     import RPi.GPIO as GPIO
-    PIR_GPIO_AVAILABLE = True
+    PIR_GPIO_AVAILABLE = False # Dimatikan permanen sesuai permintaan (tanpa sensor PIR)
 except (ImportError, RuntimeError):
     PIR_GPIO_AVAILABLE = False
 
-PIR_PIN        = 16   # Sensor PIR (hanya untuk kamera utama)
-LCD_BACKLIGHT  = 18   # Pin kontrol backlight layar 3.5 inch
+PIR_PIN        = 16   
+LCD_BACKLIGHT  = 18   
 
 if PIR_GPIO_AVAILABLE:
     GPIO.setmode(GPIO.BCM)
