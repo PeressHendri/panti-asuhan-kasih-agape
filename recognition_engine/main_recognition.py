@@ -39,7 +39,7 @@ if PIR_GPIO_AVAILABLE:
 # ============================================================
 API_BASE_URL         = "https://pantiasuhankasihagape.id/api"
 API_TOKEN            = "kasihagape2025secret"
-CONFIDENCE_THRESHOLD = 75
+CONFIDENCE_THRESHOLD = 80
 VGG16_SIM_THRESHOLD  = 0.40
 
 # Algoritma per mode:

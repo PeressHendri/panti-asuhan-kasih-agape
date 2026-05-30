@@ -19,3 +19,5 @@ yarn-error.log
 
 recognition_engine/
 *.h5
+Dataset Wajah/
+venv/

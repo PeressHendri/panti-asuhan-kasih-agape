@@ -40,7 +40,7 @@ def preprocess_vgg16(frame, x, y, w, h):
         print(f"[VGG Preprocess Error] {e}", file=sys.stderr)
         return None
 
-def predict_fusion(frame, x, y, w, h, model_vgg16, le_vgg16, recognizer_lbph, label_map, confidence_threshold=75):
+def predict_fusion(frame, x, y, w, h, model_vgg16, le_vgg16, recognizer_lbph, label_map, confidence_threshold=80):
     """
     Hybrid Prediction: VGG16 + LBPH.
     Jika VGG16 yakin (similarity > 0.85), pakai VGG16.
