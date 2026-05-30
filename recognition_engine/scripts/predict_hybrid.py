@@ -74,7 +74,7 @@ def predict_fusion(frame, x, y, w, h, model_vgg16, le_vgg16, recognizer_lbph, la
         lbph_input = preprocess_lbph(gray, x, y, w, h, img_w, img_h)
         if lbph_input is not None:
             id_pred, dist = recognizer_lbph.predict(lbph_input)
-            lbph_conf_raw = max(0, 100 - (dist / 1.5))
+            lbph_conf_raw = max(0, 100 - (dist * 0.25))
             if dist < 90: # Jika LBPH cukup yakin
                 entry = label_map.get(id_pred) or label_map.get(str(id_pred))
                 if isinstance(entry, dict):

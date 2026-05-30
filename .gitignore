@@ -17,7 +17,7 @@ yarn-error.log
 /.idea
 /.vscode
 
-recognition_engine/
+recognition_engine/models/
 *.h5
 Dataset Wajah/
 venv/
