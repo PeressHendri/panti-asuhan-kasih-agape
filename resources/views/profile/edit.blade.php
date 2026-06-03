@@ -59,24 +59,22 @@
             {{-- Penanda bahwa form ini dari halaman admin --}}
             <input type="hidden" name="is_admin_form" value="1">
             <div class="col-12 mt-2">
-                <div class="p-3 rounded-3 border" style="background: var(--card-bg, #fff);">
-                    <div class="d-flex align-items-center justify-content-center gap-3">
-                        <div class="form-check form-switch mb-0">
-                            <input class="form-check-input" style="cursor: pointer; width: 3em; height: 1.5em;"
-                                type="checkbox" role="switch"
-                                id="enable_manual_attendance"
-                                name="enable_manual_attendance"
-                                value="1"
-                                {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? 'checked' : '' }}>
-                        </div>
-                        <span id="manualStatusLabel" class="fw-bold"
-                            style="color: {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? '#22c55e' : '#94a3b8' }}">
-                            {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? 'ON' : 'OFF' }}
-                        </span>
-                        <span id="manualSaveIndicator" class="small text-muted ms-1" style="display:none;">
-                            <i class="fas fa-check-circle text-success"></i> Tersimpan
-                        </span>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" style="cursor: pointer;"
+                            type="checkbox" role="switch"
+                            id="enable_manual_attendance"
+                            name="enable_manual_attendance"
+                            value="1"
+                            {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? 'checked' : '' }}>
                     </div>
+                    <span id="manualStatusLabel" class="fw-bold"
+                        style="color: {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? '#22c55e' : '#94a3b8' }}; font-size: 0.9rem;">
+                        {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? 'ON' : 'OFF' }}
+                    </span>
+                    <span id="manualSaveIndicator" class="small text-muted ms-1" style="display:none;">
+                        <i class="fas fa-check-circle text-success"></i> Tersimpan
+                    </span>
                 </div>
             </div>
 

@@ -54,32 +54,27 @@
             </div>
             
             {{-- Toggle Absensi Manual & Webcam (1 toggle untuk keduanya) --}}
-            <div class="col-12 mt-3">
+            <div class="col-12 mt-2">
                 @php
                     $absensiAktif = \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false);
                 @endphp
-                <div class="card border-0 shadow-sm p-3"
-                     style="background: {{ $absensiAktif ? '#f0fff4' : '#f8fafc' }}; border-radius: 12px;
-                            border-left: 4px solid {{ $absensiAktif ? '#10b981' : '#94a3b8' }} !important;
-                            transition: background .3s;" id="absensiCard">
-                    <div class="d-flex align-items-center justify-content-center gap-3">
-                        <span class="fw-bold" id="absensiStatusLabel" style="font-size:.95rem;
-                            color: {{ $absensiAktif ? '#10b981' : '#94a3b8' }};">
-                            {{ $absensiAktif ? 'ON' : 'OFF' }}
-                        </span>
-                        <div class="form-check form-switch mb-0">
-                            <input class="form-check-input" style="cursor:pointer; width:3.5em; height:1.8em;"
-                                type="checkbox" role="switch"
-                                id="enable_manual_attendance"
-                                name="enable_manual_attendance"
-                                value="1"
-                                {{ $absensiAktif ? 'checked' : '' }}
-                                onchange="syncAbsensiToggle(this.checked)">
-                            {{-- hidden field: sinkronkan webcam dengan nilai yang sama --}}
-                            <input type="hidden" name="enable_webcam_attendance" id="webcamHidden"
-                                   value="{{ $absensiAktif ? '1' : '0' }}">
-                        </div>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" style="cursor: pointer;"
+                            type="checkbox" role="switch"
+                            id="enable_manual_attendance"
+                            name="enable_manual_attendance"
+                            value="1"
+                            {{ $absensiAktif ? 'checked' : '' }}
+                            onchange="syncAbsensiToggle(this.checked)">
+                        {{-- hidden field: sinkronkan webcam dengan nilai yang sama --}}
+                        <input type="hidden" name="enable_webcam_attendance" id="webcamHidden"
+                               value="{{ $absensiAktif ? '1' : '0' }}">
                     </div>
+                    <span id="absensiStatusLabel" class="fw-bold" style="font-size: 0.9rem;
+                        color: {{ $absensiAktif ? '#10b981' : '#94a3b8' }};">
+                        {{ $absensiAktif ? 'ON' : 'OFF' }}
+                    </span>
                 </div>
             </div>
 
@@ -143,18 +138,13 @@
             });
         });
 
-        // ── Sinkronkan toggle absensi (Manual + Webcam dalam 1 toggle) ──
+        // ── Sinkronkan toggle absensi ──
         function syncAbsensiToggle(checked) {
             const label  = document.getElementById('absensiStatusLabel');
-            const icon   = document.getElementById('absensiIcon');
-            const card   = document.getElementById('absensiCard');
             const hidden = document.getElementById('webcamHidden');
 
             label.textContent  = checked ? 'ON' : 'OFF';
             label.style.color  = checked ? '#10b981' : '#94a3b8';
-            icon.style.color   = checked ? '#10b981' : '#94a3b8';
-            card.style.background    = checked ? '#f0fff4' : '#f8fafc';
-            card.style.borderLeftColor = checked ? '#10b981' : '#94a3b8';
             // hidden field agar enable_webcam_attendance ikut terkirim
             hidden.value = checked ? '1' : '0';
             hidden.name  = checked ? 'enable_webcam_attendance' : '_webcam_off';
