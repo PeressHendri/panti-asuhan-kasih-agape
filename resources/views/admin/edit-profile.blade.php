@@ -62,29 +62,22 @@
                      style="background: {{ $absensiAktif ? '#f0fff4' : '#f8fafc' }}; border-radius: 12px;
                             border-left: 4px solid {{ $absensiAktif ? '#10b981' : '#94a3b8' }} !important;
                             transition: background .3s;" id="absensiCard">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div class="fw-bold" style="color: var(--text-color);">
-                            <i class="fas fa-clipboard-check me-2" id="absensiIcon"
-                               style="color: {{ $absensiAktif ? '#10b981' : '#94a3b8' }};"></i>
-                            Mode Absensi
-                        </div>
-                        <div class="d-flex align-items-center gap-3">
-                            <span class="fw-bold" id="absensiStatusLabel" style="font-size:.95rem;
-                                color: {{ $absensiAktif ? '#10b981' : '#94a3b8' }};">
-                                {{ $absensiAktif ? 'ON' : 'OFF' }}
-                            </span>
-                            <div class="form-check form-switch mb-0">
-                                <input class="form-check-input" style="cursor:pointer; width:3.5em; height:1.8em;"
-                                    type="checkbox" role="switch"
-                                    id="enable_manual_attendance"
-                                    name="enable_manual_attendance"
-                                    value="1"
-                                    {{ $absensiAktif ? 'checked' : '' }}
-                                    onchange="syncAbsensiToggle(this.checked)">
-                                {{-- hidden field: sinkronkan webcam dengan nilai yang sama --}}
-                                <input type="hidden" name="enable_webcam_attendance" id="webcamHidden"
-                                       value="{{ $absensiAktif ? '1' : '0' }}">
-                            </div>
+                    <div class="d-flex align-items-center justify-content-center gap-3">
+                        <span class="fw-bold" id="absensiStatusLabel" style="font-size:.95rem;
+                            color: {{ $absensiAktif ? '#10b981' : '#94a3b8' }};">
+                            {{ $absensiAktif ? 'ON' : 'OFF' }}
+                        </span>
+                        <div class="form-check form-switch mb-0">
+                            <input class="form-check-input" style="cursor:pointer; width:3.5em; height:1.8em;"
+                                type="checkbox" role="switch"
+                                id="enable_manual_attendance"
+                                name="enable_manual_attendance"
+                                value="1"
+                                {{ $absensiAktif ? 'checked' : '' }}
+                                onchange="syncAbsensiToggle(this.checked)">
+                            {{-- hidden field: sinkronkan webcam dengan nilai yang sama --}}
+                            <input type="hidden" name="enable_webcam_attendance" id="webcamHidden"
+                                   value="{{ $absensiAktif ? '1' : '0' }}">
                         </div>
                     </div>
                 </div>
@@ -94,7 +87,7 @@
             <div class="col-12 mt-3">
                 <div class="card border-0 shadow-sm p-3" style="background: #f8fafc; border-radius: 12px;">
                     <label class="fw-bold mb-1" style="color: var(--text-color);">
-                        <i class="fas fa-sliders-h text-primary me-2"></i>Threshold Akurasi AI (LBPH)
+                        <i class="fas fa-sliders-h text-primary me-2"></i>Threshold Akurasi
                     </label>
                     <small class="text-muted d-block mb-2">Nilai ini menentukan seberapa ketat sistem mengenali wajah. Semakin tinggi nilainya, semakin ketat (hanya mau mengenali jika mirip sekali). <strong>Default: 75</strong></small>
                     <div class="d-flex align-items-center gap-3">

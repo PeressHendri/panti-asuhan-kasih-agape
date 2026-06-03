@@ -60,37 +60,32 @@
             <input type="hidden" name="is_admin_form" value="1">
             <div class="col-12 mt-2">
                 <div class="p-3 rounded-3 border" style="background: var(--card-bg, #fff);">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <span class="fw-semibold" style="color: var(--text-color); font-size: 0.95rem;">
-                            <i class="fas fa-clipboard-check text-primary me-2"></i>Mode Absensi
-                        </span>
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="form-check form-switch mb-0">
-                                <input class="form-check-input" style="cursor: pointer; width: 3em; height: 1.5em;"
-                                    type="checkbox" role="switch"
-                                    id="enable_manual_attendance"
-                                    name="enable_manual_attendance"
-                                    value="1"
-                                    {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? 'checked' : '' }}>
-                            </div>
-                            <span id="manualStatusLabel" class="fw-bold"
-                                style="color: {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? '#22c55e' : '#94a3b8' }}">
-                                {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? 'ON' : 'OFF' }}
-                            </span>
-                            <span id="manualSaveIndicator" class="small text-muted ms-1" style="display:none;">
-                                <i class="fas fa-check-circle text-success"></i> Tersimpan
-                            </span>
+                    <div class="d-flex align-items-center justify-content-center gap-3">
+                        <div class="form-check form-switch mb-0">
+                            <input class="form-check-input" style="cursor: pointer; width: 3em; height: 1.5em;"
+                                type="checkbox" role="switch"
+                                id="enable_manual_attendance"
+                                name="enable_manual_attendance"
+                                value="1"
+                                {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? 'checked' : '' }}>
                         </div>
+                        <span id="manualStatusLabel" class="fw-bold"
+                            style="color: {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? '#22c55e' : '#94a3b8' }}">
+                            {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? 'ON' : 'OFF' }}
+                        </span>
+                        <span id="manualSaveIndicator" class="small text-muted ms-1" style="display:none;">
+                            <i class="fas fa-check-circle text-success"></i> Tersimpan
+                        </span>
                     </div>
                 </div>
             </div>
 
-            {{-- Threshold Akurasi AI LBPH --}}
+            {{-- Threshold Akurasi --}}
             <div class="col-12 mt-3">
                 <div class="p-3 rounded-3 border" style="background: var(--card-bg, #fff);">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <span class="fw-semibold" style="color: var(--text-color); font-size: 0.9rem;">
-                            <i class="fas fa-sliders-h text-primary me-2"></i>Threshold Akurasi AI (LBPH)
+                            <i class="fas fa-sliders-h text-primary me-2"></i>Threshold Akurasi
                         </span>
                         <div class="d-flex align-items-center gap-2">
                             <span id="thresholdSaveIndicator" class="small text-success" style="display:none;">
