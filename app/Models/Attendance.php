@@ -12,7 +12,12 @@ class Attendance extends Model
         'check_in',
         'check_out',
         'status',
-        'note'
+        'note',
+        // Kolom tambahan dari face recognition (migration 2026_02_28)
+        'kamera_id',
+        'confidence_score',
+        'algoritma',
+        'foto_capture_path',
     ];
 
     protected $dates = ['date', 'check_in', 'check_out']; // Opsional: untuk mengelola tanggal sebagai Carbon

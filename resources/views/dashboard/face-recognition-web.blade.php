@@ -391,8 +391,21 @@ document.addEventListener('DOMContentLoaded', () => {
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
             body:    JSON.stringify({ foto_base64: foto })
         })
-        .then(r  => r.json())
+        .then(r => {
+            // Handle 403: fitur dinonaktifkan admin
+            if (r.status === 403) {
+                return r.json().then(data => {
+                    scanning = false;
+                    setStatus('error', 'Fitur dinonaktifkan');
+                    showResult(false, null, data.message || 'Fitur Absensi Webcam sedang dinonaktifkan oleh Admin.');
+                    startCooldown();
+                    throw new Error('disabled'); // stop chain
+                });
+            }
+            return r.json();
+        })
         .then(res => {
+            if (!res) return; // sudah dihandle 403
             scanning = false;
 
             if (res.success) {
@@ -421,7 +434,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         })
-        .catch(() => {
+        .catch(err => {
+            if (err.message === 'disabled') return; // sudah dihandle di atas
             scanning = false;
             setStatus('error', 'Error koneksi server');
             showResult(false, null, 'Gagal terhubung ke server.');

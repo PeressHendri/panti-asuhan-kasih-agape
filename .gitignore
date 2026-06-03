@@ -21,3 +21,9 @@ recognition_engine/models/
 *.h5
 Dataset Wajah/
 venv/
+.DS_Store
+*.DS_Store
+__pycache__/
+*.pyc
+recognition_engine/scripts/pending_logs.json
+

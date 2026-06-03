@@ -39,9 +39,16 @@ class FaceRecognitionController extends Controller
 
     /**
      * Halaman absensi wajah via webcam browser.
+     * Hanya dapat diakses jika enable_webcam_attendance = true di Cache.
      */
     public function webFaceRecognitionPage()
     {
+        // Cek toggle ON/OFF webcam absensi (default: ON agar tidak memutus yang sudah berjalan)
+        if (!\Illuminate\Support\Facades\Cache::get('enable_webcam_attendance', true)) {
+            return redirect()->back()->with('error',
+                'Fitur Absensi Webcam sedang dinonaktifkan oleh Admin. Silakan hubungi Admin.');
+        }
+
         // Ambil kehadiran hari ini untuk ditampilkan di panel kanan
         $todayAttendances = Attendance::with('child')
             ->whereDate('date', Carbon::today())
@@ -84,6 +91,14 @@ class FaceRecognitionController extends Controller
      */
     public function webScan(Request $request)
     {
+        // Tolak scan jika fitur webcam dimatikan admin
+        if (!\Illuminate\Support\Facades\Cache::get('enable_webcam_attendance', true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Fitur Absensi Webcam sedang dinonaktifkan oleh Admin.'
+            ], 403);
+        }
+
         $validated = $request->validate([
             'foto_base64' => 'required|string',
         ]);

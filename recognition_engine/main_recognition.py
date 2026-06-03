@@ -133,30 +133,52 @@ def load_lbph_model():
 
 # ============================================================
 # LOAD MODEL VGG16 (untuk kamera utama)
+# Urutan prioritas:
+#   1. model_vgg16_adam.h5  (akurasi tertinggi, ~270MB)
+#   2. best_adam.h5         (fallback ringan, ~118MB) jika model utama gagal
 # ============================================================
 def load_vgg16_model():
     try:
         from tensorflow.keras.models import load_model
         from tensorflow.keras.layers import Dense
         import pickle
-        
+
         class SafeDense(Dense):
             def __init__(self, **kwargs):
                 kwargs.pop('quantization_config', None)
                 super().__init__(**kwargs)
-                
-        VGG16_MODEL_PATH = os.path.join(BASE_DIR, "models", "vgg16", "model_vgg16_adam.h5")
-        ENCODER_PATH     = os.path.join(BASE_DIR, "models", "vgg16", "label_encoder.pkl")
-        if os.path.exists(VGG16_MODEL_PATH) and os.path.exists(ENCODER_PATH):
-            model = load_model(VGG16_MODEL_PATH, custom_objects={'Dense': SafeDense})
-            with open(ENCODER_PATH, 'rb') as f:
-                le = pickle.load(f)
-            print("[INFO] Model VGG16 berhasil dimuat.")
-            return model, le
-        else:
-            print("[WARNING] File model VGG16 tidak ditemukan!")
+
+        ENCODER_PATH = os.path.join(BASE_DIR, "models", "vgg16", "label_encoder.pkl")
+        if not os.path.exists(ENCODER_PATH):
+            print("[WARNING] label_encoder.pkl VGG16 tidak ditemukan!")
+            return None, None
+
+        # Coba model utama dahulu, lalu fallback ke versi lebih ringan
+        model_candidates = [
+            ("model_vgg16_adam.h5", "Model VGG16 utama (270MB)"),
+            ("best_adam.h5",        "Model VGG16 fallback (118MB)"),
+        ]
+
+        for filename, label in model_candidates:
+            model_path = os.path.join(BASE_DIR, "models", "vgg16", filename)
+            if not os.path.exists(model_path):
+                print(f"[INFO] {label} tidak ditemukan, lewati.")
+                continue
+            try:
+                print(f"[INFO] Memuat {label}...")
+                model = load_model(model_path, custom_objects={'Dense': SafeDense})
+                with open(ENCODER_PATH, 'rb') as f:
+                    le = pickle.load(f)
+                print(f"[INFO] {label} berhasil dimuat.")
+                return model, le
+            except MemoryError:
+                print(f"[WARNING] {label} gagal dimuat: kehabisan RAM. Mencoba fallback...")
+            except Exception as e:
+                print(f"[WARNING] {label} gagal dimuat: {e}. Mencoba fallback...")
+
+        print("[ERROR] Semua model VGG16 gagal dimuat!")
     except ImportError:
-        print("[ERROR] TensorFlow tidak terinstall.")
+        print("[ERROR] TensorFlow tidak terinstall. VGG16 tidak akan berjalan.")
     return None, None
 
 # ============================================================
@@ -272,10 +294,12 @@ def process_main_camera(camera_id, rtsp_url, model_vgg16, le_vgg16):
                                     status="check_in", kamera_id=camera_id, algoritma=RECOGNITION_ALGO_MAIN)
                     # Reset liveness setelah berhasil absen
                     liveness_status[child_id] = {"blink": False, "smile": False, "time": now}
-                
+
                 elif not is_recognized and now - last_post_time > 5:
                     last_post_time = now
                     play_audio('warning')
+                    # Catatan: status 'tidak_dikenal' TIDAK dikirim ke API (child_id=null tidak berguna)
+                    # dan hanya akan menumpuk pending_logs.json secara sia-sia.
 
                 cv2.rectangle(display_frame, (x, y), (x+w, y+h), color, 3)
                 cv2.putText(display_frame, label, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
@@ -337,31 +361,51 @@ def process_cctv_stream(camera_id, rtsp_url, recognizer_lbph, label_map):
         motion_detected = False
         small_frame     = cv2.resize(frame, (320, 240))
         fgmask          = fgbg.apply(small_frame)
-        if cv2.countNonZero(fgmask) > (MIN_MOTION_AREA / 4):
-            motion_detected = True
-
+        
+        # Prapemrosesan MOG2: Thresholding pada nilai 200 untuk menghilangkan shadow (abu-abu 127) + Dilatasi
+        _, thresh = cv2.threshold(fgmask, 200, 255, cv2.THRESH_BINARY)
+        dilated = cv2.dilate(thresh, None, iterations=2)
+        contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
         display_frame = frame.copy()
-        now           = time.time()
+        now = time.time()
+        
+        # Cari kontur gerakan MOG2 dan gambar bounding boxes-nya (Metode MOG2 Skripsi)
+        for contour in contours:
+            if cv2.contourArea(contour) > 500: # Batas luas gerakan minimal sesuai standar skripsi
+                motion_detected = True
+                (x_m, y_m, w_m, h_m) = cv2.boundingRect(contour)
+                # Kembalikan koordinat MOG2 dari ukuran kecil (320x240) ke ukuran asli (640x480)
+                x_m, y_m, w_m, h_m = x_m * 2, y_m * 2, w_m * 2, h_m * 2
+                
+                # Gambar kotak hijau penanda deteksi objek bergerak (Metode MOG2 Skripsi)
+                cv2.rectangle(display_frame, (x_m, y_m), (x_m + w_m, y_m + h_m), (0, 255, 0), 2)
+                cv2.putText(display_frame, "MOG2: GERAKAN", (x_m, y_m - 8),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 255, 0), 2)
+
+                # JALANKAN DETEKSI WAJAH HANYA DI DALAM AREA GERAKAN MOG2 (ROI)
+                y1, y2 = max(0, y_m), min(480, y_m + h_m)
+                x1, x2 = max(0, x_m), min(640, x_m + w_m)
+                if (y2 - y1) > 40 and (x2 - x1) > 40:
+                    roi = frame[y1:y2, x1:x2]
+                    faces = detect_faces_dnn(roi)
+                    
+                    for (xf, yf, wf, hf) in faces:
+                        # Konversi koordinat wajah lokal ROI ke koordinat absolut frame
+                        abs_x = x1 + xf
+                        abs_y = y1 + yf
+                        
+                        # Jalankan pengenalan LBPH pada area wajah di dalam gerakan tersebut
+                        is_recognized, nama, child_id, accuracy_pct, model_used = predict_fusion(
+                            frame, abs_x, abs_y, wf, hf, None, None, recognizer_lbph, label_map, CONFIDENCE_THRESHOLD
+                        )
+
+                        if is_recognized and now - last_post_time > 5:
+                            last_post_time = now
+                            send_to_laravel(child_id=child_id, confidence_score=round(accuracy_pct, 2),
+                                            status="check_in", kamera_id=camera_id, algoritma=RECOGNITION_ALGO_CCTV)
 
         if motion_detected:
-            faces = detect_faces_dnn(frame)
-
-            for (x, y, w, h) in faces:
-                is_recognized, nama, child_id, accuracy_pct, model_used = predict_fusion(
-                    frame, x, y, w, h, None, None, recognizer_lbph, label_map, CONFIDENCE_THRESHOLD
-                )
-
-                label = f"{nama} ({accuracy_pct:.0f}%)" if is_recognized else "Orang Asing"
-                color = (0, 255, 0) if is_recognized else (0, 0, 255)
-
-                if is_recognized and now - last_post_time > 5:
-                    last_post_time = now
-                    send_to_laravel(child_id=child_id, confidence_score=round(accuracy_pct, 2),
-                                    status="check_in", kamera_id=camera_id, algoritma=RECOGNITION_ALGO_CCTV)
-
-                cv2.rectangle(display_frame, (x, y), (x+w, y+h), color, 3)
-                cv2.putText(display_frame, label, (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
-
             # Kirim notif motion ke log aktivitas CCTV
             if now - last_post_time > 30:
                 try:
@@ -373,9 +417,15 @@ def process_cctv_stream(camera_id, rtsp_url, recognizer_lbph, label_map):
                                   headers=headers, timeout=5)
                 except Exception:
                     pass
-        else:
-            cv2.putText(display_frame, f"CCTV STANDBY | {camera_id}", (20, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+
+        # Overlay status premium (Aktivitas Aktif / Pasif sesuai Wording Skripsi Anda)
+        status_text = "● STATUS: AKTIF (Ada Pergerakan)" if motion_detected else "● STATUS: PASIF (Diam/Tidak Ada Objek)"
+        status_color = (0, 255, 0) if motion_detected else (0, 0, 255) # Hijau jika Aktif, Merah jika Pasif
+        
+        # Tambahkan background semi-transparan hitam untuk teks agar terbaca jelas
+        cv2.rectangle(display_frame, (10, 10), (370, 42), (0, 0, 0), -1)
+        cv2.putText(display_frame, status_text, (20, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.48, status_color, 2)
 
         ok, buf = cv2.imencode('.jpg', display_frame)
         if ok:
@@ -402,6 +452,23 @@ def list_cameras():
     from flask import jsonify
     cam_list = [{"kamera_id": k, "streaming_url": f"/video_feed/{k}"} for k in latest_frames.keys()]
     return jsonify({"active_cameras": cam_list, "total": len(cam_list)})
+
+# ============================================================
+# RETRY PENDING — Thread periodik untuk mengirim ulang log
+# yang sebelumnya gagal dikirim ke Laravel API
+# ============================================================
+def retry_pending_thread():
+    """Jalankan retry_pending() setiap 5 menit di background."""
+    from send_api import retry_pending
+    # Tunggu 60 detik setelah startup agar sistem stabil dahulu
+    time.sleep(60)
+    while True:
+        try:
+            retry_pending()
+        except Exception as e:
+            print(f"[RETRY] Error saat retry pending: {e}")
+        time.sleep(300)  # Coba lagi tiap 5 menit
+
 
 # ============================================================
 # MAIN
@@ -454,6 +521,11 @@ if __name__ == "__main__":
     flask_thread.start()
     print(f"[FLASK] Streaming server aktif di http://0.0.0.0:5050")
     print(f"        Wake: {WAKE_HOLD_TIME}dtk | Sleep: {SLEEP_TIMEOUT}dtk")
+
+    # 6. Jalankan thread retry pending logs (kirim ulang log yang gagal terkirim)
+    retry_thread = threading.Thread(target=retry_pending_thread, daemon=True)
+    retry_thread.start()
+    print("[RETRY] Thread retry pending logs aktif (interval: 5 menit).")
 
     # 6. Monitor lokal di layar 3.5 inch (Main Thread)
     while True:

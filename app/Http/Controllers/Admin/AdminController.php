@@ -514,11 +514,10 @@ class AdminController extends Controller
         }
         $user->save();
 
-        if ($request->has('enable_manual_attendance')) {
-            \Illuminate\Support\Facades\Cache::forever('enable_manual_attendance', true);
-        } else {
-            \Illuminate\Support\Facades\Cache::forever('enable_manual_attendance', false);
-        }
+        // 1 toggle mengontrol keduanya: absensi manual + webcam
+        $absensiAktif = $request->has('enable_manual_attendance');
+        \Illuminate\Support\Facades\Cache::forever('enable_manual_attendance', $absensiAktif);
+        \Illuminate\Support\Facades\Cache::forever('enable_webcam_attendance', $absensiAktif);
 
         // Simpan Confidence Threshold
         $threshold = $request->input('confidence_threshold', 75);

@@ -53,33 +53,47 @@
                 </div>
             </div>
             
-            {{-- Switch Mode Absensi --}}
+            {{-- Toggle Absensi Manual & Webcam (1 toggle untuk keduanya) --}}
             <div class="col-12 mt-3">
-                <div class="card border-0 shadow-sm p-3" style="background: #f0f7ff; border-radius: 12px; border-left: 4px solid #3b82f6 !important;">
-                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                @php
+                    $absensiAktif = \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false);
+                @endphp
+                <div class="card border-0 shadow-sm p-3"
+                     style="background: {{ $absensiAktif ? '#f0fff4' : '#f8fafc' }}; border-radius: 12px;
+                            border-left: 4px solid {{ $absensiAktif ? '#10b981' : '#94a3b8' }} !important;
+                            transition: background .3s;" id="absensiCard">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
                         <div>
                             <div class="fw-bold mb-1" style="color: var(--text-color);">
-                                <i class="fas fa-toggle-on text-primary me-2"></i>Mode Absensi
+                                <i class="fas fa-clipboard-check me-2" id="absensiIcon"
+                                   style="color: {{ $absensiAktif ? '#10b981' : '#94a3b8' }};"></i>
+                                Absensi Manual &amp; Webcam
                             </div>
                             <small class="text-muted d-block">
-                                <span class="text-success fw-semibold">Otomatis</span>: Absensi dicatat langsung oleh kamera Face Recognition (Raspberry Pi).<br>
-                                <span class="text-warning fw-semibold">Manual</span>: Admin/Pengasuh dapat menambah, mengedit, dan check-out kehadiran secara manual dari dashboard.
+                                <span class="fw-semibold" style="color:#10b981;">ON</span>: Admin/Pengasuh dapat absensi manual dari dashboard
+                                dan absensi wajah via webcam browser (laptop/HP).<br>
+                                <span class="fw-semibold" style="color:#ef4444;">OFF</span>: Kedua fitur ditutup. Absensi hanya dari Raspberry Pi secara otomatis.
                             </small>
                         </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="small text-muted" id="modeLabel">
-                                {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? 'Mode: Manual' : 'Mode: Otomatis' }}
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="fw-bold" id="absensiStatusLabel" style="font-size:.95rem;
+                                color: {{ $absensiAktif ? '#10b981' : '#94a3b8' }};">
+                                {{ $absensiAktif ? 'ON' : 'OFF' }}
                             </span>
                             <div class="form-check form-switch mb-0">
-                                <input class="form-check-input" style="cursor: pointer; width: 3em; height: 1.5em;"
+                                <input class="form-check-input" style="cursor:pointer; width:3.5em; height:1.8em;"
                                     type="checkbox" role="switch"
                                     id="enable_manual_attendance"
                                     name="enable_manual_attendance"
                                     value="1"
-                                    {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? 'checked' : '' }}
-                                    onchange="document.getElementById('modeLabel').textContent = this.checked ? 'Mode: Manual' : 'Mode: Otomatis'">
-                                <label class="form-check-label" for="enable_manual_attendance" style="cursor: pointer; color: var(--text-color);">
-                                    Aktifkan Manual
+                                    {{ $absensiAktif ? 'checked' : '' }}
+                                    onchange="syncAbsensiToggle(this.checked)">
+                                {{-- hidden field: sinkronkan webcam dengan nilai yang sama --}}
+                                <input type="hidden" name="enable_webcam_attendance" id="webcamHidden"
+                                       value="{{ $absensiAktif ? '1' : '0' }}">
+                                <label class="form-check-label fw-semibold" for="enable_manual_attendance"
+                                       style="cursor:pointer; color:var(--text-color); font-size:.88rem;">
+                                    Aktifkan
                                 </label>
                             </div>
                         </div>
@@ -146,6 +160,23 @@
                 }
             });
         });
+
+        // ── Sinkronkan toggle absensi (Manual + Webcam dalam 1 toggle) ──
+        function syncAbsensiToggle(checked) {
+            const label  = document.getElementById('absensiStatusLabel');
+            const icon   = document.getElementById('absensiIcon');
+            const card   = document.getElementById('absensiCard');
+            const hidden = document.getElementById('webcamHidden');
+
+            label.textContent  = checked ? 'ON' : 'OFF';
+            label.style.color  = checked ? '#10b981' : '#94a3b8';
+            icon.style.color   = checked ? '#10b981' : '#94a3b8';
+            card.style.background    = checked ? '#f0fff4' : '#f8fafc';
+            card.style.borderLeftColor = checked ? '#10b981' : '#94a3b8';
+            // hidden field agar enable_webcam_attendance ikut terkirim
+            hidden.value = checked ? '1' : '0';
+            hidden.name  = checked ? 'enable_webcam_attendance' : '_webcam_off';
+        }
 
         function previewPhoto(event) {
             const [file] = event.target.files;

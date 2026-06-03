@@ -55,12 +55,14 @@ def lbph_dist_to_conf(dist):
       < 50  = sangat yakin (90%+)
       50-80 = cukup yakin (75%-85%)
       > 80  = tidak yakin
+    Catatan: min di-set ke 0.0 (bukan 10) agar nilai tidak pernah negatif
+    saat distance sangat besar (> 333).
     """
     if dist <= 0:
         return 100.0
     # Formula linear-mapping yang ramah persentase untuk display dashboard
     conf = 100.0 - (dist * 0.3)
-    return round(max(10.0, min(100.0, conf)), 1)
+    return round(max(0.0, min(100.0, conf)), 1)  # min=0 agar tidak bisa negatif
 
 
 # ── Fusion Logic ──────────────────────────────────────────────────────────
