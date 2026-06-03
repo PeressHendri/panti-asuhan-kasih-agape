@@ -60,13 +60,10 @@
             <input type="hidden" name="is_admin_form" value="1">
             <div class="col-12 mt-2">
                 <div class="p-3 rounded-3 border" style="background: var(--card-bg, #fff);">
-                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                        <div>
-                            <span class="fw-semibold d-block" style="color: var(--text-color); font-size: 0.95rem;">
-                                <i class="fas fa-clipboard-check text-primary me-2"></i>Absensi Manual &amp; Webcam Website
-                            </span>
-                            <small class="text-muted">Mengaktifkan/menonaktifkan form input manual dan absensi webcam browser.</small>
-                        </div>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="fw-semibold" style="color: var(--text-color); font-size: 0.95rem;">
+                            <i class="fas fa-clipboard-check text-primary me-2"></i>Mode Absensi
+                        </span>
                         <div class="d-flex align-items-center gap-3">
                             <div class="form-check form-switch mb-0">
                                 <input class="form-check-input" style="cursor: pointer; width: 3em; height: 1.5em;"
@@ -78,7 +75,7 @@
                             </div>
                             <span id="manualStatusLabel" class="fw-bold"
                                 style="color: {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? '#22c55e' : '#94a3b8' }}">
-                                {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? 'Aktif' : 'Tidak Aktif' }}
+                                {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? 'ON' : 'OFF' }}
                             </span>
                             <span id="manualSaveIndicator" class="small text-muted ms-1" style="display:none;">
                                 <i class="fas fa-check-circle text-success"></i> Tersimpan
@@ -204,7 +201,7 @@
             const ind = document.getElementById('manualSaveIndicator');
 
             // Update label UI dulu
-            lbl.textContent = enabled ? 'Aktif' : 'Tidak Aktif';
+            lbl.textContent = enabled ? 'ON' : 'OFF';
             lbl.style.color  = enabled ? '#22c55e' : '#94a3b8';
 
             // Kirim ke server
@@ -226,7 +223,7 @@
             .catch(() => {
                 // Rollback jika gagal
                 this.checked = !enabled;
-                lbl.textContent = !enabled ? 'Aktif' : 'Tidak Aktif';
+                lbl.textContent = !enabled ? 'ON' : 'OFF';
                 lbl.style.color  = !enabled ? '#22c55e' : '#94a3b8';
             });
         });

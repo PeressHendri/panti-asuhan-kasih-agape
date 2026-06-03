@@ -62,18 +62,11 @@
                      style="background: {{ $absensiAktif ? '#f0fff4' : '#f8fafc' }}; border-radius: 12px;
                             border-left: 4px solid {{ $absensiAktif ? '#10b981' : '#94a3b8' }} !important;
                             transition: background .3s;" id="absensiCard">
-                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-                        <div>
-                            <div class="fw-bold mb-1" style="color: var(--text-color);">
-                                <i class="fas fa-clipboard-check me-2" id="absensiIcon"
-                                   style="color: {{ $absensiAktif ? '#10b981' : '#94a3b8' }};"></i>
-                                Absensi Manual &amp; Webcam
-                            </div>
-                            <small class="text-muted d-block">
-                                <span class="fw-semibold" style="color:#10b981;">ON</span>: Admin/Pengasuh dapat absensi manual dari dashboard
-                                dan absensi wajah via webcam browser (laptop/HP).<br>
-                                <span class="fw-semibold" style="color:#ef4444;">OFF</span>: Kedua fitur ditutup. Absensi hanya dari Raspberry Pi secara otomatis.
-                            </small>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="fw-bold" style="color: var(--text-color);">
+                            <i class="fas fa-clipboard-check me-2" id="absensiIcon"
+                               style="color: {{ $absensiAktif ? '#10b981' : '#94a3b8' }};"></i>
+                            Mode Absensi
                         </div>
                         <div class="d-flex align-items-center gap-3">
                             <span class="fw-bold" id="absensiStatusLabel" style="font-size:.95rem;
@@ -91,10 +84,6 @@
                                 {{-- hidden field: sinkronkan webcam dengan nilai yang sama --}}
                                 <input type="hidden" name="enable_webcam_attendance" id="webcamHidden"
                                        value="{{ $absensiAktif ? '1' : '0' }}">
-                                <label class="form-check-label fw-semibold" for="enable_manual_attendance"
-                                       style="cursor:pointer; color:var(--text-color); font-size:.88rem;">
-                                    Aktifkan
-                                </label>
                             </div>
                         </div>
                     </div>
