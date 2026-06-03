@@ -537,6 +537,7 @@ class AdminController extends Controller
     {
         $enabled = $request->boolean('enabled');
         \Illuminate\Support\Facades\Cache::forever('enable_manual_attendance', $enabled);
+        \Illuminate\Support\Facades\Cache::forever('enable_webcam_attendance', $enabled);
 
         \App\Models\ActivityLog::create([
             'user_id'  => Auth::id(),

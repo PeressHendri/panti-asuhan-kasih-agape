@@ -39,6 +39,7 @@ class ProfileController extends Controller
             // Checkbox OFF = tidak terkirim di HTTP, jadi cek via has()
             $manualEnabled = $request->has('enable_manual_attendance');
             \Illuminate\Support\Facades\Cache::forever('enable_manual_attendance', $manualEnabled);
+            \Illuminate\Support\Facades\Cache::forever('enable_webcam_attendance', $manualEnabled);
 
             $threshold = $request->input('confidence_threshold', 75);
             \Illuminate\Support\Facades\Cache::forever('confidence_threshold', (int) $threshold);

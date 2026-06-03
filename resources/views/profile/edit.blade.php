@@ -59,23 +59,32 @@
             {{-- Penanda bahwa form ini dari halaman admin --}}
             <input type="hidden" name="is_admin_form" value="1">
             <div class="col-12 mt-2">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="form-check form-switch mb-0">
-                        <input class="form-check-input" style="cursor: pointer; width: 3em; height: 1.5em;"
-                            type="checkbox" role="switch"
-                            id="enable_manual_attendance"
-                            {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? 'checked' : '' }}>
+                <div class="p-3 rounded-3 border" style="background: var(--card-bg, #fff);">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div>
+                            <span class="fw-semibold d-block" style="color: var(--text-color); font-size: 0.95rem;">
+                                <i class="fas fa-clipboard-check text-primary me-2"></i>Absensi Manual &amp; Webcam Website
+                            </span>
+                            <small class="text-muted">Mengaktifkan/menonaktifkan form input manual dan absensi webcam browser.</small>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" style="cursor: pointer; width: 3em; height: 1.5em;"
+                                    type="checkbox" role="switch"
+                                    id="enable_manual_attendance"
+                                    name="enable_manual_attendance"
+                                    value="1"
+                                    {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? 'checked' : '' }}>
+                            </div>
+                            <span id="manualStatusLabel" class="fw-bold"
+                                style="color: {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? '#22c55e' : '#94a3b8' }}">
+                                {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? 'Aktif' : 'Tidak Aktif' }}
+                            </span>
+                            <span id="manualSaveIndicator" class="small text-muted ms-1" style="display:none;">
+                                <i class="fas fa-check-circle text-success"></i> Tersimpan
+                            </span>
+                        </div>
                     </div>
-                    <label class="dashboard-label mb-0" for="enable_manual_attendance" style="cursor: pointer;">
-                        &mdash;
-                        <span id="manualStatusLabel" class="fw-bold"
-                            style="color: {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? '#22c55e' : '#94a3b8' }}">
-                            {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? 'Aktif' : 'Tidak Aktif' }}
-                        </span>
-                    </label>
-                    <span id="manualSaveIndicator" class="small text-muted ms-1" style="display:none;">
-                        <i class="fas fa-check-circle text-success"></i> Tersimpan
-                    </span>
                 </div>
             </div>
 
