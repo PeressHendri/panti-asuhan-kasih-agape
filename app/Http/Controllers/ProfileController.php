@@ -36,11 +36,6 @@ class ProfileController extends Controller
 
         // Simpan pengaturan AI & mode absensi (hanya admin, jika form dari halaman admin)
         if ($user->role === 'admin' && $request->input('is_admin_form') === '1') {
-            // Checkbox OFF = tidak terkirim di HTTP, jadi cek via has()
-            $manualEnabled = $request->has('enable_manual_attendance');
-            \Illuminate\Support\Facades\Cache::forever('enable_manual_attendance', $manualEnabled);
-            \Illuminate\Support\Facades\Cache::forever('enable_webcam_attendance', $manualEnabled);
-
             $threshold = $request->input('confidence_threshold', 75);
             \Illuminate\Support\Facades\Cache::forever('confidence_threshold', (int) $threshold);
         }

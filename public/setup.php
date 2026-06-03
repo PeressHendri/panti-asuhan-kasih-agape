@@ -245,6 +245,13 @@ if ($isAuthenticated) {
             $output .= runCmd("{PHP} artisan $cmd --no-ansi") . "\n";
         }
         $output .= "✅ Full Setup Selesai!\n";
+    } elseif ($action == 'toggle_absensi') {
+        $current = trim(shell_exec(PHP_BIN . ' ' . BASE_PATH . '/artisan tinker --execute="echo Cache::get(\'enable_manual_attendance\', false) ? \'1\' : \'0\';" 2>&1'));
+        $next = ($current === '1') ? 'false' : 'true';
+        $output .= "⚙️ Mengubah Mode Absensi ke " . ($next === 'true' ? 'ON (Aktif)' : 'OFF (Tidak Aktif)') . "...\n";
+        $output .= str_repeat("─", 50) . "\n";
+        $output .= runCmd("{PHP} artisan tinker --execute=\"Cache::forever('enable_manual_attendance', $next); Cache::forever('enable_webcam_attendance', $next);\"") . "\n";
+        $output .= "✅ Berhasil diperbarui!\n";
     }
 }
 
@@ -252,12 +259,17 @@ if ($isAuthenticated) {
 $disk        = null;
 $ram         = null;
 $dbStatus    = ['ok' => false, 'msg' => 'Not checked'];
+$isAbsensiOn = false;
 
 if ($isAuthenticated) {
     $disk     = getDiskInfo();
     $ram      = getRamInfo();
     $dbStatus = testDbConnection();
     $dbConnected = $dbStatus['ok'];
+    
+    // Ambil status absensi saat ini
+    $absensiStatusRaw = trim(shell_exec(PHP_BIN . ' ' . BASE_PATH . '/artisan tinker --execute="echo Cache::get(\'enable_manual_attendance\', false) ? \'1\' : \'0\';" 2>&1'));
+    $isAbsensiOn = ($absensiStatusRaw === '1');
 } else {
     $dbConnected = false;
 }
@@ -591,6 +603,19 @@ if ($isAuthenticated) {
                         <?php endif; ?>
 
                         <!-- Actions -->
+                        <div class="section-title">⚙️ Konfigurasi Absensi</div>
+                        <div style="background:#fff; border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:12px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+                                <span style="font-size:0.75rem; font-weight:600; color:var(--text);">Mode Absensi:</span>
+                                <span class="fw-bold" style="font-size:0.8rem; color: <?= $isAbsensiOn ? 'var(--success)' : 'var(--danger)' ?>;">
+                                    <?= $isAbsensiOn ? 'ON' : 'OFF' ?>
+                                </span>
+                            </div>
+                            <a href="?action=toggle_absensi" class="btn <?= $isAbsensiOn ? 'btn-outline' : 'btn-success' ?>" style="margin-bottom:0; font-size:0.75rem;">
+                                <?= $isAbsensiOn ? 'Matikan (Switch to OFF)' : 'Aktifkan (Switch to ON)' ?>
+                            </a>
+                        </div>
+
                         <div class="section-title">🚀 Deployment</div>
                         <a href="?action=deploy" class="btn btn-primary"
                             onclick="return confirm('Tarik update dari GitHub & migrate?')">🚀 CI/CD GitHub Deploy</a>

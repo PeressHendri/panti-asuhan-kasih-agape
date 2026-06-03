@@ -514,11 +514,6 @@ class AdminController extends Controller
         }
         $user->save();
 
-        // 1 toggle mengontrol keduanya: absensi manual + webcam
-        $absensiAktif = $request->has('enable_manual_attendance');
-        \Illuminate\Support\Facades\Cache::forever('enable_manual_attendance', $absensiAktif);
-        \Illuminate\Support\Facades\Cache::forever('enable_webcam_attendance', $absensiAktif);
-
         // Simpan Confidence Threshold
         $threshold = $request->input('confidence_threshold', 75);
         \Illuminate\Support\Facades\Cache::forever('confidence_threshold', (int) $threshold);
@@ -530,26 +525,6 @@ class AdminController extends Controller
         ]);
 
         return redirect()->route('admin.dashboard')->with('success', 'Profil berhasil diperbarui!');
-    }
-
-    // Toggle Absensi Manual ON/OFF (dipanggil via AJAX dari halaman Profil Saya)
-    public function toggleManualAttendance(Request $request)
-    {
-        $enabled = $request->boolean('enabled');
-        \Illuminate\Support\Facades\Cache::forever('enable_manual_attendance', $enabled);
-        \Illuminate\Support\Facades\Cache::forever('enable_webcam_attendance', $enabled);
-
-        \App\Models\ActivityLog::create([
-            'user_id'  => Auth::id(),
-            'activity' => 'Toggle Absensi Manual: ' . ($enabled ? 'Aktif' : 'Tidak Aktif'),
-            'status'   => 'Berhasil',
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'enabled' => $enabled,
-            'message' => 'Absensi manual ' . ($enabled ? 'diaktifkan' : 'dinonaktifkan'),
-        ]);
     }
 
     // Set Confidence Threshold (dipanggil via AJAX dari slider)

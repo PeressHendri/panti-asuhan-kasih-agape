@@ -58,25 +58,7 @@
             @if(auth()->user()->role === 'admin')
             {{-- Penanda bahwa form ini dari halaman admin --}}
             <input type="hidden" name="is_admin_form" value="1">
-            <div class="col-12 mt-2">
-                <div class="d-flex align-items-center gap-2">
-                    <div class="form-check form-switch mb-0">
-                        <input class="form-check-input" style="cursor: pointer;"
-                            type="checkbox" role="switch"
-                            id="enable_manual_attendance"
-                            name="enable_manual_attendance"
-                            value="1"
-                            {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? 'checked' : '' }}>
-                    </div>
-                    <span id="manualStatusLabel" class="fw-bold"
-                        style="color: {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? '#22c55e' : '#94a3b8' }}; font-size: 0.9rem;">
-                        {{ \Illuminate\Support\Facades\Cache::get('enable_manual_attendance', false) ? 'ON' : 'OFF' }}
-                    </span>
-                    <span id="manualSaveIndicator" class="small text-muted ms-1" style="display:none;">
-                        <i class="fas fa-check-circle text-success"></i> Tersimpan
-                    </span>
-                </div>
-            </div>
+
 
             {{-- Threshold Akurasi --}}
             <div class="col-12 mt-3">
@@ -186,41 +168,7 @@
             }, 800);
         }
 
-        // Switch Absensi Manual → AJAX langsung saat toggle
-        @if(auth()->user()->role === 'admin')
-        document.getElementById('enable_manual_attendance').addEventListener('change', function () {
-            const enabled = this.checked;
-            const lbl = document.getElementById('manualStatusLabel');
-            const ind = document.getElementById('manualSaveIndicator');
 
-            // Update label UI dulu
-            lbl.textContent = enabled ? 'ON' : 'OFF';
-            lbl.style.color  = enabled ? '#22c55e' : '#94a3b8';
-
-            // Kirim ke server
-            fetch('{{ route("admin.toggle.manual.attendance") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({ enabled: enabled })
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    ind.style.display = 'inline';
-                    setTimeout(() => ind.style.display = 'none', 2000);
-                }
-            })
-            .catch(() => {
-                // Rollback jika gagal
-                this.checked = !enabled;
-                lbl.textContent = !enabled ? 'ON' : 'OFF';
-                lbl.style.color  = !enabled ? '#22c55e' : '#94a3b8';
-            });
-        });
-        @endif
 
         document.getElementById('btn-simpan-profil').addEventListener('click', function (e) {
             var pass = document.querySelector('input[name="password"]').value;
